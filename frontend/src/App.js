@@ -375,6 +375,7 @@ function App() {
       setCheckoutResult({ sessionId, checking: true });
       pollPaymentStatus(sessionId);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const pollPaymentStatus = async (sessionId, attempts = 0) => {
