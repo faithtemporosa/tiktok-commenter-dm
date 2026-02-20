@@ -61,11 +61,11 @@ GOOGLE_SHEET_ID = "1cgjxB09nXSsKMEFwNxQlDzl8xVDyQgT0o8aKm6YOJ-o"
 SHEET_NAMES = ["Bump Connect", "Kollabsy", "Bump Syndicate"]
 
 # Cloud API for real-time reporting (update this URL after deployment)
-CLOUD_API_URL = "https://creator-suite-18.preview.emergentagent.com/api"
+CLOUD_API_URL = "https://bump-tiktok-bot.preview.emergentagent.com/api"
 
 MIN_DELAY_BETWEEN_COMMENTS = 30
 MAX_DELAY_BETWEEN_COMMENTS = 60
-VIDEOS_PER_PROFILE = 100  # Target: 100 videos per profile per day
+VIDEOS_PER_PROFILE = 1000  # Target: 1000 videos per profile per day
 
 # =============================================================================
 # GLOBAL STATE
@@ -1089,119 +1089,232 @@ def scrape_brands_for_dm(page, num_brands=100):
     return list(all_brands)[:num_brands]
 
 def send_dm_to_user(page, username, message):
-    """Send a DM to a specific user using Playwright"""
+    """Send a DM to a specific user - Simple and direct approach"""
     try:
-        dm_log(f"  → Navigating to @{username}'s profile...")
+        dm_log(f"  → Going to @{username}'s profile...")
         page.goto(f"https://www.tiktok.com/@{username}", wait_until="domcontentloaded", timeout=30000)
-        time.sleep(3)
+        time.sleep(6)  # Wait longer for page to fully load
         
-        # Check if profile exists
-        if "couldn't find this account" in page.content().lower():
-            dm_log(f"  ⚠ User @{username} not found")
-            return False, "user_not_found"
+        # STEP 1: Find and click the Message button directly (no 404 check - just try it)
+        dm_log(f"  → Looking for Message button...")
         
-        # Click message/DM button
-        dm_log(f"  → Opening DM...")
-        result = page.evaluate('''() => {
-            // Look for message button
-            const selectors = [
-                '[data-e2e="message-button"]',
-                '[data-e2e="profile-message"]',
-                'button[aria-label*="message" i]',
-                'button[aria-label*="Message" i]',
-                '[class*="MessageButton"]',
-                '[class*="message-button"]'
-            ];
-            
-            for (let sel of selectors) {
-                const btn = document.querySelector(sel);
-                if (btn && btn.offsetParent) {
-                    btn.click();
-                    return {success: true, method: sel};
+        # Wait for buttons to appear (retry up to 3 times)
+        debug_info = []
+        for attempt in range(3):
+            debug_info = page.evaluate('''() => {
+                const btns = [];
+                document.querySelectorAll('button').forEach(el => {
+                    const text = (el.textContent || '').trim();
+                    if (text && el.offsetParent !== null) {
+                        btns.push(text.substring(0, 25));
+                    }
+                });
+                return btns.slice(0, 6);
+            }''')
+            if len(debug_info) > 0:
+                break
+            time.sleep(2)  # Wait and retry
+        
+        dm_log(f"  [DEBUG] Visible buttons: {debug_info}")
+        
+        # Click Message button - ONLY in profile area, NOT sidebar
+        msg_clicked = page.evaluate('''() => {
+            // IMPORTANT: Avoid sidebar navigation! Only look in main content area
+            const sidebar = document.querySelector('[class*="Sidebar"], [class*="sidebar"], [class*="SideNav"], nav[class*="Nav"]');
+            const sidebarRect = sidebar ? sidebar.getBoundingClientRect() : null;
+
+            // Helper to check if element is in sidebar (left side of page)
+            const isInSidebar = (el) => {
+                const rect = el.getBoundingClientRect();
+                // Sidebar is typically on the left (x < 300) and full height
+                if (rect.left < 250 && rect.width < 300) return true;
+                // Also check parent classes
+                let parent = el.parentElement;
+                while (parent) {
+                    const cls = (parent.className || '').toLowerCase();
+                    if (cls.includes('sidebar') || cls.includes('sidenav') || cls.includes('navigation')) return true;
+                    parent = parent.parentElement;
+                }
+                return false;
+            };
+
+            // Find all buttons NOT in sidebar
+            const allBtns = Array.from(document.querySelectorAll('button')).filter(b => {
+                return b.offsetParent !== null && !isInSidebar(b);
+            });
+
+            // Debug: show profile area buttons
+            const profileBtnTexts = allBtns.slice(0, 10).map(b => (b.textContent || '').trim().substring(0, 20));
+            console.log('Profile buttons:', profileBtnTexts);
+
+            // METHOD 1: Find Follow button first - Message button is usually next to it
+            let followBtn = null;
+            let followIdx = -1;
+            const followWords = ['follow', 'volgen', 'suivre', 'seguir', 'folgen', 'подписаться', 'フォロー'];
+            for (let i = 0; i < allBtns.length; i++) {
+                const text = (allBtns[i].textContent || '').trim().toLowerCase();
+                for (let fw of followWords) {
+                    if (text === fw || text === fw + 'ing') {
+                        followBtn = allBtns[i];
+                        followIdx = i;
+                        break;
+                    }
+                }
+                if (followBtn) break;
+            }
+
+            // If found Follow, look for sibling Message button in same container
+            if (followBtn) {
+                const parent = followBtn.parentElement;
+                if (parent) {
+                    const siblingBtns = Array.from(parent.querySelectorAll('button, div[role="button"]')).filter(b => {
+                        return b !== followBtn && b.offsetParent !== null && !isInSidebar(b);
+                    });
+                    for (let btn of siblingBtns) {
+                        const text = (btn.textContent || '').trim().toLowerCase();
+                        // Skip share/more/unfollow buttons
+                        if (!text.includes('share') && !text.includes('deel') && !text.includes('more') &&
+                            !text.includes('meer') && !text.includes('unfollow') && !text.includes('following')) {
+                            btn.scrollIntoView({block: 'center'});
+                            btn.click();
+                            return {success: true, text: text || 'follow-sibling', method: 'follow-sibling', debug: profileBtnTexts};
+                        }
+                    }
+                }
+
+                // Try button immediately after Follow in DOM
+                if (followIdx + 1 < allBtns.length) {
+                    const nextBtn = allBtns[followIdx + 1];
+                    const text = (nextBtn.textContent || '').trim().toLowerCase();
+                    if (!text.includes('share') && !text.includes('deel') && !text.includes('more')) {
+                        nextBtn.scrollIntoView({block: 'center'});
+                        nextBtn.click();
+                        return {success: true, text: text || 'after-follow', method: 'after-follow', debug: profileBtnTexts};
+                    }
                 }
             }
-            
-            // Try finding by text
-            const buttons = document.querySelectorAll('button, div[role="button"]');
-            for (let btn of buttons) {
-                if (btn.textContent.toLowerCase().includes('message') && btn.offsetParent) {
+
+            // METHOD 2: Look for data-e2e message button (but NOT in sidebar)
+            const dataE2eBtns = document.querySelectorAll('[data-e2e*="message"], [data-e2e*="Message"]');
+            for (let btn of dataE2eBtns) {
+                if (btn.offsetParent !== null && !isInSidebar(btn)) {
+                    btn.scrollIntoView({block: 'center'});
                     btn.click();
-                    return {success: true, method: 'text-search'};
+                    return {success: true, text: 'data-e2e:message', method: 'data-e2e', debug: profileBtnTexts};
                 }
             }
-            
-            return {success: false};
+
+            // METHOD 3: Find button with message text (exact match, not in sidebar)
+            const messageWords = ['message', 'berichten', 'nachricht', 'messaggio', 'mensaje', 'mensagem', 'сообщение'];
+            for (let btn of allBtns) {
+                const text = (btn.textContent || '').trim().toLowerCase();
+                for (let word of messageWords) {
+                    if (text === word) {
+                        btn.scrollIntoView({block: 'center'});
+                        btn.click();
+                        return {success: true, text: text, method: 'text-exact', debug: profileBtnTexts};
+                    }
+                }
+            }
+
+            return {success: false, debug: profileBtnTexts, followFound: !!followBtn, totalBtns: allBtns.length};
         }''')
         
-        if not result.get('success'):
-            dm_log(f"  ⚠ Could not find message button for @{username}")
+        if not msg_clicked.get('success'):
+            dm_log(f"  ⚠ No Message button found - user may have DMs disabled")
+            dm_log(f"  [DEBUG] Profile buttons found: {msg_clicked.get('debug', [])}")
+            dm_log(f"  [DEBUG] Follow button found: {msg_clicked.get('followFound', False)}")
             return False, "no_dm_button"
+
+        dm_log(f"  ✓ Clicked Message button: '{msg_clicked.get('text')}' (method: {msg_clicked.get('method')})")
         
-        dm_log(f"  ✓ DM window opened ({result.get('method')})")
-        time.sleep(2)
+        # STEP 2: Wait for messages page
+        dm_log(f"  → Waiting for chat to open...")
+        time.sleep(4)
         
-        # Find and click message input
-        input_result = page.evaluate('''() => {
-            const selectors = [
-                '[data-e2e="message-input"]',
-                '[class*="DivInputContainer"] [contenteditable="true"]',
-                '[class*="MessageInput"] [contenteditable="true"]',
-                'div[contenteditable="true"][data-text="true"]',
-                'div[contenteditable="true"]'
-            ];
-            
-            for (let sel of selectors) {
-                const el = document.querySelector(sel);
-                if (el && el.offsetParent) {
-                    el.click();
-                    el.focus();
-                    return {success: true, method: sel};
+        # STEP 3: Find the message input and type (with retries)
+        dm_log(f"  → Finding input field...")
+        
+        input_found = None
+        for attempt in range(5):  # Try up to 5 times
+            input_found = page.evaluate('''() => {
+                // Try to find and click the input
+                const selectors = [
+                    '[contenteditable="true"]',
+                    '[class*="InputArea"] [contenteditable="true"]',
+                    '[class*="DivInput"] [contenteditable="true"]',
+                    '[class*="MessageInput"] [contenteditable="true"]',
+                    'textarea',
+                    'input[type="text"]'
+                ];
+                
+                for (let sel of selectors) {
+                    const el = document.querySelector(sel);
+                    if (el && el.offsetParent !== null) {
+                        el.click();
+                        el.focus();
+                        return {success: true, selector: sel};
+                    }
                 }
-            }
-            return {success: false};
-        }''')
+                return {success: false};
+            }''')
+            
+            if input_found.get('success'):
+                break
+            time.sleep(1)  # Wait and retry
         
-        if not input_result.get('success'):
-            dm_log(f"  ⚠ Could not find message input")
+        if not input_found.get('success'):
+            dm_log(f"  ⚠ Could not find message input after retries")
             return False, "no_input"
         
-        dm_log(f"  → Typing message...")
-        time.sleep(0.5)
-        
-        # Type the message
-        page.keyboard.type(message, delay=random.randint(30, 60))
+        dm_log(f"  ✓ Found input field")
         time.sleep(1)
         
-        # Send the message
-        dm_log(f"  → Sending...")
-        send_result = page.evaluate('''() => {
-            const selectors = [
-                '[data-e2e="send-message"]',
-                '[class*="SendButton"]',
-                '[class*="send-button"]',
-                'button[aria-label*="send" i]'
-            ];
-            
-            for (let sel of selectors) {
-                const btn = document.querySelector(sel);
-                if (btn && btn.offsetParent) {
-                    btn.click();
-                    return {success: true, method: sel};
+        # STEP 4: Type the message
+        dm_log(f"  → Typing message...")
+        page.keyboard.type(message, delay=30)
+        time.sleep(2)
+        
+        # STEP 5: Send the message
+        dm_log(f"  → Sending message...")
+        
+        # Try clicking send button first
+        send_clicked = page.evaluate('''() => {
+            // Find button with SVG (send icon) in the input area
+            const inputArea = document.querySelector('[class*="InputArea"], [class*="DivInput"]');
+            if (inputArea) {
+                const btns = inputArea.querySelectorAll('button, div[role="button"]');
+                for (let btn of btns) {
+                    if (btn.querySelector('svg') && btn.offsetParent !== null) {
+                        btn.click();
+                        return {success: true, method: 'svg-button'};
+                    }
                 }
             }
+            
+            // Try any button with send-related class
+            const sendBtn = document.querySelector('[class*="Send"], [data-e2e*="send"]');
+            if (sendBtn && sendBtn.offsetParent !== null) {
+                sendBtn.click();
+                return {success: true, method: 'send-class'};
+            }
+            
             return {success: false};
         }''')
         
-        if not send_result.get('success'):
-            dm_log(f"  → Trying Enter key...")
+        if not send_clicked.get('success'):
+            dm_log(f"  → Using Enter key to send...")
             page.keyboard.press("Enter")
+        else:
+            dm_log(f"  ✓ Clicked send button")
         
-        time.sleep(2)
+        # STEP 6: Wait and confirm
+        time.sleep(3)
         dm_log(f"  ✓ DM sent to @{username}")
         return True, "success"
         
     except Exception as e:
-        dm_log(f"  ✗ Error sending DM to @{username}: {str(e)[:100]}")
+        dm_log(f"  ✗ Error: {str(e)[:100]}")
         return False, str(e)
 
 def collect_users_from_hashtag(page, hashtag, limit=100):
@@ -1343,7 +1456,7 @@ def run_dm_automation_for_profile(ws_endpoint, profile_name):
     
     # Check total daily limit
     total_today = get_total_dms_today()
-    max_total = dm_settings.get("max_dms_total", 250)
+    max_total = dm_settings.get("max_dms_total", 2500)
     remaining_total = max_total - total_today
     
     if remaining_total <= 0:
@@ -1361,6 +1474,21 @@ def run_dm_automation_for_profile(ws_endpoint, profile_name):
             browser = p.chromium.connect_over_cdp(ws_endpoint)
             context = browser.contexts[0] if browser.contexts else browser.new_context()
             page = context.pages[0] if context.pages else context.new_page()
+            
+            # === GUARDRAIL: Check if logged into TikTok ===
+            dm_log(f"  → Checking TikTok login...")
+            try:
+                page.goto("https://www.tiktok.com/messages", wait_until="domcontentloaded", timeout=30000)
+                time.sleep(3)
+                if "login" in page.url.lower():
+                    dm_log(f"  ⚠ NOT LOGGED IN - Skipping profile")
+                    browser.close()
+                    return -1
+                dm_log(f"  ✓ Logged in")
+            except Exception as e:
+                dm_log(f"  ⚠ Login check failed - Skipping")
+                browser.close()
+                return -1
             
             # Collect target users based on mode
             mode = dm_settings.get("target_mode", "brand_search")
@@ -1394,13 +1522,18 @@ def run_dm_automation_for_profile(ws_endpoint, profile_name):
                 browser.close()
                 return 0
             
-            # Limit to what we can send
-            target_users = target_users[:to_send]
-            dm_log(f"  → Will DM {len(target_users)} brands/users")
+            dm_log(f"  → Found {len(target_users)} potential targets, will try until {to_send} DMs sent")
             
-            for i, username in enumerate(target_users):
+            # Loop through ALL available users until we hit our target
+            users_tried = 0
+            for username in target_users:
                 if not dm_status["running"]:
                     dm_log(f"  ⏹ Stopped by user")
+                    break
+                
+                # Stop if we've sent enough DMs
+                if dms_sent >= to_send:
+                    dm_log(f"  ✓ Reached target: {dms_sent} DMs sent")
                     break
                 
                 # Check limits again during loop
@@ -1412,8 +1545,9 @@ def run_dm_automation_for_profile(ws_endpoint, profile_name):
                     dm_log(f"  ⚠ Profile daily limit reached")
                     break
                 
-                dm_status["progress"] = i + 1
-                dm_status["total"] = len(target_users)
+                users_tried += 1
+                dm_status["progress"] = dms_sent + 1
+                dm_status["total"] = to_send
                 
                 message = get_dm_message(username)
                 success, result = send_dm_to_user(page, username, message)
@@ -1449,6 +1583,22 @@ def run_dm_automation_for_profile(ws_endpoint, profile_name):
                         if not dm_status["running"]:
                             break
                         time.sleep(1)
+                else:
+                    # Log the failure reason
+                    if result == "user_not_found":
+                        dm_log(f"  ⚠ User @{username} not found or private")
+                    elif result == "no_dm_button":
+                        dm_log(f"  ⚠ User @{username} - DMs disabled or private account")
+                    else:
+                        dm_log(f"  ⚠ Failed to DM @{username}: {result}")
+                    
+                    # Add to sent_to to avoid retrying the same user
+                    dm_status["sent_to"].add(username)
+                    
+                    # Short delay between failures to avoid rate limiting
+                    time.sleep(2)
+            
+            dm_log(f"  📊 Tried {users_tried} users, sent {dms_sent} DMs")
             
             browser.close()
             dm_log(f"✓ Profile {profile_name}: Sent {dms_sent} DMs")
@@ -1483,16 +1633,16 @@ def process_dm_profile(profile_id, profile_name):
     
     return dms_sent
 
-def start_dm_automation():
-    """Start the DM automation process - NEW VERSION
+def start_dm_automation(selected_profile_ids=None):
+    """Start the DM automation process
     
     Features:
     - Searches TikTok for brands/businesses
     - Max 100 DMs per profile per day
-    - Max 250 DMs total per day
+    - Max 2500 DMs total per day
     - 2 profiles open at a time (parallel)
-    - Starts from lowest numbered profile
-    - Continues until all profiles hit daily quota
+    - Only processes selected profiles
+    - Continues until all selected profiles hit daily quota
     """
     if dm_status["running"]:
         return False
@@ -1504,21 +1654,38 @@ def start_dm_automation():
     dm_status["profiles_completed"] = []
     dm_status["dms_sent_today"] = get_total_dms_today()
     
+    # Filter to only selected profiles
+    if selected_profile_ids:
+        selected_profiles = [p for p in profiles if p.get("user_id") in selected_profile_ids]
+    else:
+        selected_profiles = profiles
+
+    # Sort profiles numerically: tt1, tt2, tt3, ... tt10, tt11, etc.
+    def sort_key(p):
+        name = p.get("name", p.get("user_id", ""))
+        import re
+        match = re.search(r'(\d+)', name)
+        if match:
+            return int(match.group(1))
+        return 999
+    selected_profiles = sorted(selected_profiles, key=sort_key)
+
+    if not selected_profiles:
+        dm_log("✗ No profiles selected!")
+        dm_status["running"] = False
+        return False
+    
     dm_log("═" * 50)
     dm_log("🚀 Starting Brand DM Outreach")
     dm_log("═" * 50)
     dm_log(f"📊 Settings:")
+    dm_log(f"   Selected profiles: {len(selected_profiles)}")
     dm_log(f"   Max per profile: {dm_settings['max_dms_per_profile']} DMs")
     dm_log(f"   Max total/day: {dm_settings['max_dms_total']} DMs")
     dm_log(f"   Parallel browsers: {dm_settings['parallel_browsers']}")
     dm_log(f"   Mode: {dm_settings['target_mode']}")
     dm_log(f"   Already sent today: {dm_status['dms_sent_today']} DMs")
     dm_log("═" * 50)
-    
-    if not profiles:
-        dm_log("✗ No profiles loaded! Click Sync first.")
-        dm_status["running"] = False
-        return False
     
     # Check if we've hit total daily limit
     if dm_status["dms_sent_today"] >= dm_settings["max_dms_total"]:
@@ -1529,13 +1696,20 @@ def start_dm_automation():
     def run():
         total_dms = 0
         try:
-            # Sort profiles by name (lowest number first)
-            sorted_profiles = sorted(profiles, key=lambda p: p.get("name", p.get("user_id", "")))
+            # Sort profiles by name numerically (tt1, tt2, ... tt25)
+            def sort_key(p):
+                name = p.get("name", p.get("user_id", ""))
+                # Extract number from name like "tt1", "tt2", etc.
+                import re
+                match = re.search(r'(\d+)', str(name))
+                return int(match.group(1)) if match else 999
+            
+            sorted_profiles = sorted(selected_profiles, key=sort_key)
             parallel = dm_settings.get("parallel_browsers", 2)
             max_total = dm_settings["max_dms_total"]
             max_per_profile = dm_settings["max_dms_per_profile"]
             
-            dm_log(f"📋 Processing {len(sorted_profiles)} profiles (sorted by name)")
+            dm_log(f"📋 Processing {len(sorted_profiles)} selected profiles")
             dm_log(f"🔄 Running {parallel} profiles at a time")
             
             profile_index = 0
@@ -1752,29 +1926,172 @@ def scrape_and_repost(page, profile_name, search_terms, content_type):
                 page.goto(video_url, wait_until="domcontentloaded", timeout=30000)
                 time.sleep(4)
                 
-                repost_ok = page.evaluate('''() => {
-                    const sels = ['button[aria-label*="Repost"]','[data-e2e="video-repost-button"]','button[data-e2e="undefined-Repost"]'];
-                    for (let s of sels) { const e = document.querySelector(s); if (e) { e.click(); return {ok:true,v:s}; } }
-                    const share = document.querySelector('[data-e2e="share-icon"]') || document.querySelector('[aria-label="Share"]');
-                    if (share) { share.click(); return {ok:false,v:'share',more:true}; }
-                    for (let b of document.querySelectorAll('button,[role="button"]')) {
-                        if ((b.textContent||'').toLowerCase().includes('repost')||(b.getAttribute('aria-label')||'').toLowerCase().includes('repost')) { b.click(); return {ok:true,v:'text'}; }
+                # Step 1: Click the Share button to open the share modal
+                post_log(f"  → Clicking share button...")
+                share_clicked = page.evaluate('''() => {
+                    // Method 1: data-e2e selectors (most reliable)
+                    const dataE2eSelectors = [
+                        '[data-e2e="share-icon"]',
+                        '[data-e2e="video-share-icon"]',
+                        '[data-e2e*="share"]'
+                    ];
+                    for (let sel of dataE2eSelectors) {
+                        const el = document.querySelector(sel);
+                        if (el && el.offsetParent) {
+                            el.scrollIntoView({block: 'center'});
+                            el.click();
+                            return {ok: true, method: 'data-e2e'};
+                        }
                     }
-                    return {ok:false,v:'none'};
+
+                    // Method 2: aria-label
+                    const ariaSelectors = [
+                        '[aria-label="Share video"]',
+                        '[aria-label*="Share"]',
+                        '[aria-label*="share"]',
+                        '[title*="Share"]'
+                    ];
+                    for (let sel of ariaSelectors) {
+                        const el = document.querySelector(sel);
+                        if (el && el.offsetParent) {
+                            el.scrollIntoView({block: 'center'});
+                            el.click();
+                            return {ok: true, method: 'aria'};
+                        }
+                    }
+
+                    // Method 3: Look for share icon in the action bar (right side of video)
+                    const actionBars = document.querySelectorAll('[class*="ActionBar"], [class*="action-bar"], [class*="DivActionItemContainer"]');
+                    for (let bar of actionBars) {
+                        const btns = bar.querySelectorAll('button, [role="button"], span[class*="Icon"]');
+                        for (let btn of btns) {
+                            const svg = btn.querySelector('svg');
+                            if (svg && btn.offsetParent) {
+                                // Share icon usually has an arrow or is after like/comment/save
+                                btn.click();
+                                return {ok: true, method: 'action-bar'};
+                            }
+                        }
+                    }
+
+                    // Method 4: Find buttons on right side of screen with SVG icons
+                    const allBtns = document.querySelectorAll('button, [role="button"]');
+                    const rightBtns = Array.from(allBtns).filter(b => {
+                        if (!b.offsetParent) return false;
+                        const rect = b.getBoundingClientRect();
+                        return rect.left > window.innerWidth * 0.6; // Right 40% of screen
+                    });
+                    // Share is usually 4th or 5th button (after like, comment, save, favorite)
+                    for (let btn of rightBtns.slice(3, 6)) {
+                        if (btn.querySelector('svg')) {
+                            btn.click();
+                            return {ok: true, method: 'right-side'};
+                        }
+                    }
+
+                    return {ok: false};
                 }''')
                 
-                if repost_ok.get('more'):
-                    time.sleep(1.5)
-                    page.evaluate('''() => {
-                        for (let i of document.querySelectorAll('[class*="share"] button,[role="button"]')) {
-                            if ((i.textContent||'').toLowerCase().includes('repost')) { i.click(); return; }
+                if not share_clicked.get('ok'):
+                    post_log(f"  ✗ Share button not found")
+                    continue
+
+                post_log(f"  ✓ Share clicked ({share_clicked.get('method')})")
+                time.sleep(4)  # Wait for share modal to fully load
+
+                # Step 2: Click the Repost button in the share modal
+                post_log(f"  → Looking for Repost button...")
+
+                # First debug what's in the modal
+                modal_debug = page.evaluate('''() => {
+                    const items = [];
+                    document.querySelectorAll('[class*="Share"] span, [class*="share"] span, [role="dialog"] span').forEach(el => {
+                        const t = (el.textContent || '').trim();
+                        if (t && t.length < 30) items.push(t);
+                    });
+                    return items.slice(0, 10);
+                }''')
+                post_log(f"  [DEBUG] Modal items: {modal_debug}")
+
+                repost_clicked = page.evaluate('''() => {
+                    // Multi-language repost words
+                    const repostWords = ['repost', 'reposten', 'republier', 'repostear', 'ripubblicare', 'opnieuw posten', 'повторить'];
+
+                    // Method 1: data-e2e for repost
+                    const repostE2e = document.querySelector('[data-e2e="share-to-repost"], [data-e2e*="repost"]');
+                    if (repostE2e && repostE2e.offsetParent) {
+                        repostE2e.click();
+                        return {ok: true, method: 'data-e2e'};
+                    }
+
+                    // Method 2: Look for exact "Repost" text in modal
+                    const modal = document.querySelector('[role="dialog"], [class*="SharePanel"], [class*="share-panel"], [class*="Modal"]');
+                    if (modal) {
+                        const elements = modal.querySelectorAll('button, div, span, [role="button"], [class*="Item"]');
+                        for (let el of elements) {
+                            const text = (el.textContent || '').trim().toLowerCase();
+                            for (let word of repostWords) {
+                                if (text === word || (text.includes(word) && text.length < 25)) {
+                                    el.click();
+                                    return {ok: true, method: 'modal-text', text: text};
+                                }
+                            }
                         }
-                    }''')
-                    time.sleep(1)
-                    repost_ok = {"ok": True, "v": "share+repost"}
+                    }
+
+                    // Method 3: Look for repost in any share-related container
+                    const shareContainers = document.querySelectorAll('[class*="ShareLayoutMain"], [class*="share-layout"], [class*="ShareMenu"]');
+                    for (let container of shareContainers) {
+                        const items = container.querySelectorAll('[class*="ItemContainer"], [class*="item"], button, div');
+                        for (let item of items) {
+                            const txt = (item.textContent || '').trim().toLowerCase();
+                            for (let word of repostWords) {
+                                if (txt === word || (txt.includes(word) && txt.length < 25)) {
+                                    item.click();
+                                    return {ok: true, method: 'container-item', text: txt};
+                                }
+                            }
+                        }
+                    }
+
+                    // Method 4: First item with circular arrow icon (repost icon)
+                    const allItems = document.querySelectorAll('[class*="Share"] [class*="Item"], [role="dialog"] button');
+                    if (allItems.length > 0) {
+                        // Repost is usually the first action in share modal
+                        const firstItem = allItems[0];
+                        if (firstItem.offsetParent) {
+                            firstItem.click();
+                            return {ok: true, method: 'first-item'};
+                        }
+                    }
+
+                    // Method 5: aria-label
+                    const ariaBtn = document.querySelector('[aria-label*="Repost" i], [aria-label*="repost" i]');
+                    if (ariaBtn && ariaBtn.offsetParent) {
+                        ariaBtn.click();
+                        return {ok: true, method: 'aria'};
+                    }
+
+                    return {ok: false};
+                }''')
                 
-                if repost_ok.get('ok'):
-                    time.sleep(2)
+                if repost_clicked.get('ok'):
+                    post_log(f"  → Clicked Repost ({repost_clicked.get('method')}), waiting for confirmation...")
+                    time.sleep(3)  # Wait for confirmation/animation
+                    
+                    # Check if repost was successful (look for confirmation or undo button)
+                    confirmed = page.evaluate('''() => {
+                        const body = document.body.innerText.toLowerCase();
+                        if (body.includes('reposted') || body.includes('undo')) return true;
+                        // Check if modal closed
+                        const modal = document.querySelector('[class*="SharePanel"], [class*="share-panel"]');
+                        if (!modal || !modal.offsetParent) return true; // Modal closed = success
+                        return false;
+                    }''')
+                    
+                    if confirmed:
+                        post_log(f"  ✓ Repost confirmed!")
+                    
                     reposts_made += 1
                     record_repost(profile_name)
                     entry = {
@@ -1792,7 +2109,7 @@ def scrape_and_repost(page, profile_name, search_terms, content_type):
                         threading.Thread(target=sync_post_to_cloud, args=(entry,), daemon=True).start()
                     except:
                         pass
-                    post_log(f"  Reposted! ({reposts_made}/{remaining})")
+                    post_log(f"  ✓ Done! ({reposts_made}/{remaining})")
                     if reposts_made < remaining:
                         delay = random.randint(post_settings["min_delay"], post_settings["max_delay"])
                         post_log(f"  Waiting {delay}s...")
@@ -1801,7 +2118,7 @@ def scrape_and_repost(page, profile_name, search_terms, content_type):
                                 break
                             time.sleep(1)
                 else:
-                    post_log(f"  Repost button not found, next video")
+                    post_log(f"  ✗ Repost button not found in modal")
             except Exception as e:
                 post_log(f"  Error: {str(e)[:60]}")
     except Exception as e:
@@ -1852,26 +2169,39 @@ def start_repost_automation():
     if not profiles:
         post_log("No profiles loaded! Sync first.")
         return False
-    
+
     search_terms, content_type = get_todays_search_terms()
     day_name = datetime.now().strftime("%A")
     today_str = datetime.now().strftime("%Y-%m-%d")
-    
+
+    # Sort profiles numerically: tt1, tt2, tt3, ... tt10, tt11, etc.
+    def sort_key(p):
+        name = p.get("name", p.get("user_id", ""))
+        # Extract number from name like "tt1", "tt12", etc.
+        import re
+        match = re.search(r'(\d+)', name)
+        if match:
+            return int(match.group(1))
+        return 999  # Put non-numeric names at the end
+
+    sorted_profiles = sorted(profiles, key=sort_key)
+
     post_status["running"] = True
     post_status["logs"] = []
     post_status["progress"] = 0
-    post_status["total"] = len(profiles)
-    
+    post_status["total"] = len(sorted_profiles)
+
     post_log("=" * 50)
     post_log(f"Auto Repost - {day_name}, {today_str}")
     post_log(f"Content: {'Brand (Bump Connect/Kollabsy/Bump Syndicate)' if content_type == 'brand' else 'Social Media'}")
-    post_log(f"Profiles: {len(profiles)} | Max {post_settings['max_reposts_per_day']}/profile/day")
+    post_log(f"Profiles: {len(sorted_profiles)} | Max {post_settings['max_reposts_per_day']}/profile/day")
+    post_log(f"Order: {', '.join([p.get('name', p.get('user_id'))[:6] for p in sorted_profiles[:5]])}...")
     post_log("=" * 50)
-    
+
     def run():
         total_reposts = 0
         try:
-            for i, profile in enumerate(profiles):
+            for i, profile in enumerate(sorted_profiles):
                 if not post_status["running"]:
                     break
                 pid = profile.get("user_id")
@@ -2293,6 +2623,9 @@ def process_single_video_with_retry(page, video_num, profile_name, target_videos
                 if "/video/" not in page.url:
                     log(f"    ⚠ Video didn't open, retrying...")
                     continue
+                
+                # Capture the actual video URL after it loads
+                current_url = page.url
             
             video_id = f"video_{video_num}_{int(time.time())}"
             
@@ -2669,11 +3002,23 @@ def run_automation_thread(profile_ids, sheet_mapping):
     # Comments are built-in promotional messages
     log(f"📢 Using promotional comments for: Bump Connect, Kollabsy, Bump Syndicate")
     
-    # Run profiles in parallel batches
+    # Sort profile_ids numerically (tt1, tt2, ... tt25)
+    def sort_key(pid):
+        # Get profile name
+        profile = next((p for p in profiles if p.get("user_id") == pid), None)
+        name = profile.get("name", pid) if profile else pid
+        import re
+        match = re.search(r'(\d+)', str(name))
+        return int(match.group(1)) if match else 999
+    
+    sorted_profile_ids = sorted(profile_ids, key=sort_key)
+    log(f"📋 Order: {', '.join([next((p.get('name', pid) for p in profiles if p.get('user_id') == pid), pid) for pid in sorted_profile_ids[:5]])}...")
+    
+    # Run profiles in parallel batches of 2
     with ThreadPoolExecutor(max_workers=parallel) as executor:
         futures = {}
         
-        for profile_id in profile_ids:
+        for profile_id in sorted_profile_ids:
             if not automation_status["running"]:
                 break
             
@@ -2756,15 +3101,15 @@ DASHBOARD_HTML = """
 <body>
     <div class="container">
         <h1>🎵 TikTok Auto Commenter</h1>
-        <p class="subtitle">Daily target: 25 browsers × 100 videos = 2,500 comments</p>
+        <p class="subtitle">Daily target: 25 browsers × 1000 videos = 25,000 comments</p>
         
         <div class="target-info">
             <h3>📊 Daily Target</h3>
             <div class="target-stats">
-                <div class="target-stat"><div class="num">25</div><div class="lbl">Browsers/Day</div></div>
-                <div class="target-stat"><div class="num">100</div><div class="lbl">Videos/Browser</div></div>
-                <div class="target-stat"><div class="num">2,500</div><div class="lbl">Total Comments</div></div>
-                <div class="target-stat"><div class="num">3</div><div class="lbl">Brands Promoted</div></div>
+                <div class="target-stat"><div class="num">25</div><div class="lbl">Profiles</div></div>
+                <div class="target-stat"><div class="num">1,000</div><div class="lbl">Videos/Profile</div></div>
+                <div class="target-stat"><div class="num">25,000</div><div class="lbl">Daily Target</div></div>
+                <div class="target-stat"><div class="num">2</div><div class="lbl">Parallel</div></div>
             </div>
             <div style="margin-top:12px;font-size:12px;color:#a1a1aa;">
                 🎯 Promoting: <span style="color:#4ade80">Bump Connect</span> • <span style="color:#a78bfa">Kollabsy</span> • <span style="color:#fbbf24">Bump Syndicate</span>
@@ -2821,14 +3166,22 @@ DASHBOARD_HTML = """
         <div id="tab-dm" style="display:none">
             <div class="grid">
                 <div class="card">
+                    <div class="card-title"><span>👥 Select Profiles for DM</span><span id="dm-pc" style="color:#71717a">0/0</span></div>
+                    <div style="display:flex;gap:8px;margin-bottom:12px;">
+                        <button class="btn btn-secondary" onclick="dmSelAll()">Select All</button>
+                        <button class="btn btn-secondary" onclick="dmSelNone()">Deselect All</button>
+                    </div>
+                    <div class="profile-list" id="dm-pl" style="max-height:200px;"></div>
+                </div>
+                <div class="card">
                     <div class="card-title"><span>🎯 Brand DM Outreach</span></div>
                     <div style="background:#1e1b4b;border:1px solid #4c1d95;border-radius:8px;padding:12px;margin-bottom:12px;">
                         <div style="font-size:13px;color:#c4b5fd;font-weight:bold;margin-bottom:6px;">How It Works</div>
                         <div style="font-size:12px;color:#a1a1aa;line-height:1.8;">
-                            <b style="color:#4ade80;">1.</b> Searches TikTok for brands/businesses needing social media help<br>
-                            <b style="color:#60a5fa;">2.</b> Sends personalized DM about Bump Syndicate services<br>
+                            <b style="color:#4ade80;">1.</b> Select profiles above, then click Start<br>
+                            <b style="color:#60a5fa;">2.</b> Searches TikTok for brands needing social media help<br>
                             <b style="color:#fbbf24;">3.</b> Max <span id="dm-limit-profile">100</span> DMs per profile, <span id="dm-limit-total">2500</span> total per day<br>
-                            <b style="color:#c4b5fd;">4.</b> Processes 2 profiles at a time, starting from lowest number
+                            <b style="color:#c4b5fd;">4.</b> Processes 2 profiles at a time (tt1 → tt25)
                         </div>
                     </div>
                     <div class="settings">
@@ -2886,7 +3239,7 @@ DASHBOARD_HTML = """
                     <div class="settings">
                         <div style="margin-bottom:12px;">
                             <label style="font-size:13px;color:#a1a1aa;">Message to send:</label>
-                            <textarea id="dm-default-msg" style="width:100%;height:100px;background:#27272a;border:1px solid #3f3f46;color:white;border-radius:6px;padding:8px;margin-top:4px;">Hey! 👋 I noticed your brand and love what you're doing! We help businesses like yours grow on social media. Check out bumpsyndicate.xyz - we'd love to help you scale! 🚀</textarea>
+                            <textarea id="dm-default-msg" oninput="dmMessageEdited=true" style="width:100%;height:100px;background:#27272a;border:1px solid #3f3f46;color:white;border-radius:6px;padding:8px;margin-top:4px;">Hey! 👋 I noticed your brand and love what you're doing! We help businesses like yours grow on social media. Check out bumpsyndicate.xyz - we'd love to help you scale! 🚀</textarea>
                         </div>
                         <button class="btn btn-secondary" onclick="saveDmMessage()">💾 Save Message</button>
                     </div>
@@ -3039,7 +3392,16 @@ DASHBOARD_HTML = """
         
         <div id="tab-report" style="display:none">
             <div class="card">
-                <div class="card-title"><span>📊 All Comments History (All Time)</span><span id="rc" style="color:#71717a">0 total</span></div>
+                <div class="card-title"><span>📊 All Comments History</span><span id="rc" style="color:#71717a">0 local</span></div>
+                <div style="background:#14532d;border:1px solid #16a34a;border-radius:8px;padding:12px;margin-bottom:16px;">
+                    <div style="display:flex;justify-content:space-between;align-items:center;">
+                        <div>
+                            <span style="color:#4ade80;font-weight:bold;">☁️ Cloud Total: <span id="cloud-total-count">Loading...</span></span>
+                            <span style="color:#86efac;margin-left:16px;">Local: <span id="local-count">0</span></span>
+                        </div>
+                        <button class="btn btn-success" onclick="loadFromCloud()" id="btn-load-cloud" style="padding:6px 16px;">📥 Load All from Cloud</button>
+                    </div>
+                </div>
                 <div style="display:flex;gap:10px;margin-bottom:16px;align-items:center;flex-wrap:wrap;">
                     <button class="btn btn-primary" onclick="expCSV()">📥 Export CSV</button>
                     <button class="btn btn-secondary" onclick="syncCloud()" style="background:#4c1d95;">☁️ Sync to Cloud</button>
@@ -3059,7 +3421,7 @@ DASHBOARD_HTML = """
                 </div>
                 <div style="background:#1e1b4b;border:1px solid #4c1d95;border-radius:8px;padding:12px;margin-bottom:16px;">
                     <div style="font-size:12px;color:#a78bfa;margin-bottom:4px;">☁️ Team Dashboard</div>
-                    <div style="font-size:11px;color:#71717a;">Comments are automatically synced to: <a href="https://creator-suite-18.preview.emergentagent.com" target="_blank" style="color:#7c3aed;">profile-reports-sync.preview.emergentagent.com</a></div>
+                    <div style="font-size:11px;color:#71717a;">Comments are automatically synced to: <a href="https://bump-tiktok-bot.preview.emergentagent.com" target="_blank" style="color:#7c3aed;">profile-reports-sync.preview.emergentagent.com</a></div>
                 </div>
                 <div id="filter-info" style="font-size:12px;color:#a78bfa;margin-bottom:10px;">Showing: All time</div>
                 <div style="max-height:400px;overflow:auto">
@@ -3081,7 +3443,7 @@ DASHBOARD_HTML = """
         let currentFilter='all';
         const SHEETS=['Bump Connect','Kollabsy','Bump Syndicate'];
         setInterval(upd,1000);
-        function showTab(t){document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));event.target.classList.add('active');document.getElementById('tab-main').style.display=t=='main'?'block':'none';document.getElementById('tab-dm').style.display=t=='dm'?'block':'none';document.getElementById('tab-replies').style.display=t=='replies'?'block':'none';document.getElementById('tab-post').style.display=t=='post'?'block':'none';document.getElementById('tab-report').style.display=t=='report'?'block':'none';if(t=='dm')updDm();if(t=='replies')refreshReplies();if(t=='post')updPost();}
+        function showTab(t){document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));event.target.classList.add('active');document.getElementById('tab-main').style.display=t=='main'?'block':'none';document.getElementById('tab-dm').style.display=t=='dm'?'block':'none';document.getElementById('tab-replies').style.display=t=='replies'?'block':'none';document.getElementById('tab-post').style.display=t=='post'?'block':'none';document.getElementById('tab-report').style.display=t=='report'?'block':'none';if(t=='dm')updDm();if(t=='replies')refreshReplies();if(t=='post')updPost();if(t=='report')fetchCloudStats();}
         async function sync(){const r=await fetch('/api/sync-profiles',{method:'POST'});profiles=(await r.json()).profiles||[];render();}
         async function loadC(){const r=await fetch('/api/load-comments',{method:'POST'});const d=await r.json();alert('Loaded:\\n'+Object.entries(d.counts).map(([k,v])=>k+': '+v).join('\\n'));}
         function render(){const e=document.getElementById('pl');if(!profiles.length){e.innerHTML='<div style="text-align:center;color:#71717a;padding:40px">Click Sync to load 25 profiles</div>';return;}e.innerHTML=profiles.map(p=>'<div class="profile '+(selected.has(p.user_id)?'selected':'')+'" onclick="tog(\\''+p.user_id+'\\')"><input type="checkbox" '+(selected.has(p.user_id)?'checked':'')+' onclick="event.stopPropagation();tog(\\''+p.user_id+'\\')"><div style="flex:1"><div style="font-weight:500">'+(p.name||p.user_id)+'</div><div style="font-size:11px;color:#71717a">'+p.user_id+'</div></div></div>').join('');document.getElementById('pc').textContent=selected.size+'/'+profiles.length+' selected';}
@@ -3158,11 +3520,39 @@ DASHBOARD_HTML = """
             filterAll();
         }
         
+        async function fetchCloudStats(){
+            try{
+                const r=await fetch('/api/cloud-stats');
+                const d=await r.json();
+                if(d.ok){
+                    document.getElementById('cloud-total-count').textContent=d.total.toLocaleString()+' comments';
+                    document.getElementById('local-count').textContent=report.length.toLocaleString();
+                }else{
+                    document.getElementById('cloud-total-count').textContent='Error';
+                }
+            }catch(e){document.getElementById('cloud-total-count').textContent='Offline';}
+        }
+        
         async function upd(){try{const r=await fetch('/api/status');const d=await r.json();document.getElementById('prog').style.width=(d.total?(d.progress/d.total*100):0)+'%';document.getElementById('sp').textContent=d.completed.length;document.getElementById('sc').textContent=d.comments_posted||0;document.getElementById('st').textContent=d.running?'Running: '+d.current_profile+' ('+d.progress+'/'+d.total+')':'Ready';if(!d.running){document.getElementById('startb').style.display='inline';document.getElementById('stopb').style.display='none';}if(d.logs.length)document.getElementById('logs').innerHTML=d.logs.map(l=>'<div style="color:'+(l.includes('✗')?'#f87171':l.includes('✓')?'#4ade80':'#a1a1aa')+'">'+l+'</div>').join('');if(d.report&&d.report.length!==report.length){report=d.report;applyFilter();}}catch(e){}}
         function clrLog(){fetch('/api/clear-logs',{method:'POST'});document.getElementById('logs').innerHTML='Cleared';}
         async function clrReport(){if(!confirm('⚠️ Delete ALL comment history forever?\\n\\nThis will remove '+report.length+' comments and cannot be undone.'))return;await fetch('/api/clear-report',{method:'POST'});report=[];filteredReport=[];renderReport();}
         function expCSV(){if(!report.length)return alert('No data');const csv='Date,Time,Profile,Comment,Video URL,Sheet\\n'+report.map(r=>{const[d,t]=r.timestamp.split(' ');return d+','+t+','+r.profile+',"'+r.comment.replace(/"/g,'""')+'",'+r.video_url+','+r.sheet;}).join('\\n');const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv]));a.download='tiktok_comments_history_'+new Date().toISOString().split('T')[0]+'.csv';a.click();}
         async function syncCloud(){if(!report.length)return alert('No reports to sync');try{const r=await fetch('/api/sync-to-cloud',{method:'POST'});const d=await r.json();alert('☁️ Synced '+d.synced+' reports to cloud dashboard!');}catch(e){alert('Sync failed: '+e.message);}}
+        async function loadFromCloud(){
+            const btn=document.getElementById('btn-load-cloud');
+            btn.disabled=true;btn.textContent='⏳ Loading...';
+            try{
+                const r=await fetch('/api/load-from-cloud');
+                const d=await r.json();
+                if(d.ok){
+                    report=d.reports||[];filteredReport=report;renderReport();
+                    document.getElementById('cloud-total-count').textContent=d.cloud_total.toLocaleString()+' comments';
+                    document.getElementById('local-count').textContent=report.length.toLocaleString();
+                    alert('✅ Loaded '+report.length+' comments!\\n\\nCloud total: '+d.cloud_total.toLocaleString());
+                }else{alert('❌ '+d.message);}
+            }catch(e){alert('❌ Error: '+e.message);}
+            btn.disabled=false;btn.textContent='📥 Load from Cloud (11k+)';
+        }
         
         // Repost Functions
         let postStatus={running:false,posts_made:0,history:[],logs:[]};
@@ -3204,6 +3594,20 @@ DASHBOARD_HTML = """
         
         // DM Functions
         let dmStatus={running:false,dms_sent:0,report:[]};
+        let dmMessageEdited=false;
+        // DM Profile Selection
+        let dmSelected = new Set();
+        
+        function renderDmProfiles(){
+            const e=document.getElementById('dm-pl');
+            if(!profiles.length){e.innerHTML='<div style="text-align:center;color:#71717a;padding:20px">Sync profiles in Control tab first</div>';return;}
+            e.innerHTML=profiles.map(p=>'<div class="profile '+(dmSelected.has(p.user_id)?'selected':'')+'" onclick="dmTog(\\''+p.user_id+'\\')"><input type="checkbox" '+(dmSelected.has(p.user_id)?'checked':'')+' onclick="event.stopPropagation();dmTog(\\''+p.user_id+'\\')"><div style="flex:1"><div style="font-weight:500">'+(p.name||p.user_id)+'</div></div></div>').join('');
+            document.getElementById('dm-pc').textContent=dmSelected.size+'/'+profiles.length;
+        }
+        function dmTog(id){if(dmSelected.has(id))dmSelected.delete(id);else dmSelected.add(id);renderDmProfiles();}
+        function dmSelAll(){profiles.forEach(p=>dmSelected.add(p.user_id));renderDmProfiles();}
+        function dmSelNone(){dmSelected.clear();renderDmProfiles();}
+        
         function dmModeChange(){
             const mode=document.getElementById('dm-mode').value;
             document.getElementById('dm-brand-info').style.display=mode=='brand_search'?'block':'none';
@@ -3214,6 +3618,9 @@ DASHBOARD_HTML = """
         }
         async function updDm(){
             try{
+                // Render DM profiles if not done
+                if(profiles.length && document.getElementById('dm-pl').innerHTML.includes('Sync profiles'))renderDmProfiles();
+                
                 const r=await fetch('/api/dm/status');
                 const d=await r.json();
                 dmStatus=d;
@@ -3223,15 +3630,15 @@ DASHBOARD_HTML = """
                 document.getElementById('dm-remaining').textContent=Math.max(0, maxTotal-(d.dms_sent_today||0));
                 document.getElementById('dm-profiles-done').textContent=d.profiles_completed?.length||0;
                 document.getElementById('dm-prog').style.width=(d.total?(d.progress/d.total*100):0)+'%';
-                document.getElementById('dm-st').textContent=d.running?'🔄 Running: '+d.current_profile+' ('+d.progress+'/'+d.total+')':'Ready - Click Start to begin brand outreach';
+                document.getElementById('dm-st').textContent=d.running?'🔄 Running: '+d.current_profile+' ('+d.progress+'/'+d.total+')':'Ready - Select profiles and click Start';
                 if(!d.running){document.getElementById('dm-startb').style.display='inline';document.getElementById('dm-stopb').style.display='none';}
                 else{document.getElementById('dm-startb').style.display='none';document.getElementById('dm-stopb').style.display='inline';}
                 if(d.logs&&d.logs.length)document.getElementById('dm-logs').innerHTML=d.logs.map(l=>'<div style="color:'+(l.includes('✗')?'#f87171':l.includes('✓')?'#4ade80':l.includes('⚠')?'#fbbf24':'#a1a1aa')+'">'+l+'</div>').join('');
                 if(d.report)renderDmReport(d.report);
-                if(d.targets?.messages?.default)document.getElementById('dm-default-msg').value=d.targets.messages.default;
+                if(!dmMessageEdited && d.targets?.messages?.default)document.getElementById('dm-default-msg').value=d.targets.messages.default;
                 // Update limit displays
                 document.getElementById('dm-limit-profile').textContent=d.settings?.max_dms_per_profile||100;
-                document.getElementById('dm-limit-total').textContent=d.settings?.max_dms_total||250;
+                document.getElementById('dm-limit-total').textContent=d.settings?.max_dms_total||2500;
             }catch(e){}
         }
         setInterval(()=>{if(document.getElementById('tab-dm').style.display!='none')updDm();},2000);
@@ -3256,11 +3663,13 @@ DASHBOARD_HTML = """
         async function saveDmMessage(){
             const msg=document.getElementById('dm-default-msg').value;
             await fetch('/api/dm/message',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({message:msg})});
+            dmMessageEdited=false;
             alert('Message saved!');
         }
         async function startDm(){
+            if(!dmSelected.size){alert('Please select at least one profile');return;}
             await saveDmSettings();
-            await fetch('/api/dm/start',{method:'POST'});
+            await fetch('/api/dm/start',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({profile_ids:[...dmSelected]})});
             document.getElementById('dm-startb').style.display='none';
             document.getElementById('dm-stopb').style.display='inline';
         }
@@ -3493,6 +3902,36 @@ def api_sync_to_cloud():
     synced = sync_all_to_cloud()
     return jsonify({"ok": True, "synced": synced})
 
+@app.route('/api/cloud-stats', methods=['GET'])
+def api_cloud_stats():
+    """Get cloud stats from Supabase"""
+    if not HAS_SUPABASE:
+        return jsonify({"ok": False, "message": "Supabase not configured"})
+    try:
+        total_result = supabase.table("comment_reports").select("id", count="exact").execute()
+        total = total_result.count if hasattr(total_result, 'count') else 0
+        return jsonify({"ok": True, "total": total})
+    except Exception as e:
+        return jsonify({"ok": False, "message": str(e)})
+
+@app.route('/api/load-from-cloud', methods=['GET'])
+def api_load_from_cloud():
+    """Load comment reports from Supabase cloud"""
+    if not HAS_SUPABASE:
+        return jsonify({"ok": False, "message": "Supabase not configured"})
+    try:
+        total_result = supabase.table("comment_reports").select("id", count="exact").execute()
+        cloud_total = total_result.count if hasattr(total_result, 'count') else 0
+        reports_result = supabase.table("comment_reports").select("*").order("timestamp", desc=True).limit(1000).execute()
+        reports = []
+        for r in reports_result.data:
+            reports.append({"timestamp": r.get("timestamp", ""), "profile": r.get("profile", ""), "comment": r.get("comment", ""), "video_url": r.get("video_url", ""), "sheet": r.get("sheet", "")})
+        automation_status["report"] = reports
+        save_report_history()
+        return jsonify({"ok": True, "reports": reports, "cloud_total": cloud_total})
+    except Exception as e:
+        return jsonify({"ok": False, "message": str(e)})
+
 @app.route('/api/clear-report', methods=['POST'])
 def api_clear_report():
     automation_status["report"] = []
@@ -3617,7 +4056,10 @@ def api_dm_start():
     if dm_status["running"]:
         return jsonify({"error": "DM automation already running"}), 400
     
-    success = start_dm_automation()
+    data = request.json or {}
+    selected_profile_ids = data.get("profile_ids", [])
+    
+    success = start_dm_automation(selected_profile_ids)
     return jsonify({"ok": success})
 
 @app.route('/api/dm/stop', methods=['POST'])
