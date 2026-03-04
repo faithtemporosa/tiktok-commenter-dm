@@ -3566,7 +3566,7 @@ DASHBOARD_HTML = """
                     </div>
                 </div>
                 <div style="max-height:200px;overflow:auto">
-                    <table class="report-table"><thead><tr><th>Time</th><th>Profile</th><th>Video</th><th>Content Type</th><th>Status</th></tr></thead><tbody id="post-hist-tb"></tbody></table>
+                    <table class="report-table"><thead><tr><th>Time</th><th>Profile</th><th>Repost</th><th>Content Type</th><th>Status</th></tr></thead><tbody id="post-hist-tb"></tbody></table>
                 </div>
             </div>
         </div>
@@ -3759,7 +3759,7 @@ DASHBOARD_HTML = """
         }
         setInterval(()=>{if(document.getElementById('tab-post').style.display!='none')updPost();},2000);
         function renderPostHistory(hist){
-            document.getElementById('post-hist-tb').innerHTML=hist.length?hist.slice().reverse().slice(0,50).map(h=>'<tr><td>'+h.timestamp+'</td><td>'+h.profile+'</td><td><a href="'+h.video+'" target="_blank" style="color:#a78bfa">View</a></td><td style="color:'+(h.content_type=='brand'?'#4ade80':'#60a5fa')+'">'+((h.content_type||'').charAt(0).toUpperCase()+(h.content_type||'').slice(1))+'</td><td style="color:#4ade80">'+h.status+'</td></tr>').join(''):'<tr><td colspan="5" style="text-align:center;color:#71717a">No reposts yet. Click Start or wait for auto-scheduler.</td></tr>';
+            document.getElementById('post-hist-tb').innerHTML=hist.length?hist.slice().reverse().slice(0,50).map(h=>'<tr><td>'+h.timestamp+'</td><td>'+h.profile+'</td><td>'+(h.repost_url?'<a href="'+h.repost_url+'" target="_blank" style="color:#f472b6">@'+(h.tiktok_username||'View')+'</a>':'<span style="color:#71717a">-</span>')+'</td><td style="color:'+(h.content_type=='brand'?'#4ade80':'#60a5fa')+'">'+((h.content_type||'').charAt(0).toUpperCase()+(h.content_type||'').slice(1))+'</td><td style="color:#4ade80">'+h.status+'</td></tr>').join(''):'<tr><td colspan="5" style="text-align:center;color:#71717a">No reposts yet. Click Start or wait for auto-scheduler.</td></tr>';
         }
         async function applyRepostSettings(){
             const s={max_reposts_per_day:+document.getElementById('post-maxday').value,min_delay:+document.getElementById('post-mind').value,max_delay:+document.getElementById('post-maxd').value};
