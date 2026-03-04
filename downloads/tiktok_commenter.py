@@ -1538,7 +1538,21 @@ def run_dm_automation_for_profile(ws_endpoint, profile_name):
                 dm_log(f"  ⚠ Login check failed - Skipping")
                 browser.close()
                 return -1
-            
+
+            # Auto-detect TikTok username and save to mapping
+            try:
+                page.goto("https://www.tiktok.com/profile", wait_until="domcontentloaded", timeout=20000)
+                time.sleep(2)
+                current_url = page.url
+                if "/@" in current_url:
+                    match = re.search(r'/@([^/?]+)', current_url)
+                    if match:
+                        detected_username = match.group(1)
+                        set_tiktok_username(profile_name, detected_username)
+                        dm_log(f"  📱 Account: @{detected_username}")
+            except:
+                pass
+
             # Collect target users based on mode
             mode = dm_settings.get("target_mode", "brand_search")
             
@@ -2898,7 +2912,21 @@ def run_tiktok_commenter(ws_endpoint, profile_name, sheet_name):
             page = context.pages[0] if context.pages else context.new_page()
             
             log(f"  ✓ Connected")
-            
+
+            # Auto-detect TikTok username and save to mapping
+            try:
+                page.goto("https://www.tiktok.com/profile", wait_until="domcontentloaded", timeout=20000)
+                time.sleep(2)
+                current_url = page.url
+                if "/@" in current_url:
+                    match = re.search(r'/@([^/?]+)', current_url)
+                    if match:
+                        detected_username = match.group(1)
+                        set_tiktok_username(profile_name, detected_username)
+                        log(f"  📱 Account: @{detected_username}")
+            except:
+                pass
+
             # Close extra TikTok tabs only, keep AdsPower tab
             log(f"  → Cleaning up TikTok tabs...")
             pages = context.pages

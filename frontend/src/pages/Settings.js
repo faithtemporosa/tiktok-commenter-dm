@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Bell, BellOff, Mail, Check, X, CreditCard, Users, Save, Plus, Trash2 } from "lucide-react";
+import { Bell, BellOff, Mail, Check, X, Users, Plus, Trash2, RefreshCw } from "lucide-react";
 
 const API_URL = process.env.REACT_APP_BACKEND_URL;
 const BOT_URL = "http://localhost:9000";
@@ -217,23 +217,7 @@ export default function Settings() {
             </div>
           )}
         </div>
-        <p className="text-xs text-zinc-500 mt-4">Note: Make sure the local bot is running at localhost:9000 for mappings to save.</p>
-      </div>
-
-      {/* Billing */}
-      <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6">
-        <div className="flex items-center gap-3 mb-4">
-          <div className="w-10 h-10 rounded-lg bg-emerald-500/10 flex items-center justify-center"><CreditCard className="w-5 h-5 text-emerald-400" /></div>
-          <div><h3 className="font-semibold">Billing</h3><p className="text-sm text-zinc-500">Manage your subscription</p></div>
-        </div>
-        <div className="bg-zinc-800/50 p-4 rounded-lg">
-          <div className="flex items-center justify-between">
-            <div><span className="text-sm text-zinc-400">Current Plan:</span> <span className="ml-2 font-semibold text-emerald-400">Free</span></div>
-            <button onClick={() => window.scrollTo(0, 0)} className="px-4 py-2 bg-violet-600 hover:bg-violet-500 rounded-lg text-sm font-medium transition-all" data-testid="upgrade-btn">
-              Upgrade Plan
-            </button>
-          </div>
-        </div>
+        <p className="text-xs text-zinc-500 mt-4">✨ Mappings are auto-detected when running reposts, DMs, or comments. You can also add them manually above.</p>
       </div>
 
       {/* Setup Instructions */}
