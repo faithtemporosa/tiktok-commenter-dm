@@ -2638,12 +2638,37 @@ def process_single_video_with_retry(page, video_num, profile_name, target_videos
                 # Capture the actual video URL after it loads
                 current_url = page.url
             
+            # If URL is still FYP/foryou, try to extract actual video URL from page
+            if "/foryou" in current_url or "/video/" not in current_url:
+                extracted_url = page.evaluate('''() => {
+                    // Try to get video URL from current video element or URL
+                    const videoLink = document.querySelector('a[href*="/video/"]');
+                    if (videoLink) return videoLink.href;
+
+                    // Try to get from share button or canonical link
+                    const canonical = document.querySelector('link[rel="canonical"]');
+                    if (canonical && canonical.href.includes('/video/')) return canonical.href;
+
+                    // Try meta og:url
+                    const ogUrl = document.querySelector('meta[property="og:url"]');
+                    if (ogUrl && ogUrl.content.includes('/video/')) return ogUrl.content;
+
+                    // Try to extract from any visible video ID
+                    const match = document.body.innerHTML.match(/\/@[\w.]+\/video\/(\d+)/);
+                    if (match) return 'https://www.tiktok.com' + match[0];
+
+                    return null;
+                }''')
+                if extracted_url:
+                    current_url = extracted_url
+                    log(f"    📍 Extracted video URL: ...{current_url[-40:]}")
+
             video_id = f"video_{video_num}_{int(time.time())}"
-            
+
             if video_id in commented_videos:
                 log(f"    ⏭ Already commented, skipping")
                 return True, "skipped"
-            
+
             # Step 1: Open comments
             log(f"    → Opening comments...")
             comment_result = click_comment_button(page)
