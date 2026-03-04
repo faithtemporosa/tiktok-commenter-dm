@@ -782,8 +782,9 @@ def send_to_cloud(report_data):
     if not HAS_SUPABASE:
         return False
     try:
-        # Get screenshot filename only (not full path)
+        # Get screenshot and upload to storage
         screenshot = report_data.get('screenshot', '')
+        screenshot_url = upload_screenshot_to_storage(screenshot) if screenshot else None
         screenshot_filename = os.path.basename(screenshot) if screenshot else ''
 
         supabase.table('comment_reports').insert({
@@ -793,9 +794,9 @@ def send_to_cloud(report_data):
             'video_id': report_data.get('video_id'),
             'comment': report_data.get('comment'),
             'sheet': report_data.get('sheet'),
-            'screenshot': screenshot_filename
+            'screenshot': screenshot_url or screenshot_filename
         }).execute()
-        log(f"    ☁️ Synced to Supabase")
+        log(f"    ☁️ Synced to Supabase" + (" with screenshot" if screenshot_url else ""))
         return True
     except Exception as e:
         if 'duplicate' in str(e).lower() or '23505' in str(e):
@@ -803,6 +804,30 @@ def send_to_cloud(report_data):
         else:
             log(f"    ⚠ Cloud sync error: {e}")
     return False
+
+def upload_screenshot_to_storage(screenshot_path):
+    """Upload screenshot to Supabase Storage and return public URL"""
+    if not HAS_SUPABASE or not screenshot_path:
+        return None
+    try:
+        filename = os.path.basename(screenshot_path)
+        full_path = screenshot_path if os.path.isabs(screenshot_path) else os.path.join(SCREENSHOTS_FOLDER, filename)
+        if not os.path.exists(full_path):
+            return None
+
+        with open(full_path, 'rb') as f:
+            file_data = f.read()
+
+        # Upload to Supabase Storage bucket 'screenshots'
+        storage_path = f"comments/{filename}"
+        supabase.storage.from_('screenshots').upload(storage_path, file_data, {"content-type": "image/png", "upsert": "true"})
+
+        # Get public URL
+        public_url = supabase.storage.from_('screenshots').get_public_url(storage_path)
+        return public_url
+    except Exception as e:
+        print(f"Screenshot upload error: {e}")
+        return None
 
 def sync_all_to_cloud():
     """Sync all local reports to Supabase (for bulk sync)"""
@@ -812,13 +837,19 @@ def sync_all_to_cloud():
     synced = 0
     for report in automation_status["report"]:
         try:
+            # Get screenshot filename and try to upload
+            screenshot = report.get('screenshot', '')
+            screenshot_filename = os.path.basename(screenshot) if screenshot else ''
+            screenshot_url = upload_screenshot_to_storage(screenshot) if screenshot else None
+
             supabase.table('comment_reports').insert({
                 'timestamp': report.get('timestamp'),
                 'profile': report.get('profile'),
                 'video_url': report.get('video_url'),
                 'video_id': report.get('video_id'),
                 'comment': report.get('comment'),
-                'sheet': report.get('sheet')
+                'sheet': report.get('sheet'),
+                'screenshot': screenshot_url or screenshot_filename
             }).execute()
             synced += 1
         except Exception as e:
@@ -888,13 +919,18 @@ def sync_dm_to_cloud(dm_report_entry):
     if not HAS_SUPABASE:
         return
     try:
+        # Get screenshot filename
+        screenshot = dm_report_entry.get('screenshot', '')
+        screenshot_filename = os.path.basename(screenshot) if screenshot else ''
+
         supabase.table('dm_reports').insert({
             'timestamp': dm_report_entry.get('timestamp'),
             'profile': dm_report_entry.get('profile'),
             'username': dm_report_entry.get('username'),
             'profile_url': dm_report_entry.get('profile_url', f"https://www.tiktok.com/@{dm_report_entry.get('username', '')}"),
             'message': dm_report_entry.get('message', '')[:500],
-            'status': dm_report_entry.get('status', 'unknown')
+            'status': dm_report_entry.get('status', 'unknown'),
+            'screenshot': screenshot_filename
         }).execute()
     except:
         pass
@@ -904,6 +940,10 @@ def sync_post_to_cloud(post_entry):
     if not HAS_SUPABASE:
         return
     try:
+        # Get screenshot filename
+        screenshot = post_entry.get('screenshot', '')
+        screenshot_filename = os.path.basename(screenshot) if screenshot else ''
+
         supabase.table('post_reports').insert({
             'timestamp': post_entry.get('timestamp'),
             'profile': post_entry.get('profile'),
@@ -911,7 +951,8 @@ def sync_post_to_cloud(post_entry):
             'repost_url': post_entry.get('repost_url', ''),
             'tiktok_username': post_entry.get('tiktok_username', ''),
             'caption': post_entry.get('caption', '')[:500],
-            'status': post_entry.get('status', 'unknown')
+            'status': post_entry.get('status', 'unknown'),
+            'screenshot': screenshot_filename
         }).execute()
     except:
         pass
@@ -1622,6 +1663,17 @@ def run_dm_automation_for_profile(ws_endpoint, profile_name):
                     dm_status["sent_to"].add(username)
                     record_dm(profile_name)
 
+                    # Take screenshot as proof of DM
+                    dm_screenshot_path = None
+                    try:
+                        timestamp_str = datetime.now().strftime("%Y%m%d_%H%M%S")
+                        dm_screenshot_filename = f"dm_{profile_name}_{timestamp_str}_{username[:15]}.png"
+                        dm_screenshot_path = os.path.join(SCREENSHOTS_FOLDER, dm_screenshot_filename)
+                        page.screenshot(path=dm_screenshot_path, full_page=False)
+                        dm_log(f"    📸 DM screenshot saved: {dm_screenshot_filename}")
+                    except Exception as e:
+                        dm_log(f"    ⚠ Screenshot failed: {e}")
+
                     dm_status["report"].append({
                         "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
                         "profile": profile_name,
@@ -1629,7 +1681,8 @@ def run_dm_automation_for_profile(ws_endpoint, profile_name):
                         "profile_url": f"https://www.tiktok.com/@{username}",
                         "message": message[:50] + "..." if len(message) > 50 else message,
                         "status": "sent",
-                        "search_mode": mode
+                        "search_mode": mode,
+                        "screenshot": dm_screenshot_path
                     })
                     
                     # Sync DM to cloud
@@ -2214,9 +2267,20 @@ def scrape_and_repost(page, profile_name, search_terms, content_type):
                     
                     if confirmed:
                         post_log(f"  ✓ Repost confirmed!")
-                    
+
                     reposts_made += 1
                     record_repost(profile_name)
+
+                    # Take screenshot as proof of repost
+                    post_screenshot_path = None
+                    try:
+                        timestamp_str = datetime.now().strftime("%Y%m%d_%H%M%S")
+                        post_screenshot_filename = f"repost_{profile_name}_{timestamp_str}.png"
+                        post_screenshot_path = os.path.join(SCREENSHOTS_FOLDER, post_screenshot_filename)
+                        page.screenshot(path=post_screenshot_path, full_page=False)
+                        post_log(f"  📸 Repost screenshot saved")
+                    except Exception as e:
+                        post_log(f"  ⚠ Screenshot failed: {e}")
 
                     # Build repost_url - link directly to the Reposts tab on the profile
                     repost_url = f"https://www.tiktok.com/@{tiktok_username}?tab=reposts" if tiktok_username else None
@@ -2230,6 +2294,7 @@ def scrape_and_repost(page, profile_name, search_terms, content_type):
                         "caption": f"Reposted {content_type}: {search_term}",
                         "status": "reposted",
                         "content_type": content_type,
+                        "screenshot": post_screenshot_path,
                     }
                     post_status["history"].append(entry)
                     post_status["posts_made"] += 1
@@ -3302,6 +3367,7 @@ DASHBOARD_HTML = """
             <div class="tab" onclick="showTab('dm')">💬 DM</div>
             <div class="tab" onclick="showTab('replies')">📨 Replies</div>
             <div class="tab" onclick="showTab('post')">📤 Post</div>
+            <div class="tab" onclick="showTab('profiles')">👤 Profiles</div>
             <div class="tab" onclick="showTab('report')">📊 Report</div>
         </div>
         
@@ -3570,7 +3636,49 @@ DASHBOARD_HTML = """
                 </div>
             </div>
         </div>
-        
+
+        <!-- PROFILES TAB - Profile to TikTok Username Mapping -->
+        <div id="tab-profiles" style="display:none">
+            <div class="card">
+                <div class="card-title"><span>👤 Profile to TikTok Username Mapping</span></div>
+                <div style="background:#1e1b4b;border:1px solid #4c1d95;border-radius:8px;padding:12px;margin-bottom:16px;">
+                    <div style="font-size:13px;color:#c4b5fd;font-weight:bold;margin-bottom:6px;">How It Works</div>
+                    <div style="font-size:12px;color:#a1a1aa;line-height:1.8;">
+                        <b style="color:#4ade80;">Auto-Detection:</b> Usernames are automatically detected when you run any automation (DM, Repost, Comment)<br>
+                        <b style="color:#60a5fa;">Manual Entry:</b> You can also manually add/edit mappings below<br>
+                        <b style="color:#fbbf24;">Repost Links:</b> Mappings are used to generate correct repost links (@username?tab=reposts)
+                    </div>
+                </div>
+                <div style="display:flex;gap:8px;margin-bottom:16px;">
+                    <button class="btn btn-primary" onclick="refreshProfileMapping()">🔄 Refresh</button>
+                    <button class="btn btn-secondary" onclick="detectAllUsernames()">🔍 Detect All Usernames</button>
+                </div>
+                <div style="max-height:500px;overflow:auto">
+                    <table class="report-table">
+                        <thead>
+                            <tr>
+                                <th style="width:120px;">Profile (Browser)</th>
+                                <th style="width:180px;">TikTok Username</th>
+                                <th style="width:250px;">Repost URL</th>
+                                <th style="width:100px;">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="profile-mapping-tb"></tbody>
+                    </table>
+                </div>
+                <div style="margin-top:20px;padding:16px;background:#27272a;border-radius:8px;">
+                    <div style="font-size:14px;font-weight:600;margin-bottom:12px;">➕ Add New Mapping</div>
+                    <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;">
+                        <select id="new-profile-select" style="padding:8px 12px;background:#18181b;border:1px solid #3f3f46;color:#e4e4e7;border-radius:6px;">
+                            <option value="">Select Profile...</option>
+                        </select>
+                        <input type="text" id="new-tiktok-username" placeholder="@username" style="padding:8px 12px;background:#18181b;border:1px solid #3f3f46;color:#e4e4e7;border-radius:6px;width:180px;">
+                        <button class="btn btn-success" onclick="addProfileMapping()">Add Mapping</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <div id="tab-report" style="display:none">
             <div class="card">
                 <div class="card-title"><span>📊 All Comments History</span><span id="rc" style="color:#71717a">0 local</span></div>
@@ -3624,7 +3732,7 @@ DASHBOARD_HTML = """
         let currentFilter='all';
         const SHEETS=['Bump Connect','Kollabsy','Bump Syndicate'];
         setInterval(upd,1000);
-        function showTab(t){document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));event.target.classList.add('active');document.getElementById('tab-main').style.display=t=='main'?'block':'none';document.getElementById('tab-dm').style.display=t=='dm'?'block':'none';document.getElementById('tab-replies').style.display=t=='replies'?'block':'none';document.getElementById('tab-post').style.display=t=='post'?'block':'none';document.getElementById('tab-report').style.display=t=='report'?'block':'none';if(t=='dm')updDm();if(t=='replies')refreshReplies();if(t=='post')updPost();if(t=='report')fetchCloudStats();}
+        function showTab(t){document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));event.target.classList.add('active');document.getElementById('tab-main').style.display=t=='main'?'block':'none';document.getElementById('tab-dm').style.display=t=='dm'?'block':'none';document.getElementById('tab-replies').style.display=t=='replies'?'block':'none';document.getElementById('tab-post').style.display=t=='post'?'block':'none';document.getElementById('tab-profiles').style.display=t=='profiles'?'block':'none';document.getElementById('tab-report').style.display=t=='report'?'block':'none';if(t=='dm')updDm();if(t=='replies')refreshReplies();if(t=='post')updPost();if(t=='profiles')refreshProfileMapping();if(t=='report')fetchCloudStats();}
         async function sync(){const r=await fetch('/api/sync-profiles',{method:'POST'});profiles=(await r.json()).profiles||[];render();}
         async function loadC(){const r=await fetch('/api/load-comments',{method:'POST'});const d=await r.json();alert('Loaded:\\n'+Object.entries(d.counts).map(([k,v])=>k+': '+v).join('\\n'));}
         function render(){const e=document.getElementById('pl');if(!profiles.length){e.innerHTML='<div style="text-align:center;color:#71717a;padding:40px">Click Sync to load 25 profiles</div>';return;}e.innerHTML=profiles.map(p=>'<div class="profile '+(selected.has(p.user_id)?'selected':'')+'" onclick="tog(\\''+p.user_id+'\\')"><input type="checkbox" '+(selected.has(p.user_id)?'checked':'')+' onclick="event.stopPropagation();tog(\\''+p.user_id+'\\')"><div style="flex:1"><div style="font-weight:500">'+(p.name||p.user_id)+'</div><div style="font-size:11px;color:#71717a">'+p.user_id+'</div></div></div>').join('');document.getElementById('pc').textContent=selected.size+'/'+profiles.length+' selected';}
@@ -3662,7 +3770,7 @@ DASHBOARD_HTML = """
         
         function renderReport(){
             document.getElementById('rc').textContent=report.length+' total';
-            document.getElementById('rb').innerHTML=filteredReport.length?filteredReport.slice().reverse().map(r=>'<tr><td style="white-space:nowrap">'+r.timestamp+'</td><td>'+r.profile+'</td><td title="'+r.comment.replace(/"/g,'&quot;')+'">'+r.comment.substring(0,35)+'...</td><td><a href="'+r.video_url+'" target="_blank">🔗 Open</a></td><td>'+r.sheet+'</td></tr>').join(''):'<tr><td colspan="5" style="text-align:center;color:#71717a;padding:20px">No comments for this period</td></tr>';
+            document.getElementById('rb').innerHTML=filteredReport.length?filteredReport.slice().sort((a,b)=>b.timestamp.localeCompare(a.timestamp)).map(r=>'<tr><td style="white-space:nowrap">'+r.timestamp+'</td><td>'+r.profile+'</td><td title="'+r.comment.replace(/"/g,'&quot;')+'">'+r.comment.substring(0,35)+'...</td><td><a href="'+r.video_url+'" target="_blank">🔗 Open</a></td><td>'+r.sheet+'</td></tr>').join(''):'<tr><td colspan="5" style="text-align:center;color:#71717a;padding:20px">No comments for this period</td></tr>';
 
             const now=new Date();
             const todayStr=now.toISOString().split('T')[0];
@@ -3759,7 +3867,7 @@ DASHBOARD_HTML = """
         }
         setInterval(()=>{if(document.getElementById('tab-post').style.display!='none')updPost();},2000);
         function renderPostHistory(hist){
-            document.getElementById('post-hist-tb').innerHTML=hist.length?hist.slice().reverse().slice(0,50).map(h=>'<tr><td>'+h.timestamp+'</td><td>'+h.profile+'</td><td>'+(h.repost_url?'<a href="'+h.repost_url+'" target="_blank" style="color:#f472b6">@'+(h.tiktok_username||'View')+'</a>':'<span style="color:#71717a">-</span>')+'</td><td style="color:'+(h.content_type=='brand'?'#4ade80':'#60a5fa')+'">'+((h.content_type||'').charAt(0).toUpperCase()+(h.content_type||'').slice(1))+'</td><td style="color:#4ade80">'+h.status+'</td></tr>').join(''):'<tr><td colspan="5" style="text-align:center;color:#71717a">No reposts yet. Click Start or wait for auto-scheduler.</td></tr>';
+            document.getElementById('post-hist-tb').innerHTML=hist.length?hist.slice().sort((a,b)=>b.timestamp.localeCompare(a.timestamp)).slice(0,50).map(h=>'<tr><td>'+h.timestamp+'</td><td>'+h.profile+'</td><td>'+(h.repost_url?'<a href="'+h.repost_url+'" target="_blank" style="color:#f472b6">@'+(h.tiktok_username||'View')+'</a>':'<span style="color:#71717a">-</span>')+'</td><td style="color:'+(h.content_type=='brand'?'#4ade80':'#60a5fa')+'">'+((h.content_type||'').charAt(0).toUpperCase()+(h.content_type||'').slice(1))+'</td><td style="color:#4ade80">'+h.status+'</td></tr>').join(''):'<tr><td colspan="5" style="text-align:center;color:#71717a">No reposts yet. Click Start or wait for auto-scheduler.</td></tr>';
         }
         async function applyRepostSettings(){
             const s={max_reposts_per_day:+document.getElementById('post-maxday').value,min_delay:+document.getElementById('post-mind').value,max_delay:+document.getElementById('post-maxd').value};
@@ -3824,7 +3932,7 @@ DASHBOARD_HTML = """
         }
         setInterval(()=>{if(document.getElementById('tab-dm').style.display!='none')updDm();},2000);
         function renderDmReport(rep){
-            document.getElementById('dm-rb').innerHTML=rep.length?rep.slice().reverse().slice(0,50).map(r=>'<tr><td>'+r.timestamp+'</td><td>'+r.profile+'</td><td>@'+r.username+'</td><td title="'+r.message+'">'+r.message.substring(0,30)+'...</td><td style="color:'+(r.status=='sent'?'#4ade80':'#f87171')+'">'+r.status+'</td></tr>').join(''):'<tr><td colspan="5" style="text-align:center;color:#71717a">No DMs sent yet</td></tr>';
+            document.getElementById('dm-rb').innerHTML=rep.length?rep.slice().sort((a,b)=>b.timestamp.localeCompare(a.timestamp)).slice(0,50).map(r=>'<tr><td>'+r.timestamp+'</td><td>'+r.profile+'</td><td>@'+r.username+'</td><td title="'+r.message+'">'+r.message.substring(0,30)+'...</td><td style="color:'+(r.status=='sent'?'#4ade80':'#f87171')+'">'+r.status+'</td></tr>').join(''):'<tr><td colspan="5" style="text-align:center;color:#71717a">No DMs sent yet</td></tr>';
         }
         async function saveDmSettings(){
             const mode=document.getElementById('dm-mode').value;
@@ -4022,6 +4130,136 @@ DASHBOARD_HTML = """
         
         // Auto-refresh replies tab
         setInterval(() => { if(document.getElementById('tab-replies').style.display != 'none') refreshReplies(); }, 3000);
+
+        // Profile Mapping Functions
+        let profileMappings = {};
+
+        async function refreshProfileMapping() {
+            try {
+                // Fetch current mappings
+                const r = await fetch('/api/profile-mapping');
+                profileMappings = await r.json();
+                renderProfileMapping();
+            } catch(e) {
+                console.error('Error fetching profile mapping:', e);
+            }
+        }
+
+        function renderProfileMapping() {
+            const tbody = document.getElementById('profile-mapping-tb');
+            const select = document.getElementById('new-profile-select');
+
+            // Build rows for all profiles
+            let rows = '';
+            const mappedProfiles = new Set(Object.keys(profileMappings));
+
+            // Show all synced profiles with their mappings
+            profiles.forEach(p => {
+                const profileName = p.name || p.user_id;
+                const username = profileMappings[profileName] || '';
+                const hasMapping = !!username;
+                const repostUrl = username ? 'https://www.tiktok.com/@' + username + '?tab=reposts' : '-';
+
+                rows += '<tr>' +
+                    '<td><div style="font-weight:500;">' + profileName + '</div><div style="font-size:10px;color:#71717a;">' + p.user_id + '</div></td>' +
+                    '<td>' + (hasMapping ?
+                        '<span style="color:#4ade80;">@' + username + '</span>' :
+                        '<span style="color:#71717a;font-style:italic;">Not detected</span>') +
+                    '</td>' +
+                    '<td>' + (hasMapping ?
+                        '<a href="' + repostUrl + '" target="_blank" style="color:#f472b6;font-size:11px;">' + repostUrl + '</a>' :
+                        '<span style="color:#3f3f46;">-</span>') +
+                    '</td>' +
+                    '<td>' +
+                        '<button class="btn btn-secondary" onclick="editProfileMapping(\\'' + profileName + '\\', \\'' + username + '\\')" style="padding:4px 8px;font-size:11px;margin-right:4px;">✏️ Edit</button>' +
+                        (hasMapping ? '<button class="btn btn-danger" onclick="deleteProfileMapping(\\'' + profileName + '\\')" style="padding:4px 8px;font-size:11px;">🗑️</button>' : '') +
+                    '</td>' +
+                '</tr>';
+            });
+
+            // Also show any mappings for profiles not in the current list
+            Object.keys(profileMappings).forEach(pname => {
+                if (!profiles.find(p => (p.name || p.user_id) === pname)) {
+                    const username = profileMappings[pname];
+                    const repostUrl = 'https://www.tiktok.com/@' + username + '?tab=reposts';
+                    rows += '<tr style="opacity:0.6;">' +
+                        '<td><div style="font-weight:500;">' + pname + '</div><div style="font-size:10px;color:#71717a;">Not synced</div></td>' +
+                        '<td><span style="color:#4ade80;">@' + username + '</span></td>' +
+                        '<td><a href="' + repostUrl + '" target="_blank" style="color:#f472b6;font-size:11px;">' + repostUrl + '</a></td>' +
+                        '<td>' +
+                            '<button class="btn btn-secondary" onclick="editProfileMapping(\\'' + pname + '\\', \\'' + username + '\\')" style="padding:4px 8px;font-size:11px;margin-right:4px;">✏️ Edit</button>' +
+                            '<button class="btn btn-danger" onclick="deleteProfileMapping(\\'' + pname + '\\')" style="padding:4px 8px;font-size:11px;">🗑️</button>' +
+                        '</td>' +
+                    '</tr>';
+                }
+            });
+
+            if (!rows) {
+                rows = '<tr><td colspan="4" style="text-align:center;color:#71717a;padding:40px;">No profiles synced. Click "Sync" in Control tab first, then run any automation to auto-detect usernames.</td></tr>';
+            }
+
+            tbody.innerHTML = rows;
+
+            // Update the profile select dropdown
+            let options = '<option value="">Select Profile...</option>';
+            profiles.forEach(p => {
+                const profileName = p.name || p.user_id;
+                if (!profileMappings[profileName]) {
+                    options += '<option value="' + profileName + '">' + profileName + '</option>';
+                }
+            });
+            select.innerHTML = options;
+        }
+
+        async function addProfileMapping() {
+            const profile = document.getElementById('new-profile-select').value;
+            const username = document.getElementById('new-tiktok-username').value.replace('@', '').trim();
+
+            if (!profile) { alert('Please select a profile'); return; }
+            if (!username) { alert('Please enter a TikTok username'); return; }
+
+            await fetch('/api/profile-mapping', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ [profile]: username })
+            });
+
+            document.getElementById('new-tiktok-username').value = '';
+            refreshProfileMapping();
+        }
+
+        function editProfileMapping(profile, currentUsername) {
+            const newUsername = prompt('Enter TikTok username for ' + profile + ':', currentUsername);
+            if (newUsername === null) return;
+
+            const cleaned = newUsername.replace('@', '').trim();
+            if (!cleaned) {
+                if (confirm('Remove mapping for ' + profile + '?')) {
+                    deleteProfileMapping(profile);
+                }
+                return;
+            }
+
+            fetch('/api/profile-mapping', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ [profile]: cleaned })
+            }).then(() => refreshProfileMapping());
+        }
+
+        async function deleteProfileMapping(profile) {
+            if (!confirm('Remove TikTok username mapping for ' + profile + '?')) return;
+
+            await fetch('/api/profile-mapping/' + encodeURIComponent(profile), {
+                method: 'DELETE'
+            });
+            refreshProfileMapping();
+        }
+
+        async function detectAllUsernames() {
+            if (!confirm('This will open each browser one by one to detect TikTok usernames. Continue?')) return;
+            alert('Username detection runs automatically when you start any automation (DM, Repost, Comments). The usernames will be saved and appear here.');
+        }
     </script>
 </body>
 </html>
@@ -4504,6 +4742,16 @@ def api_set_single_profile_mapping(profile):
         del profile_usernames[profile]
         save_profile_mapping()
     return jsonify({"ok": True, "profile": profile, "username": username})
+
+@app.route('/api/profile-mapping/<profile>', methods=['DELETE'])
+def api_delete_profile_mapping(profile):
+    """Delete TikTok username mapping for a profile"""
+    global profile_usernames
+    if profile in profile_usernames:
+        del profile_usernames[profile]
+        save_profile_mapping()
+        return jsonify({"ok": True, "message": f"Mapping for {profile} deleted"})
+    return jsonify({"ok": False, "message": f"No mapping found for {profile}"})
 
 if __name__ == "__main__":
     print("=" * 50)
