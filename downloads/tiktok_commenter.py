@@ -670,6 +670,40 @@ post_settings = {
     "max_reposts_per_day": 2,  # Max 2 reposts per profile per day
 }
 
+# Profile to TikTok username mapping
+# Maps internal profile names (tt1, tt2, etc.) to actual TikTok usernames
+PROFILE_MAPPING_FILE = "tiktok_profile_mapping.json"
+profile_usernames = {}
+
+def load_profile_mapping():
+    """Load profile to TikTok username mapping from file"""
+    global profile_usernames
+    try:
+        with open(PROFILE_MAPPING_FILE, "r") as f:
+            profile_usernames = json.load(f)
+    except:
+        profile_usernames = {}
+
+def save_profile_mapping():
+    """Save profile to TikTok username mapping to file"""
+    try:
+        with open(PROFILE_MAPPING_FILE, "w") as f:
+            json.dump(profile_usernames, f, indent=2)
+    except:
+        pass
+
+def get_tiktok_username(profile_name):
+    """Get TikTok username for a profile, returns None if not mapped"""
+    return profile_usernames.get(profile_name)
+
+def set_tiktok_username(profile_name, tiktok_username):
+    """Set TikTok username for a profile"""
+    profile_usernames[profile_name] = tiktok_username.replace("@", "")
+    save_profile_mapping()
+
+# Load mapping on startup
+load_profile_mapping()
+
 # Repost schedule: Monday = brand content, Tue-Sun = social media content
 BRAND_SEARCH_TERMS = [
     "bumpconnect", "bump connect", "kollabsy", "bumpsyndicate", "bump syndicate",
@@ -1941,10 +1975,19 @@ def scrape_and_repost(page, profile_name, search_terms, content_type):
 
         if tiktok_username:
             post_log(f"  Logged in as: @{tiktok_username}")
+            # Save to mapping for future use
+            set_tiktok_username(profile_name, tiktok_username)
         else:
-            post_log(f"  ⚠ Could not detect username")
+            # Fall back to saved mapping
+            tiktok_username = get_tiktok_username(profile_name)
+            if tiktok_username:
+                post_log(f"  Using saved username: @{tiktok_username}")
+            else:
+                post_log(f"  ⚠ Could not detect username (set mapping in Settings)")
     except Exception as e:
         post_log(f"  ⚠ Username detection error: {str(e)[:40]}")
+        # Fall back to saved mapping on error
+        tiktok_username = get_tiktok_username(profile_name)
 
     try:
         encoded = search_term.replace(" ", "%20")
@@ -4398,6 +4441,41 @@ def api_post_export():
         'Content-Type': 'text/csv',
         'Content-Disposition': f'attachment; filename=repost_history_{datetime.now().strftime("%Y%m%d")}.csv'
     }
+
+# =============================================================================
+# PROFILE MAPPING API - Map profile names to TikTok usernames
+# =============================================================================
+
+@app.route('/api/profile-mapping', methods=['GET'])
+def api_get_profile_mapping():
+    """Get all profile to TikTok username mappings"""
+    return jsonify(profile_usernames)
+
+@app.route('/api/profile-mapping', methods=['POST'])
+def api_set_profile_mapping():
+    """Set profile to TikTok username mappings"""
+    global profile_usernames
+    data = request.json or {}
+    # Update mappings (remove @ prefix if present)
+    for profile, username in data.items():
+        if username:
+            profile_usernames[profile] = username.replace("@", "")
+        elif profile in profile_usernames:
+            del profile_usernames[profile]
+    save_profile_mapping()
+    return jsonify({"ok": True, "mappings": profile_usernames})
+
+@app.route('/api/profile-mapping/<profile>', methods=['PUT'])
+def api_set_single_profile_mapping(profile):
+    """Set TikTok username for a single profile"""
+    data = request.json or {}
+    username = data.get("username", "").replace("@", "")
+    if username:
+        set_tiktok_username(profile, username)
+    elif profile in profile_usernames:
+        del profile_usernames[profile]
+        save_profile_mapping()
+    return jsonify({"ok": True, "profile": profile, "username": username})
 
 if __name__ == "__main__":
     print("=" * 50)

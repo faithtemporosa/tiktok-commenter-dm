@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react";
-import { Bell, BellOff, Mail, Check, X, CreditCard } from "lucide-react";
+import { Bell, BellOff, Mail, Check, X, CreditCard, Users, Save, Plus, Trash2 } from "lucide-react";
 
 const API_URL = process.env.REACT_APP_BACKEND_URL;
+const BOT_URL = "http://localhost:9000";
 
 export default function Settings() {
   const [email, setEmail] = useState("");
@@ -9,6 +10,58 @@ export default function Settings() {
   const [subscriptions, setSubscriptions] = useState([]);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState(null);
+  const [profileMappings, setProfileMappings] = useState({});
+  const [newProfile, setNewProfile] = useState("");
+  const [newUsername, setNewUsername] = useState("");
+  const [mappingSaving, setMappingSaving] = useState(false);
+
+  const fetchProfileMappings = async () => {
+    try {
+      const res = await fetch(`${BOT_URL}/api/profile-mapping`);
+      if (res.ok) {
+        const data = await res.json();
+        setProfileMappings(data);
+      }
+    } catch (err) {
+      // Bot not running
+    }
+  };
+
+  const saveProfileMapping = async (profile, username) => {
+    setMappingSaving(true);
+    try {
+      await fetch(`${BOT_URL}/api/profile-mapping/${profile}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username: username.replace("@", "") })
+      });
+      await fetchProfileMappings();
+      setMessage({ type: "success", text: `Saved @${username.replace("@", "")} for ${profile}` });
+    } catch (err) {
+      setMessage({ type: "error", text: "Failed to save. Is the bot running?" });
+    }
+    setMappingSaving(false);
+  };
+
+  const deleteProfileMapping = async (profile) => {
+    try {
+      await fetch(`${BOT_URL}/api/profile-mapping/${profile}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username: "" })
+      });
+      await fetchProfileMappings();
+    } catch (err) {
+      setMessage({ type: "error", text: "Failed to delete" });
+    }
+  };
+
+  const addNewMapping = async () => {
+    if (!newProfile || !newUsername) return;
+    await saveProfileMapping(newProfile, newUsername);
+    setNewProfile("");
+    setNewUsername("");
+  };
 
   const fetchSubs = async () => {
     try {
@@ -18,7 +71,7 @@ export default function Settings() {
     } catch (err) { console.error(err); }
   };
 
-  useEffect(() => { fetchSubs(); }, []);
+  useEffect(() => { fetchSubs(); fetchProfileMappings(); }, []);
 
   const handleSubscribe = async () => {
     if (!email || !email.includes("@")) { setMessage({ type: "error", text: "Enter a valid email" }); return; }
@@ -117,6 +170,54 @@ export default function Settings() {
             </div>
           )}
         </div>
+      </div>
+
+      {/* Profile Mapping */}
+      <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6">
+        <div className="flex items-center gap-3 mb-4">
+          <div className="w-10 h-10 rounded-lg bg-rose-500/10 flex items-center justify-center"><Users className="w-5 h-5 text-rose-400" /></div>
+          <div><h3 className="font-semibold">Profile Mapping</h3><p className="text-sm text-zinc-500">Map your profile names (tt1, tt2...) to TikTok usernames for repost links</p></div>
+        </div>
+
+        {/* Add New Mapping */}
+        <div className="flex gap-3 mb-4 flex-wrap">
+          <input type="text" value={newProfile} onChange={(e) => setNewProfile(e.target.value)} placeholder="Profile (e.g., tt1)"
+            className="w-32 px-4 py-2.5 bg-zinc-800 border border-zinc-700 rounded-lg text-sm focus:outline-none focus:border-rose-500" />
+          <input type="text" value={newUsername} onChange={(e) => setNewUsername(e.target.value)} placeholder="TikTok username"
+            className="flex-1 min-w-[150px] px-4 py-2.5 bg-zinc-800 border border-zinc-700 rounded-lg text-sm focus:outline-none focus:border-rose-500" />
+          <button onClick={addNewMapping} disabled={mappingSaving || !newProfile || !newUsername}
+            className="px-4 py-2.5 bg-rose-600 hover:bg-rose-500 rounded-lg text-sm font-medium transition-all disabled:opacity-50 flex items-center gap-2">
+            <Plus className="w-4 h-4" /> Add
+          </button>
+        </div>
+
+        {/* Existing Mappings */}
+        <div className="border-t border-zinc-800 pt-4 mt-4">
+          <h4 className="text-sm font-medium text-zinc-400 mb-3">Saved Mappings ({Object.keys(profileMappings).length})</h4>
+          {Object.keys(profileMappings).length === 0 ? (
+            <p className="text-sm text-zinc-500">No mappings yet. Add profile mappings to show repost links for past reposts.</p>
+          ) : (
+            <div className="space-y-2">
+              {Object.entries(profileMappings).sort((a,b) => {
+                const numA = parseInt(a[0].replace(/\D/g, '')) || 999;
+                const numB = parseInt(b[0].replace(/\D/g, '')) || 999;
+                return numA - numB;
+              }).map(([profile, username]) => (
+                <div key={profile} className="flex items-center justify-between bg-zinc-800/50 px-4 py-2 rounded-lg">
+                  <div className="flex items-center gap-3">
+                    <span className="px-2 py-0.5 rounded bg-zinc-700 text-zinc-300 text-xs font-mono">{profile}</span>
+                    <span className="text-zinc-400">&rarr;</span>
+                    <a href={`https://www.tiktok.com/@${username}`} target="_blank" rel="noopener noreferrer" className="text-rose-400 hover:text-rose-300 text-sm">@{username}</a>
+                  </div>
+                  <button onClick={() => deleteProfileMapping(profile)} className="text-zinc-500 hover:text-red-400 transition-colors">
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+        <p className="text-xs text-zinc-500 mt-4">Note: Make sure the local bot is running at localhost:9000 for mappings to save.</p>
       </div>
 
       {/* Billing */}
