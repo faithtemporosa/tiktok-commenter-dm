@@ -279,7 +279,7 @@ function Dashboard({ onNavigate }) {
                       <td className="px-4 py-3 max-w-md text-zinc-300 text-xs" title={r.comment}>{trunc(r.comment, 60)}</td>
                       <td className="px-4 py-3"><span className={`px-2 py-0.5 rounded text-xs ${brandColor(r.sheet)}`}>{r.sheet}</span></td>
                       <td className="px-4 py-3"><a href={r.video_url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-violet-400 hover:text-violet-300 text-xs"><ExternalLink className="w-3 h-3" />View</a></td>
-                      <td className="px-4 py-3">{r.screenshot ? <a href={`http://localhost:9000/screenshots/${r.screenshot}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-emerald-400 hover:text-emerald-300 text-xs">📸 Proof</a> : <span className="text-zinc-600 text-xs">-</span>}</td>
+                      <td className="px-4 py-3">{r.screenshot ? <a href={`http://localhost:9000/screenshots/${r.screenshot}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-emerald-400 hover:text-emerald-300 text-xs">📸 Screenshot</a> : r.video_url ? <a href={r.video_url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-amber-400 hover:text-amber-300 text-xs">🔗 Video</a> : <span className="text-zinc-600 text-xs">-</span>}</td>
                     </tr>
                   ))}
                 </tbody>
