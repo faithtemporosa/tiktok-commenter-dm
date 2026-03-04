@@ -2218,8 +2218,8 @@ def scrape_and_repost(page, profile_name, search_terms, content_type):
                     reposts_made += 1
                     record_repost(profile_name)
 
-                    # Build repost_url - the profile where the repost appears
-                    repost_url = f"https://www.tiktok.com/@{tiktok_username}" if tiktok_username else None
+                    # Build repost_url - link directly to the Reposts tab on the profile
+                    repost_url = f"https://www.tiktok.com/@{tiktok_username}?tab=reposts" if tiktok_username else None
 
                     entry = {
                         "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
