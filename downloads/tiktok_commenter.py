@@ -19,6 +19,7 @@ import time
 import json
 import csv
 import io
+import re
 import threading
 import random
 import traceback
@@ -1895,36 +1896,55 @@ def scrape_and_repost(page, profile_name, search_terms, content_type):
     reposts_made = 0
     search_term = random.choice(search_terms)
 
-    # Get the TikTok username of the logged-in account
+    # Get the TikTok username by navigating to profile page first
     tiktok_username = None
     try:
-        tiktok_username = page.evaluate('''() => {
-            // Method 1: Look for profile link in sidebar/navigation
-            const profileLinks = document.querySelectorAll('a[href*="/@"]');
-            for (let link of profileLinks) {
-                const match = link.href.match(/\/@([^/?]+)/);
-                if (match && match[1] && !link.href.includes('/video/')) {
-                    return match[1];
+        post_log(f"  Getting account username...")
+        # Navigate to TikTok profile page to get the username
+        page.goto("https://www.tiktok.com/profile", wait_until="domcontentloaded", timeout=30000)
+        time.sleep(3)
+
+        # The profile page URL will contain the username
+        current_url = page.url
+        if "/@" in current_url:
+            match = re.search(r'/@([^/?]+)', current_url)
+            if match:
+                tiktok_username = match.group(1)
+
+        # If URL doesn't have it, try extracting from page elements
+        if not tiktok_username:
+            tiktok_username = page.evaluate('''() => {
+                // Method 1: Check canonical link (most reliable on profile page)
+                const canonical = document.querySelector('link[rel="canonical"]');
+                if (canonical && canonical.href.includes('/@')) {
+                    const match = canonical.href.match(/\\/@([^/?]+)/);
+                    if (match) return match[1];
                 }
-            }
-            // Method 2: Look for username in avatar/profile elements
-            const avatarLink = document.querySelector('[data-e2e="nav-profile"] a, [class*="Avatar"] a, [class*="profile"] a');
-            if (avatarLink && avatarLink.href) {
-                const match = avatarLink.href.match(/\/@([^/?]+)/);
-                if (match) return match[1];
-            }
-            // Method 3: Check canonical/meta tags
-            const canonical = document.querySelector('link[rel="canonical"]');
-            if (canonical && canonical.href.includes('/@')) {
-                const match = canonical.href.match(/\/@([^/?]+)/);
-                if (match) return match[1];
-            }
-            return null;
-        }''')
+                // Method 2: Check og:url meta tag
+                const ogUrl = document.querySelector('meta[property="og:url"]');
+                if (ogUrl && ogUrl.content.includes('/@')) {
+                    const match = ogUrl.content.match(/\\/@([^/?]+)/);
+                    if (match) return match[1];
+                }
+                // Method 3: Look for username display element
+                const usernameEl = document.querySelector('[data-e2e="user-subtitle"], [class*="SpanUniqueId"], h2[data-e2e="user-subtitle"]');
+                if (usernameEl) {
+                    const text = usernameEl.textContent.trim();
+                    if (text.startsWith('@')) return text.substring(1);
+                    return text;
+                }
+                // Method 4: Get from profile header
+                const headerUsername = document.querySelector('[class*="ShareTitle"] span, [class*="UserTitle"]');
+                if (headerUsername) return headerUsername.textContent.trim().replace('@', '');
+                return null;
+            }''')
+
         if tiktok_username:
             post_log(f"  Logged in as: @{tiktok_username}")
-    except:
-        pass
+        else:
+            post_log(f"  ⚠ Could not detect username")
+    except Exception as e:
+        post_log(f"  ⚠ Username detection error: {str(e)[:40]}")
 
     try:
         encoded = search_term.replace(" ", "%20")
