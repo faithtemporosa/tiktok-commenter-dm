@@ -77,11 +77,17 @@ CREATE TABLE IF NOT EXISTS post_reports (
     timestamp TEXT NOT NULL,
     profile TEXT NOT NULL,
     video TEXT,
+    repost_url TEXT,
+    tiktok_username TEXT,
     caption TEXT,
     status TEXT DEFAULT 'reposted',
     content_type TEXT,
     UNIQUE(timestamp, profile, video)
 );
+
+-- Add repost_url and tiktok_username columns if table already exists
+ALTER TABLE post_reports ADD COLUMN IF NOT EXISTS repost_url TEXT;
+ALTER TABLE post_reports ADD COLUMN IF NOT EXISTS tiktok_username TEXT;
 
 -- Index for faster queries
 CREATE INDEX IF NOT EXISTS idx_post_reports_timestamp ON post_reports(timestamp DESC);

@@ -873,6 +873,8 @@ def sync_post_to_cloud(post_entry):
             'timestamp': post_entry.get('timestamp'),
             'profile': post_entry.get('profile'),
             'video': post_entry.get('video', ''),
+            'repost_url': post_entry.get('repost_url', ''),
+            'tiktok_username': post_entry.get('tiktok_username', ''),
             'caption': post_entry.get('caption', '')[:500],
             'status': post_entry.get('status', 'unknown')
         }).execute()
@@ -1888,11 +1890,42 @@ def scrape_and_repost(page, profile_name, search_terms, content_type):
     if remaining <= 0:
         post_log(f"  Already at {max_reposts} reposts today, skipping")
         return 0
-    
+
     post_log(f"  Need {remaining} repost(s) ({content_type} content)")
     reposts_made = 0
     search_term = random.choice(search_terms)
-    
+
+    # Get the TikTok username of the logged-in account
+    tiktok_username = None
+    try:
+        tiktok_username = page.evaluate('''() => {
+            // Method 1: Look for profile link in sidebar/navigation
+            const profileLinks = document.querySelectorAll('a[href*="/@"]');
+            for (let link of profileLinks) {
+                const match = link.href.match(/\/@([^/?]+)/);
+                if (match && match[1] && !link.href.includes('/video/')) {
+                    return match[1];
+                }
+            }
+            // Method 2: Look for username in avatar/profile elements
+            const avatarLink = document.querySelector('[data-e2e="nav-profile"] a, [class*="Avatar"] a, [class*="profile"] a');
+            if (avatarLink && avatarLink.href) {
+                const match = avatarLink.href.match(/\/@([^/?]+)/);
+                if (match) return match[1];
+            }
+            // Method 3: Check canonical/meta tags
+            const canonical = document.querySelector('link[rel="canonical"]');
+            if (canonical && canonical.href.includes('/@')) {
+                const match = canonical.href.match(/\/@([^/?]+)/);
+                if (match) return match[1];
+            }
+            return null;
+        }''')
+        if tiktok_username:
+            post_log(f"  Logged in as: @{tiktok_username}")
+    except:
+        pass
+
     try:
         encoded = search_term.replace(" ", "%20")
         post_log(f"  Searching: '{search_term}'")
@@ -2107,10 +2140,16 @@ def scrape_and_repost(page, profile_name, search_terms, content_type):
                     
                     reposts_made += 1
                     record_repost(profile_name)
+
+                    # Build repost_url - the profile where the repost appears
+                    repost_url = f"https://www.tiktok.com/@{tiktok_username}" if tiktok_username else None
+
                     entry = {
                         "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
                         "profile": profile_name,
                         "video": video_url,
+                        "repost_url": repost_url,
+                        "tiktok_username": tiktok_username,
                         "caption": f"Reposted {content_type}: {search_term}",
                         "status": "reposted",
                         "content_type": content_type,
