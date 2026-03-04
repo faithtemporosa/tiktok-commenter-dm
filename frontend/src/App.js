@@ -267,10 +267,11 @@ function Dashboard({ onNavigate }) {
                   <th className="text-left px-4 py-3 font-medium text-zinc-400">Comment</th>
                   <th className="text-left px-4 py-3 font-medium text-zinc-400">Brand</th>
                   <th className="text-left px-4 py-3 font-medium text-zinc-400">Video</th>
+                  <th className="text-left px-4 py-3 font-medium text-zinc-400">Proof</th>
                 </tr></thead>
                 <tbody>
-                  {loading ? <tr><td colSpan="5" className="text-center py-12 text-zinc-500"><RefreshCw className="w-5 h-5 animate-spin mx-auto mb-2" />Loading...</td></tr>
-                  : reports.length === 0 ? <tr><td colSpan="5" className="text-center py-12 text-zinc-500">No comments yet</td></tr>
+                  {loading ? <tr><td colSpan="6" className="text-center py-12 text-zinc-500"><RefreshCw className="w-5 h-5 animate-spin mx-auto mb-2" />Loading...</td></tr>
+                  : reports.length === 0 ? <tr><td colSpan="6" className="text-center py-12 text-zinc-500">No comments yet</td></tr>
                   : reports.map((r, i) => (
                     <tr key={r.id||i} className="border-t border-zinc-800 hover:bg-zinc-800/30" data-testid={`report-row-${i}`}>
                       <td className="px-4 py-3 whitespace-nowrap text-zinc-400 text-xs">{fmt(r.timestamp)}</td>
@@ -278,6 +279,7 @@ function Dashboard({ onNavigate }) {
                       <td className="px-4 py-3 max-w-md text-zinc-300 text-xs" title={r.comment}>{trunc(r.comment, 60)}</td>
                       <td className="px-4 py-3"><span className={`px-2 py-0.5 rounded text-xs ${brandColor(r.sheet)}`}>{r.sheet}</span></td>
                       <td className="px-4 py-3"><a href={r.video_url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-violet-400 hover:text-violet-300 text-xs"><ExternalLink className="w-3 h-3" />View</a></td>
+                      <td className="px-4 py-3">{r.screenshot ? <a href={`http://localhost:9000/screenshots/${r.screenshot}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-emerald-400 hover:text-emerald-300 text-xs">📸 Proof</a> : <span className="text-zinc-600 text-xs">-</span>}</td>
                     </tr>
                   ))}
                 </tbody>

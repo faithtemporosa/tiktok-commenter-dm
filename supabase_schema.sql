@@ -17,8 +17,12 @@ CREATE TABLE IF NOT EXISTS comment_reports (
     video_id TEXT,
     comment TEXT NOT NULL,
     sheet TEXT,
+    screenshot TEXT,
     UNIQUE(timestamp, profile, video_id)
 );
+
+-- Add screenshot column if table already exists
+ALTER TABLE comment_reports ADD COLUMN IF NOT EXISTS screenshot TEXT;
 
 -- Index for faster queries
 CREATE INDEX IF NOT EXISTS idx_comment_reports_timestamp ON comment_reports(timestamp DESC);

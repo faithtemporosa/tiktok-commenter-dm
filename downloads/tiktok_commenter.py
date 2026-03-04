@@ -80,6 +80,12 @@ DM_REPORT_FILE = "tiktok_dm_history.json"
 DM_TARGETS_FILE = "tiktok_dm_targets.json"
 POST_QUEUE_FILE = "tiktok_post_queue.json"
 POST_HISTORY_FILE = "tiktok_post_history.json"
+SCREENSHOTS_FOLDER = "comment_screenshots"
+
+# Create screenshots folder if it doesn't exist
+import os
+if not os.path.exists(SCREENSHOTS_FOLDER):
+    os.makedirs(SCREENSHOTS_FOLDER)
 
 settings = {
     "min_delay": MIN_DELAY_BETWEEN_COMMENTS,
@@ -741,13 +747,18 @@ def send_to_cloud(report_data):
     if not HAS_SUPABASE:
         return False
     try:
+        # Get screenshot filename only (not full path)
+        screenshot = report_data.get('screenshot', '')
+        screenshot_filename = os.path.basename(screenshot) if screenshot else ''
+
         supabase.table('comment_reports').insert({
             'timestamp': report_data.get('timestamp'),
             'profile': report_data.get('profile'),
             'video_url': report_data.get('video_url'),
             'video_id': report_data.get('video_id'),
             'comment': report_data.get('comment'),
-            'sheet': report_data.get('sheet')
+            'sheet': report_data.get('sheet'),
+            'screenshot': screenshot_filename
         }).execute()
         log(f"    ☁️ Synced to Supabase")
         return True
@@ -2704,15 +2715,27 @@ def process_single_video_with_retry(page, video_num, profile_name, target_videos
                 log(f"    ✓ Clicked post ({post_result.get('method')})")
             
             time.sleep(2)
-            
+
+            # Take screenshot as proof of comment
+            screenshot_path = None
+            try:
+                timestamp_str = datetime.now().strftime("%Y%m%d_%H%M%S")
+                screenshot_filename = f"{profile_name}_{timestamp_str}_{video_id[-8:]}.png"
+                screenshot_path = os.path.join(SCREENSHOTS_FOLDER, screenshot_filename)
+                page.screenshot(path=screenshot_path, full_page=False)
+                log(f"    📸 Screenshot saved: {screenshot_filename}")
+            except Exception as ss_err:
+                log(f"    ⚠ Screenshot failed: {str(ss_err)[:50]}")
+
             # Success!
             commented_videos.add(video_id)
-            
+
             return True, {
                 "comment": comment_text,
                 "sheet": from_sheet,
                 "video_url": current_url,
-                "video_id": video_id
+                "video_id": video_id,
+                "screenshot": screenshot_path
             }
             
         except Exception as e:
@@ -2854,7 +2877,8 @@ def run_tiktok_commenter(ws_endpoint, profile_name, sheet_name):
                             "video_url": result.get("video_url", ""),
                             "video_id": result.get("video_id", ""),
                             "comment": result.get("comment", ""),
-                            "sheet": result.get("sheet", "Unknown")
+                            "sheet": result.get("sheet", "Unknown"),
+                            "screenshot": result.get("screenshot", "")
                         }
                         
                         automation_status["report"].append(report_entry)
@@ -3852,6 +3876,26 @@ DASHBOARD_HTML = """
 @app.route('/')
 def index():
     return render_template_string(DASHBOARD_HTML)
+
+@app.route('/screenshots/<path:filename>')
+def serve_screenshot(filename):
+    """Serve screenshot images"""
+    from flask import send_from_directory
+    return send_from_directory(SCREENSHOTS_FOLDER, filename)
+
+@app.route('/api/screenshots')
+def api_screenshots():
+    """List all screenshots"""
+    screenshots = []
+    if os.path.exists(SCREENSHOTS_FOLDER):
+        for f in sorted(os.listdir(SCREENSHOTS_FOLDER), reverse=True)[:100]:
+            if f.endswith('.png'):
+                screenshots.append({
+                    "filename": f,
+                    "url": f"/screenshots/{f}",
+                    "timestamp": f.split('_')[1] if '_' in f else ""
+                })
+    return jsonify({"screenshots": screenshots})
 
 @app.route('/api/sync-profiles', methods=['POST'])
 def api_sync():
