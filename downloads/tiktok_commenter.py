@@ -857,6 +857,7 @@ def sync_dm_to_cloud(dm_report_entry):
             'timestamp': dm_report_entry.get('timestamp'),
             'profile': dm_report_entry.get('profile'),
             'username': dm_report_entry.get('username'),
+            'profile_url': dm_report_entry.get('profile_url', f"https://www.tiktok.com/@{dm_report_entry.get('username', '')}"),
             'message': dm_report_entry.get('message', '')[:500],
             'status': dm_report_entry.get('status', 'unknown')
         }).execute()
@@ -1569,11 +1570,12 @@ def run_dm_automation_for_profile(ws_endpoint, profile_name):
                     dm_status["dms_sent_today"] += 1
                     dm_status["sent_to"].add(username)
                     record_dm(profile_name)
-                    
+
                     dm_status["report"].append({
                         "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
                         "profile": profile_name,
                         "username": username,
+                        "profile_url": f"https://www.tiktok.com/@{username}",
                         "message": message[:50] + "..." if len(message) > 50 else message,
                         "status": "sent",
                         "search_mode": mode

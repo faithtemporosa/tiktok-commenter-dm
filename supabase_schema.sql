@@ -46,10 +46,14 @@ CREATE TABLE IF NOT EXISTS dm_reports (
     timestamp TEXT NOT NULL,
     profile TEXT NOT NULL,
     username TEXT NOT NULL,
+    profile_url TEXT,
     message TEXT,
     status TEXT DEFAULT 'sent',
     UNIQUE(timestamp, profile, username)
 );
+
+-- Add profile_url column if table already exists
+ALTER TABLE dm_reports ADD COLUMN IF NOT EXISTS profile_url TEXT;
 
 -- Index for faster queries
 CREATE INDEX IF NOT EXISTS idx_dm_reports_timestamp ON dm_reports(timestamp DESC);
