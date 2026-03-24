@@ -219,9 +219,9 @@ function Dashboard({ onNavigate }) {
         <div className="bg-gradient-to-r from-violet-900/30 via-fuchsia-900/20 to-violet-900/30 border border-violet-500/30 rounded-xl p-4 mb-6">
           <div className="flex items-center justify-between flex-wrap gap-4">
             <div className="flex items-center gap-6">
-              <div className="text-center"><div className="text-2xl font-bold">25</div><div className="text-xs text-zinc-400">Profiles</div></div>
-              <div className="text-center"><div className="text-2xl font-bold">100</div><div className="text-xs text-zinc-400">Videos/Profile</div></div>
-              <div className="text-center"><div className="text-2xl font-bold text-emerald-400">2,500</div><div className="text-xs text-zinc-400">Daily Target</div></div>
+              <div className="text-center"><div className="text-2xl font-bold">{accountsTotal.toLocaleString()}</div><div className="text-xs text-zinc-400">Profiles</div></div>
+              <div className="text-center"><div className="text-2xl font-bold">10</div><div className="text-xs text-zinc-400">Videos/Profile</div></div>
+              <div className="text-center"><div className="text-2xl font-bold text-emerald-400">{(accountsTotal * 10).toLocaleString()}</div><div className="text-xs text-zinc-400">Daily Target</div></div>
             </div>
             <div className="flex gap-2 text-xs">
               <span className="px-2 py-1 rounded bg-emerald-500/20 text-emerald-400">Bump Connect</span>
