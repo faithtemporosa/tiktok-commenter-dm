@@ -13,16 +13,20 @@ CREATE TABLE IF NOT EXISTS comment_reports (
     created_at TIMESTAMPTZ DEFAULT NOW(),
     timestamp TEXT NOT NULL,
     profile TEXT NOT NULL,
+    tiktok_username TEXT,
     video_url TEXT,
     video_id TEXT,
     comment TEXT NOT NULL,
     sheet TEXT,
     screenshot TEXT,
+    search_query TEXT,
     UNIQUE(timestamp, profile, video_id)
 );
 
--- Add screenshot column if table already exists
+-- Add columns if table already exists
 ALTER TABLE comment_reports ADD COLUMN IF NOT EXISTS screenshot TEXT;
+ALTER TABLE comment_reports ADD COLUMN IF NOT EXISTS tiktok_username TEXT;
+ALTER TABLE comment_reports ADD COLUMN IF NOT EXISTS search_query TEXT;
 
 -- Index for faster queries
 CREATE INDEX IF NOT EXISTS idx_comment_reports_timestamp ON comment_reports(timestamp DESC);
@@ -122,6 +126,34 @@ ALTER TABLE live_logs ENABLE ROW LEVEL SECURITY;
 
 -- Policy: Allow all operations
 CREATE POLICY "Allow all live_logs access" ON live_logs
+    FOR ALL USING (true) WITH CHECK (true);
+
+-- ============================================================================
+-- 5. TIKTOK ACCOUNTS TABLE
+-- Stores all TikTok accounts created by the automation
+-- ============================================================================
+CREATE TABLE IF NOT EXISTS tiktok_accounts (
+    id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+    browser_num INTEGER NOT NULL,
+    email TEXT NOT NULL,
+    password TEXT NOT NULL,
+    username TEXT,
+    birthdate TEXT,
+    status TEXT DEFAULT 'active',
+    UNIQUE(browser_num),
+    UNIQUE(email)
+);
+
+-- Index for faster queries
+CREATE INDEX IF NOT EXISTS idx_tiktok_accounts_browser ON tiktok_accounts(browser_num);
+CREATE INDEX IF NOT EXISTS idx_tiktok_accounts_status ON tiktok_accounts(status);
+
+-- Enable Row Level Security
+ALTER TABLE tiktok_accounts ENABLE ROW LEVEL SECURITY;
+
+-- Policy: Allow all operations
+CREATE POLICY "Allow all tiktok_accounts access" ON tiktok_accounts
     FOR ALL USING (true) WITH CHECK (true);
 
 -- ============================================================================

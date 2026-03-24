@@ -7,7 +7,7 @@ import Settings from "./pages/Settings";
 import {
   MessageCircle, TrendingUp, Calendar, RefreshCw, ExternalLink, Sparkles, BarChart3, Clock,
   Upload, Download, Terminal, Play, Pause, Send, Video, CalendarClock, Settings as SettingsIcon,
-  Home, ChevronLeft
+  Home, ChevronLeft, Users
 } from "lucide-react";
 
 const REFRESH_INTERVAL = 10000;
@@ -33,6 +33,8 @@ function Dashboard({ onNavigate }) {
   const [postReports, setPostReports] = useState([]);
   const [postTotal, setPostTotal] = useState(0);
   const [profileMappings, setProfileMappings] = useState({});
+  const [accounts, setAccounts] = useState([]);
+  const [accountsTotal, setAccountsTotal] = useState(0);
   const fileInputRef = useRef(null);
   const logsContainerRef = useRef(null);
 
@@ -101,6 +103,13 @@ function Dashboard({ onNavigate }) {
     } catch (err) { console.error("Post error:", err); }
   }, []);
 
+  const fetchAccounts = useCallback(async () => {
+    try {
+      const { data, count } = await supabase.from('tiktok_accounts').select('*', { count: 'exact' }).order('browser_num', { ascending: true });
+      setAccounts(data || []); setAccountsTotal(count || 0);
+    } catch (err) { console.error("Accounts error:", err); }
+  }, []);
+
   const fetchLogs = useCallback(async () => {
     try {
       const { data } = await supabase.from('live_logs').select('*').eq('id', '00000000-0000-0000-0000-000000000001').maybeSingle();
@@ -110,9 +119,9 @@ function Dashboard({ onNavigate }) {
 
   const fetchAll = useCallback(async () => {
     setLoading(true);
-    await Promise.all([fetchStats(), fetchReports(), fetchLogs(), fetchDmReports(), fetchPostReports(), fetchProfileMappings()]);
+    await Promise.all([fetchStats(), fetchReports(), fetchLogs(), fetchDmReports(), fetchPostReports(), fetchProfileMappings(), fetchAccounts()]);
     setLoading(false);
-  }, [fetchStats, fetchReports, fetchLogs, fetchDmReports, fetchPostReports, fetchProfileMappings]);
+  }, [fetchStats, fetchReports, fetchLogs, fetchDmReports, fetchPostReports, fetchProfileMappings, fetchAccounts]);
 
   const handleFileImport = async (event) => {
     const file = event.target.files[0]; if (!file) return;
@@ -140,7 +149,7 @@ function Dashboard({ onNavigate }) {
       else if (filter === "week") { const w = new Date(); w.setDate(w.getDate()-7); query = query.gte('timestamp', w.toISOString()); }
       else if (filter === "month") { const m = new Date(); m.setMonth(m.getMonth()-1); query = query.gte('timestamp', m.toISOString()); }
       const { data } = await query;
-      const headers = ['timestamp','profile','comment','sheet','video_url','video_id'];
+      const headers = ['timestamp','profile','tiktok_username','comment','search_query','sheet','video_url','video_id'];
       const csv = [headers.join(','), ...data.map(row => headers.map(h => `"${(row[h]||'').toString().replace(/"/g,'""')}"`).join(','))].join('\n');
       const blob = new Blob([csv], { type: 'text/csv' }); const url = URL.createObjectURL(blob);
       const a = document.createElement('a'); a.href = url; a.download = `comments_${new Date().toISOString().split('T')[0]}.csv`; a.click(); URL.revokeObjectURL(url);
@@ -172,6 +181,7 @@ function Dashboard({ onNavigate }) {
     { id: "comments", label: "Comments", icon: MessageCircle, count: stats?.total_comments },
     { id: "dms", label: "DMs", icon: Send, count: stats?.dm_total },
     { id: "posts", label: "Posts", icon: Video, count: stats?.post_total },
+    { id: "accounts", label: "Accounts", icon: Users, count: accountsTotal },
     { id: "analytics", label: "Analytics", icon: BarChart3 },
     { id: "logs", label: "Live Logs", icon: Terminal },
     { id: "settings", label: "Settings", icon: SettingsIcon }
@@ -278,20 +288,24 @@ function Dashboard({ onNavigate }) {
                 <thead className="bg-zinc-800/50"><tr>
                   <th className="text-left px-4 py-3 font-medium text-zinc-400">Time</th>
                   <th className="text-left px-4 py-3 font-medium text-zinc-400">Profile</th>
+                  <th className="text-left px-4 py-3 font-medium text-zinc-400">Username</th>
                   <th className="text-left px-4 py-3 font-medium text-zinc-400">Comment</th>
                   <th className="text-left px-4 py-3 font-medium text-zinc-400">Brand</th>
+                  <th className="text-left px-4 py-3 font-medium text-zinc-400">Search</th>
                   <th className="text-left px-4 py-3 font-medium text-zinc-400">Video</th>
                   <th className="text-left px-4 py-3 font-medium text-zinc-400">Proof</th>
                 </tr></thead>
                 <tbody>
-                  {loading ? <tr><td colSpan="6" className="text-center py-12 text-zinc-500"><RefreshCw className="w-5 h-5 animate-spin mx-auto mb-2" />Loading...</td></tr>
-                  : reports.length === 0 ? <tr><td colSpan="6" className="text-center py-12 text-zinc-500">No comments yet</td></tr>
+                  {loading ? <tr><td colSpan="8" className="text-center py-12 text-zinc-500"><RefreshCw className="w-5 h-5 animate-spin mx-auto mb-2" />Loading...</td></tr>
+                  : reports.length === 0 ? <tr><td colSpan="8" className="text-center py-12 text-zinc-500">No comments yet</td></tr>
                   : reports.map((r, i) => (
                     <tr key={r.id||i} className="border-t border-zinc-800 hover:bg-zinc-800/30" data-testid={`report-row-${i}`}>
                       <td className="px-4 py-3 whitespace-nowrap text-zinc-400 text-xs">{fmt(r.timestamp)}</td>
                       <td className="px-4 py-3"><span className="px-2 py-0.5 rounded bg-zinc-800 text-zinc-300 text-xs">{r.profile}</span></td>
+                      <td className="px-4 py-3">{r.tiktok_username ? <a href={`https://www.tiktok.com/@${r.tiktok_username}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-cyan-400 hover:text-cyan-300 text-xs"><ExternalLink className="w-3 h-3" />@{r.tiktok_username}</a> : <span className="text-zinc-600 text-xs">-</span>}</td>
                       <td className="px-4 py-3 max-w-md text-zinc-300 text-xs" title={r.comment}>{trunc(r.comment, 60)}</td>
                       <td className="px-4 py-3"><span className={`px-2 py-0.5 rounded text-xs ${brandColor(r.sheet)}`}>{r.sheet}</span></td>
+                      <td className="px-4 py-3"><span className={`px-2 py-0.5 rounded text-xs ${r.search_query === 'FYP' ? 'text-amber-400 bg-amber-500/20' : 'text-blue-400 bg-blue-500/20'}`}>{r.search_query || 'FYP'}</span></td>
                       <td className="px-4 py-3"><a href={r.video_url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-violet-400 hover:text-violet-300 text-xs"><ExternalLink className="w-3 h-3" />View</a></td>
                       <td className="px-4 py-3">{r.screenshot ? <a href={r.screenshot.startsWith('http') ? r.screenshot : `http://localhost:9000/screenshots/${r.screenshot}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-emerald-400 hover:text-emerald-300 text-xs">📸 Screenshot</a> : r.video_url ? <a href={r.video_url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-amber-400 hover:text-amber-300 text-xs">🔗 Video</a> : <span className="text-zinc-600 text-xs">-</span>}</td>
                     </tr>
@@ -337,6 +351,46 @@ function Dashboard({ onNavigate }) {
                 <thead className="bg-zinc-800/50"><tr><th className="text-left px-4 py-3 font-medium text-zinc-400">Time</th><th className="text-left px-4 py-3 font-medium text-zinc-400">Profile</th><th className="text-left px-4 py-3 font-medium text-zinc-400">Repost</th><th className="text-left px-4 py-3 font-medium text-zinc-400">Caption</th><th className="text-left px-4 py-3 font-medium text-zinc-400">Status</th><th className="text-left px-4 py-3 font-medium text-zinc-400">Proof</th></tr></thead>
                 <tbody>{postReports.length===0?<tr><td colSpan="6" className="text-center py-12 text-zinc-500"><Video className="w-6 h-6 mx-auto mb-2 opacity-50" />No posts yet</td></tr>
                   :postReports.map((p,i)=>{const mappedUsername = p.tiktok_username || profileMappings[p.profile]; const repostLink = p.repost_url || (mappedUsername && `https://www.tiktok.com/@${mappedUsername}?tab=reposts`); return <tr key={p.id||i} className="border-t border-zinc-800 hover:bg-zinc-800/30" data-testid={`post-row-${i}`}><td className="px-4 py-3 text-zinc-400 text-xs">{fmt(p.timestamp)}</td><td className="px-4 py-3"><span className="px-2 py-0.5 rounded bg-zinc-800 text-zinc-300 text-xs">{p.profile}</span></td><td className="px-4 py-3">{repostLink?<a href={repostLink} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-rose-400 hover:text-rose-300 text-xs"><ExternalLink className="w-3 h-3" />@{mappedUsername || 'View'}</a>:<span className="text-zinc-500 text-xs">Set in Settings</span>}</td><td className="px-4 py-3 text-zinc-300 text-xs max-w-md">{trunc(p.caption,60)}</td><td className="px-4 py-3"><span className="px-2 py-0.5 rounded text-xs text-emerald-400 bg-emerald-500/20">{p.status}</span></td><td className="px-4 py-3">{p.screenshot ? <a href={p.screenshot.startsWith('http') ? p.screenshot : `http://localhost:9000/screenshots/${p.screenshot}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-emerald-400 hover:text-emerald-300 text-xs">📸 Screenshot</a> : <span className="text-zinc-600 text-xs">-</span>}</td></tr>})}</tbody>
+              </table>
+            </div>
+          </div>
+        )}
+
+        {/* ACCOUNTS */}
+        {activeTab === "accounts" && (
+          <div data-testid="accounts-tab">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
+              <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-4 text-center"><div className="text-2xl font-bold text-violet-400">{accountsTotal.toLocaleString()}</div><div className="text-xs text-zinc-500">Total Accounts</div></div>
+              <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-4 text-center"><div className="text-2xl font-bold text-emerald-400">{accounts.filter(a=>a.status==='active').length}</div><div className="text-xs text-zinc-500">Active</div></div>
+              <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-4 text-center"><div className="text-2xl font-bold text-amber-400">{accounts.filter(a=>a.status==='suspended').length}</div><div className="text-xs text-zinc-500">Suspended</div></div>
+              <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-4 text-center"><div className="text-2xl font-bold text-cyan-400">{new Set(accounts.map(a=>a.email?.split('@')[1])).size}</div><div className="text-xs text-zinc-500">Email Domains</div></div>
+            </div>
+            <div className="mb-3 text-sm text-zinc-500">Showing {accounts.length} accounts</div>
+            <div className="bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden">
+              <table className="w-full text-sm" data-testid="accounts-table">
+                <thead className="bg-zinc-800/50"><tr>
+                  <th className="text-left px-4 py-3 font-medium text-zinc-400">Browser</th>
+                  <th className="text-left px-4 py-3 font-medium text-zinc-400">Email</th>
+                  <th className="text-left px-4 py-3 font-medium text-zinc-400">Password</th>
+                  <th className="text-left px-4 py-3 font-medium text-zinc-400">Username</th>
+                  <th className="text-left px-4 py-3 font-medium text-zinc-400">Birthdate</th>
+                  <th className="text-left px-4 py-3 font-medium text-zinc-400">Status</th>
+                  <th className="text-left px-4 py-3 font-medium text-zinc-400">Created</th>
+                </tr></thead>
+                <tbody>
+                  {accounts.length === 0 ? <tr><td colSpan="7" className="text-center py-12 text-zinc-500"><Users className="w-6 h-6 mx-auto mb-2 opacity-50" />No accounts yet. Run import script to add accounts.</td></tr>
+                  : accounts.map((acc, i) => (
+                    <tr key={acc.id || i} className="border-t border-zinc-800 hover:bg-zinc-800/30" data-testid={`account-row-${i}`}>
+                      <td className="px-4 py-3"><span className="px-2 py-0.5 rounded bg-violet-500/20 text-violet-400 text-xs font-mono">{acc.browser_num}</span></td>
+                      <td className="px-4 py-3 text-zinc-300 text-xs font-mono">{acc.email}</td>
+                      <td className="px-4 py-3 text-zinc-400 text-xs font-mono">{acc.password}</td>
+                      <td className="px-4 py-3">{acc.username ? <a href={`https://www.tiktok.com/@${acc.username}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-cyan-400 hover:text-cyan-300 text-xs"><ExternalLink className="w-3 h-3" />@{acc.username}</a> : <span className="text-zinc-600 text-xs">-</span>}</td>
+                      <td className="px-4 py-3 text-zinc-400 text-xs">{acc.birthdate || '-'}</td>
+                      <td className="px-4 py-3"><span className={`px-2 py-0.5 rounded text-xs ${acc.status==='active'?'text-emerald-400 bg-emerald-500/20':acc.status==='suspended'?'text-red-400 bg-red-500/20':'text-zinc-400 bg-zinc-500/20'}`}>{acc.status}</span></td>
+                      <td className="px-4 py-3 text-zinc-500 text-xs">{acc.created_at ? new Date(acc.created_at).toLocaleDateString() : '-'}</td>
+                    </tr>
+                  ))}
+                </tbody>
               </table>
             </div>
           </div>
