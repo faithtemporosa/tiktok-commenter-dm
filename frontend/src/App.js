@@ -74,9 +74,9 @@ function Dashboard({ onNavigate }) {
       const todayByBrand = {};
       todayBrandData?.forEach(r => { if (r.sheet) todayByBrand[r.sheet] = (todayByBrand[r.sheet] || 0) + 1; });
       const { count: dmCount } = await supabase.from('dm_reports').select('*', { count: 'exact', head: true });
-      const { count: dmTodayCount } = await supabase.from('dm_reports').select('*', { count: 'exact', head: true }).gte('timestamp', today.toISOString());
+      const { count: dmTodayCount } = await supabase.from('dm_reports').select('*', { count: 'exact', head: true }).gte('timestamp', todayISO);
       const { count: postCount } = await supabase.from('post_reports').select('*', { count: 'exact', head: true });
-      const { count: postTodayCount } = await supabase.from('post_reports').select('*', { count: 'exact', head: true }).gte('timestamp', today.toISOString());
+      const { count: postTodayCount } = await supabase.from('post_reports').select('*', { count: 'exact', head: true }).gte('timestamp', todayISO);
       setStats({
         total_comments: totalCount || 0, today_comments: todayCount || 0, week_comments: weekCount || 0, month_comments: monthCount || 0,
         today_by_brand: todayByBrand, dm_total: dmCount || 0, dm_today: dmTodayCount || 0, post_total: postCount || 0, post_today: postTodayCount || 0
