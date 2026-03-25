@@ -61,13 +61,16 @@ function Dashboard({ onNavigate }) {
   const fetchStats = useCallback(async () => {
     try {
       const { count: totalCount } = await supabase.from('comment_reports').select('*', { count: 'exact', head: true });
-      const today = new Date(); today.setHours(0, 0, 0, 0);
-      const { count: todayCount } = await supabase.from('comment_reports').select('*', { count: 'exact', head: true }).gte('timestamp', today.toISOString());
-      const weekAgo = new Date(); weekAgo.setDate(weekAgo.getDate() - 7);
+      // Use local midnight for "today" calculation
+      const now = new Date();
+      const localMidnight = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0);
+      const todayISO = localMidnight.toISOString();
+      const { count: todayCount } = await supabase.from('comment_reports').select('*', { count: 'exact', head: true }).gte('timestamp', todayISO);
+      const weekAgo = new Date(localMidnight); weekAgo.setDate(weekAgo.getDate() - 7);
       const { count: weekCount } = await supabase.from('comment_reports').select('*', { count: 'exact', head: true }).gte('timestamp', weekAgo.toISOString());
-      const monthAgo = new Date(); monthAgo.setMonth(monthAgo.getMonth() - 1);
+      const monthAgo = new Date(localMidnight); monthAgo.setMonth(monthAgo.getMonth() - 1);
       const { count: monthCount } = await supabase.from('comment_reports').select('*', { count: 'exact', head: true }).gte('timestamp', monthAgo.toISOString());
-      const { data: todayBrandData } = await supabase.from('comment_reports').select('sheet').gte('timestamp', today.toISOString());
+      const { data: todayBrandData } = await supabase.from('comment_reports').select('sheet').gte('timestamp', todayISO);
       const todayByBrand = {};
       todayBrandData?.forEach(r => { if (r.sheet) todayByBrand[r.sheet] = (todayByBrand[r.sheet] || 0) + 1; });
       const { count: dmCount } = await supabase.from('dm_reports').select('*', { count: 'exact', head: true });
