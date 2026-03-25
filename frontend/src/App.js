@@ -60,26 +60,32 @@ function Dashboard({ onNavigate }) {
 
   const fetchStats = useCallback(async () => {
     try {
-      const { count: totalCount } = await supabase.from('comment_reports').select('*', { count: 'exact', head: true });
       // Use local midnight for "today" calculation
       const now = new Date();
       const localMidnight = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0);
       const todayISO = localMidnight.toISOString();
-      const { count: todayCount } = await supabase.from('comment_reports').select('*', { count: 'exact', head: true }).gte('timestamp', todayISO);
       const weekAgo = new Date(localMidnight); weekAgo.setDate(weekAgo.getDate() - 7);
-      const { count: weekCount } = await supabase.from('comment_reports').select('*', { count: 'exact', head: true }).gte('timestamp', weekAgo.toISOString());
       const monthAgo = new Date(localMidnight); monthAgo.setMonth(monthAgo.getMonth() - 1);
-      const { count: monthCount } = await supabase.from('comment_reports').select('*', { count: 'exact', head: true }).gte('timestamp', monthAgo.toISOString());
-      const { data: todayBrandData } = await supabase.from('comment_reports').select('sheet').gte('timestamp', todayISO);
+
+      // Fetch counts (removed head:true for compatibility)
+      const [totalRes, todayRes, weekRes, monthRes, dmRes, dmTodayRes, postRes, postTodayRes, brandRes] = await Promise.all([
+        supabase.from('comment_reports').select('id', { count: 'exact' }),
+        supabase.from('comment_reports').select('id', { count: 'exact' }).gte('timestamp', todayISO),
+        supabase.from('comment_reports').select('id', { count: 'exact' }).gte('timestamp', weekAgo.toISOString()),
+        supabase.from('comment_reports').select('id', { count: 'exact' }).gte('timestamp', monthAgo.toISOString()),
+        supabase.from('dm_reports').select('id', { count: 'exact' }),
+        supabase.from('dm_reports').select('id', { count: 'exact' }).gte('timestamp', todayISO),
+        supabase.from('post_reports').select('id', { count: 'exact' }),
+        supabase.from('post_reports').select('id', { count: 'exact' }).gte('timestamp', todayISO),
+        supabase.from('comment_reports').select('sheet').gte('timestamp', todayISO)
+      ]);
+
       const todayByBrand = {};
-      todayBrandData?.forEach(r => { if (r.sheet) todayByBrand[r.sheet] = (todayByBrand[r.sheet] || 0) + 1; });
-      const { count: dmCount } = await supabase.from('dm_reports').select('*', { count: 'exact', head: true });
-      const { count: dmTodayCount } = await supabase.from('dm_reports').select('*', { count: 'exact', head: true }).gte('timestamp', todayISO);
-      const { count: postCount } = await supabase.from('post_reports').select('*', { count: 'exact', head: true });
-      const { count: postTodayCount } = await supabase.from('post_reports').select('*', { count: 'exact', head: true }).gte('timestamp', todayISO);
+      brandRes.data?.forEach(r => { if (r.sheet) todayByBrand[r.sheet] = (todayByBrand[r.sheet] || 0) + 1; });
+
       setStats({
-        total_comments: totalCount || 0, today_comments: todayCount || 0, week_comments: weekCount || 0, month_comments: monthCount || 0,
-        today_by_brand: todayByBrand, dm_total: dmCount || 0, dm_today: dmTodayCount || 0, post_total: postCount || 0, post_today: postTodayCount || 0
+        total_comments: totalRes.count || 0, today_comments: todayRes.count || 0, week_comments: weekRes.count || 0, month_comments: monthRes.count || 0,
+        today_by_brand: todayByBrand, dm_total: dmRes.count || 0, dm_today: dmTodayRes.count || 0, post_total: postRes.count || 0, post_today: postTodayRes.count || 0
       });
     } catch (err) { console.error("Stats error:", err); }
   }, []);
