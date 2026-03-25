@@ -12,6 +12,13 @@ import {
 
 const REFRESH_INTERVAL = 10000;
 
+// Helper to format UTC timestamp to local time
+const formatLocalTime = (utcTimestamp) => {
+  if (!utcTimestamp) return '';
+  const date = new Date(utcTimestamp);
+  return date.toLocaleString();
+};
+
 function Dashboard({ onNavigate }) {
   const [activeTab, setActiveTab] = useState("comments");
   const [stats, setStats] = useState(null);
@@ -172,7 +179,20 @@ function Dashboard({ onNavigate }) {
   }, [autoRefresh, fetchStats, fetchReports, fetchLogs, fetchDmReports, fetchPostReports]);
   useEffect(() => { if (logsContainerRef.current) logsContainerRef.current.scrollTop = logsContainerRef.current.scrollHeight; }, [logs]);
 
-  const fmt = (ts) => ts ? new Date(ts).toLocaleString() : "-";
+  const fmt = (ts) => {
+    if (!ts) return "-";
+    // Ensure UTC timestamp is properly converted to local time
+    const date = new Date(ts);
+    return date.toLocaleString('en-US', {
+      month: 'numeric',
+      day: 'numeric',
+      year: 'numeric',
+      hour: 'numeric',
+      minute: '2-digit',
+      second: '2-digit',
+      hour12: true
+    });
+  };
   const trunc = (c, m = 50) => !c ? "-" : c.length > m ? c.substring(0, m) + "..." : c;
   const brandColor = (s) => s === "Bump Connect" ? "text-emerald-400 bg-emerald-500/20" : s === "Kollabsy" ? "text-violet-400 bg-violet-500/20" : s === "Bump Syndicate" ? "text-amber-400 bg-amber-500/20" : "text-zinc-400 bg-zinc-500/20";
   const logColor = (m) => m.includes("\u2717") || m.includes("Error") || m.includes("Failed") ? "text-red-400" : m.includes("\u2713") || m.includes("SUCCESS") || m.includes("Completed") ? "text-emerald-400" : m.includes("\u26A0") ? "text-amber-400" : m.includes("\u2192") || m.includes("Starting") ? "text-blue-400" : "text-zinc-400";
