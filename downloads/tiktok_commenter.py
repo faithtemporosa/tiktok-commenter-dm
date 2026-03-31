@@ -39,8 +39,8 @@ except ImportError:
 # Supabase for cloud sync
 try:
     from supabase import create_client
-    SUPABASE_URL = "https://qwnhywiygyvlhjxxrbkk.supabase.co"
-    SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF3bmh5d2l5Z3l2bGhqeHhyYmtrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzEyNTkxNzgsImV4cCI6MjA4NjgzNTE3OH0.X7RdTeOPrJCkf8c1oOUGHv1tntDigluOnj7bPw50tKE"
+    SUPABASE_URL = "https://gisbdbbsvwjcjwovwklg.supabase.co"
+    SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imdpc2JkYmJzdndqY2p3b3Z3a2xnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njk3OTk5NzQsImV4cCI6MjA4NTM3NTk3NH0.uIKtftzl9ssaP2rXfXgHr3NFcA2PFYAUcSzQu_6ZIcI"
     supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
     HAS_SUPABASE = True
 except ImportError:
@@ -92,7 +92,7 @@ settings = {
     "min_delay": MIN_DELAY_BETWEEN_COMMENTS,
     "max_delay": MAX_DELAY_BETWEEN_COMMENTS,
     "videos_per_profile": VIDEOS_PER_PROFILE,
-    "parallel_browsers": 2,  # Fixed at 2 browsers at a time
+    "parallel_browsers": 2,  # Number of browsers to run in parallel (1-10, recommended: 2-3)
     "target_hashtag": "",  # Target hashtag to search (e.g., #socialmedia)
 }
 
@@ -940,22 +940,23 @@ def sync_post_to_cloud(post_entry):
     if not HAS_SUPABASE:
         return
     try:
-        # Get screenshot filename
-        screenshot = post_entry.get('screenshot', '')
-        screenshot_filename = os.path.basename(screenshot) if screenshot else ''
+        # Format timestamp for Supabase
+        ts = post_entry.get('timestamp')
+        if ts and ' ' in ts:
+            # Convert "2026-03-26 01:29:34" to ISO format
+            dt = datetime.strptime(ts, '%Y-%m-%d %H:%M:%S')
+            ts = dt.strftime('%Y-%m-%dT%H:%M:%S+00:00')
 
         supabase.table('post_reports').insert({
-            'timestamp': post_entry.get('timestamp'),
+            'timestamp': ts,
             'profile': post_entry.get('profile'),
             'video': post_entry.get('video', ''),
-            'repost_url': post_entry.get('repost_url', ''),
-            'tiktok_username': post_entry.get('tiktok_username', ''),
             'caption': post_entry.get('caption', '')[:500],
-            'status': post_entry.get('status', 'unknown'),
-            'screenshot': screenshot_filename
+            'status': post_entry.get('status', 'reposted'),
+            'content_type': post_entry.get('content_type', 'social')
         }).execute()
-    except:
-        pass
+    except Exception as e:
+        print(f"Error syncing repost to Supabase: {e}")
 
 def scheduler_loop():
     """Background thread: auto-runs repost scheduler daily"""
@@ -2077,12 +2078,17 @@ def scrape_and_repost(page, profile_name, search_terms, content_type):
             return links.slice(0, 10);
         }''')
         
-        if not video_links:
-            search_term = random.choice(search_terms)
+        # Retry with different search terms until we find videos
+        retry_count = 0
+        max_retries = min(3, len(search_terms))
+        while not video_links and retry_count < max_retries:
+            search_term = random.choice([t for t in search_terms if t != search_term])
             encoded = search_term.replace(" ", "%20")
             post_log(f"  Retrying: '{search_term}'")
             page.goto(f"https://www.tiktok.com/search/video?q={encoded}", wait_until="domcontentloaded", timeout=60000)
             time.sleep(5)
+            page.evaluate("window.scrollBy(0, 400)")
+            time.sleep(2)
             video_links = page.evaluate('''() => {
                 const links = [];
                 document.querySelectorAll('a[href*="/video/"]').forEach(a => {
@@ -2090,7 +2096,8 @@ def scrape_and_repost(page, profile_name, search_terms, content_type):
                 });
                 return links.slice(0, 10);
             }''')
-        
+            retry_count += 1
+
         post_log(f"  Found {len(video_links)} videos")
         random.shuffle(video_links)
         
@@ -2430,7 +2437,7 @@ def fetch_adspower_profiles():
     """Fetch profiles from AdsPower API"""
     global profiles
     try:
-        response = requests.get(f"{ADSPOWER_API}/api/v1/user/list?page_size=100", timeout=5)
+        response = requests.get(f"{ADSPOWER_API}/api/v1/user/list?page_size=1000", timeout=5)
         data = response.json()
         if data.get("code") == 0:
             profiles = data.get("data", {}).get("list", [])
@@ -3230,12 +3237,12 @@ def run_automation_thread(profile_ids, sheet_mapping):
     automation_status["logs"] = []
     # Keep existing report data - don't clear it!
     # comments_posted is total of ALL time
-    
-    parallel = 2  # Always run exactly 2 browsers at a time
-    
+
+    parallel = settings.get('parallel_browsers', 2)  # Number of browsers to run at a time
+
     log(f"{'='*50}")
     log(f"Starting for {len(profile_ids)} profiles (Target: 25/day)")
-    log(f"Running 2 browsers at a time until all {len(profile_ids)} finished")
+    log(f"Running {parallel} browser{'s' if parallel != 1 else ''} at a time until all {len(profile_ids)} finished")
     log(f"Target: {settings['videos_per_profile']} videos per profile")
     if settings.get('target_hashtag'):
         log(f"🎯 Targeting: #{settings['target_hashtag'].replace('#','')}")
@@ -3347,14 +3354,14 @@ DASHBOARD_HTML = """
 <body>
     <div class="container">
         <h1>🎵 TikTok Auto Commenter</h1>
-        <p class="subtitle">Daily target: 25 browsers × 1000 videos = 25,000 comments</p>
-        
+        <p class="subtitle" id="dailyTargetText">Daily target: <span id="numProfiles">0</span> browsers × <span id="numVideos">10</span> videos = <span id="totalTarget">0</span> comments</p>
+
         <div class="target-info">
             <h3>📊 Daily Target</h3>
             <div class="target-stats">
-                <div class="target-stat"><div class="num">25</div><div class="lbl">Profiles</div></div>
-                <div class="target-stat"><div class="num">1,000</div><div class="lbl">Videos/Profile</div></div>
-                <div class="target-stat"><div class="num">25,000</div><div class="lbl">Daily Target</div></div>
+                <div class="target-stat"><div class="num" id="profileCount">0</div><div class="lbl">Profiles</div></div>
+                <div class="target-stat"><div class="num" id="videosPerProfile">10</div><div class="lbl">Videos/Profile</div></div>
+                <div class="target-stat"><div class="num" id="dailyTarget">0</div><div class="lbl">Daily Target</div></div>
                 <div class="target-stat"><div class="num">2</div><div class="lbl">Parallel</div></div>
             </div>
             <div style="margin-top:12px;font-size:12px;color:#a1a1aa;">
@@ -3374,10 +3381,10 @@ DASHBOARD_HTML = """
         <div id="tab-main">
             <div class="grid">
                 <div class="card">
-                    <div class="card-title"><span>Profiles (Select 25)</span><span id="pc" style="color:#71717a">0</span></div>
+                    <div class="card-title"><span>Profiles</span><span id="pc" style="color:#71717a">0/0 selected</span></div>
                     <div style="display:flex;gap:8px;margin-bottom:12px;">
                         <button class="btn btn-secondary" onclick="sync()">🔄 Sync</button>
-                        <button class="btn btn-secondary" onclick="selAll()">Select All 25</button>
+                        <button class="btn btn-secondary" onclick="selAll()" id="selAllBtn">Select All</button>
                     </div>
                     <div class="profile-list" id="pl"></div>
                 </div>
@@ -3389,11 +3396,13 @@ DASHBOARD_HTML = """
                         <div class="setting-row"><label>Min delay (s):</label><input type="number" id="mind" value="30"></div>
                         <div class="setting-row"><label>Max delay (s):</label><input type="number" id="maxd" value="60"></div>
                         <div class="setting-row"><label>Videos/profile:</label><input type="number" id="vpp" value="100"></div>
-                        <div style="font-size:12px;color:#71717a;margin-top:8px;">⚡ Running 2 browsers at a time (fixed for stability)</div>
+                        <div class="setting-row"><label>Parallel browsers:</label><input type="number" id="parallel" value="2" min="1" max="10"></div>
+                        <div style="font-size:12px;color:#71717a;margin-top:8px;">⚡ Run 1-10 browsers at a time (2-3 recommended for stability)</div>
                     </div>
                     <div class="stats">
                         <div class="stat"><div class="stat-value" id="sp">0</div><div class="stat-label">Profiles Done</div></div>
-                        <div class="stat"><div class="stat-value" id="sc">0</div><div class="stat-label">Comments Today</div></div>
+                        <div class="stat"><div class="stat-value" id="sc-today">0</div><div class="stat-label">Today</div></div>
+                        <div class="stat"><div class="stat-value" id="sc">0</div><div class="stat-label">Total</div></div>
                     </div>
                     <div class="progress"><div class="progress-fill" id="prog" style="width:0%"></div></div>
                     <p class="center" style="color:#71717a" id="st">Ready - Click Start to run 25 browsers</p>
@@ -3738,7 +3747,7 @@ DASHBOARD_HTML = """
         function render(){const e=document.getElementById('pl');if(!profiles.length){e.innerHTML='<div style="text-align:center;color:#71717a;padding:40px">Click Sync to load 25 profiles</div>';return;}e.innerHTML=profiles.map(p=>'<div class="profile '+(selected.has(p.user_id)?'selected':'')+'" onclick="tog(\\''+p.user_id+'\\')"><input type="checkbox" '+(selected.has(p.user_id)?'checked':'')+' onclick="event.stopPropagation();tog(\\''+p.user_id+'\\')"><div style="flex:1"><div style="font-weight:500">'+(p.name||p.user_id)+'</div><div style="font-size:11px;color:#71717a">'+p.user_id+'</div></div></div>').join('');document.getElementById('pc').textContent=selected.size+'/'+profiles.length+' selected';}
         function tog(id){selected.has(id)?selected.delete(id):selected.add(id);render();}
         function selAll(){if(selected.size==profiles.length)selected.clear();else profiles.forEach(p=>selected.add(p.user_id));render();}
-        async function start(){if(!selected.size){alert('Select profiles first');return;}await fetch('/api/settings',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({min_delay:+document.getElementById('mind').value,max_delay:+document.getElementById('maxd').value,videos_per_profile:+document.getElementById('vpp').value,target_hashtag:document.getElementById('hashtag').value})});await fetch('/api/start',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({profile_ids:[...selected],sheet_mapping:{}})});document.getElementById('startb').style.display='none';document.getElementById('stopb').style.display='inline';}
+        async function start(){if(!selected.size){alert('Select profiles first');return;}await fetch('/api/settings',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({min_delay:+document.getElementById('mind').value,max_delay:+document.getElementById('maxd').value,videos_per_profile:+document.getElementById('vpp').value,target_hashtag:document.getElementById('hashtag').value,parallel_browsers:+document.getElementById('parallel').value})});await fetch('/api/start',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({profile_ids:[...selected],sheet_mapping:{}})});document.getElementById('startb').style.display='none';document.getElementById('stopb').style.display='inline';}
         async function stop(){await fetch('/api/stop',{method:'POST'});}
         
         function filterToday(){currentFilter='today';applyFilter();}
@@ -3822,7 +3831,7 @@ DASHBOARD_HTML = """
             }catch(e){document.getElementById('cloud-total-count').textContent='Offline';}
         }
         
-        async function upd(){try{const r=await fetch('/api/status');const d=await r.json();document.getElementById('prog').style.width=(d.total?(d.progress/d.total*100):0)+'%';document.getElementById('sp').textContent=d.completed.length;document.getElementById('sc').textContent=d.comments_posted||0;document.getElementById('st').textContent=d.running?'Running: '+d.current_profile+' ('+d.progress+'/'+d.total+')':'Ready';if(!d.running){document.getElementById('startb').style.display='inline';document.getElementById('stopb').style.display='none';}if(d.logs.length)document.getElementById('logs').innerHTML=d.logs.map(l=>'<div style="color:'+(l.includes('✗')?'#f87171':l.includes('✓')?'#4ade80':'#a1a1aa')+'">'+l+'</div>').join('');if(d.report&&d.report.length!==report.length){report=d.report;applyFilter();}}catch(e){}}
+        async function upd(){try{const r=await fetch('/api/status');const d=await r.json();document.getElementById('prog').style.width=(d.total?(d.progress/d.total*100):0)+'%';document.getElementById('sp').textContent=d.completed.length;document.getElementById('sc-today').textContent=d.comments_today||0;document.getElementById('sc').textContent=d.comments_posted||0;document.getElementById('st').textContent=d.running?'Running: '+d.current_profile+' ('+d.progress+'/'+d.total+')':'Ready';if(!d.running){document.getElementById('startb').style.display='inline';document.getElementById('stopb').style.display='none';}if(d.logs.length)document.getElementById('logs').innerHTML=d.logs.map(l=>'<div style="color:'+(l.includes('✗')?'#f87171':l.includes('✓')?'#4ade80':'#a1a1aa')+'">'+l+'</div>').join('');if(d.report&&d.report.length!==report.length){report=d.report;applyFilter();}}catch(e){}}
         function clrLog(){fetch('/api/clear-logs',{method:'POST'});document.getElementById('logs').innerHTML='Cleared';}
         async function clrReport(){if(!confirm('⚠️ Delete ALL comment history forever?\\n\\nThis will remove '+report.length+' comments and cannot be undone.'))return;await fetch('/api/clear-report',{method:'POST'});report=[];filteredReport=[];renderReport();}
         function expCSV(){if(!report.length)return alert('No data');const csv='Date,Time,Profile,Comment,Video URL,Sheet\\n'+report.map(r=>{const[d,t]=r.timestamp.split(' ');return d+','+t+','+r.profile+',"'+r.comment.replace(/"/g,'""')+'",'+r.video_url+','+r.sheet;}).join('\\n');const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv]));a.download='tiktok_comments_history_'+new Date().toISOString().split('T')[0]+'.csv';a.click();}
@@ -4260,6 +4269,29 @@ DASHBOARD_HTML = """
             if (!confirm('This will open each browser one by one to detect TikTok usernames. Continue?')) return;
             alert('Username detection runs automatically when you start any automation (DM, Repost, Comments). The usernames will be saved and appear here.');
         }
+
+        // Load profile mapping on startup and update profile count
+        async function updateProfileCounts() {
+            try {
+                const r = await fetch('/api/profile-mapping');
+                const mapping = await r.json();
+                const numProfiles = Object.keys(mapping).length;
+                const videosPerProfile = 10;
+                const dailyTarget = numProfiles * videosPerProfile;
+
+                document.getElementById('profileCount').textContent = numProfiles.toLocaleString();
+                document.getElementById('numProfiles').textContent = numProfiles;
+                document.getElementById('numVideos').textContent = videosPerProfile;
+                document.getElementById('videosPerProfile').textContent = videosPerProfile;
+                document.getElementById('totalTarget').textContent = dailyTarget.toLocaleString();
+                document.getElementById('dailyTarget').textContent = dailyTarget.toLocaleString();
+            } catch(e) {
+                console.error('Error updating profile counts:', e);
+            }
+        }
+
+        // Update counts on page load
+        updateProfileCounts();
     </script>
 </body>
 </html>
@@ -4307,7 +4339,32 @@ def api_load_comments():
 
 @app.route('/api/status')
 def api_status():
-    return jsonify(automation_status)
+    # Fetch counts from Supabase to match Vercel dashboard
+    try:
+        # Use UTC midnight to match Vercel (which uses browser's timezone)
+        from datetime import timezone as tz
+        utc_now = datetime.now(tz.utc)
+        utc_midnight = utc_now.replace(hour=0, minute=0, second=0, microsecond=0)
+        today_iso = utc_midnight.strftime("%Y-%m-%dT%H:%M:%S+00:00")
+
+        # Fetch from Supabase
+        today_result = supabase.table('comment_reports').select('id', count='exact').gte('timestamp', today_iso).execute()
+        total_result = supabase.table('comment_reports').select('id', count='exact').execute()
+
+        today_count = today_result.count or 0
+        total_count = total_result.count or 0
+    except Exception as e:
+        print(f"Error fetching from Supabase: {e}")
+        # Fallback to local data
+        today_str = datetime.now().strftime("%Y-%m-%d")
+        today_count = sum(1 for r in automation_status.get("report", [])
+                          if r.get("timestamp", "").startswith(today_str))
+        total_count = len(automation_status.get("report", []))
+
+    response = dict(automation_status)
+    response["comments_today"] = today_count
+    response["comments_posted"] = total_count
+    return jsonify(response)
 
 @app.route('/api/settings', methods=['POST'])
 def api_settings():
