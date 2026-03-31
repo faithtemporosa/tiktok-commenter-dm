@@ -261,12 +261,12 @@ function Dashboard({ onNavigate }) {
         </div>
 
         {/* Stats */}
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 mb-6">
+        <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
           {[
             // { label: "This Month", value: stats?.month_comments, icon: Calendar, color: "violet" }, // Hidden until old Supabase data migrated
             { label: "This Week", value: stats?.week_comments, icon: TrendingUp, color: "blue" },
             { label: "Today", value: stats?.today_comments, icon: Sparkles, color: "emerald" },
-            { label: "All Comments", value: stats?.total_comments, icon: MessageCircle, color: "zinc" },
+            // { label: "All Comments", value: stats?.total_comments, icon: MessageCircle, color: "zinc" }, // Hidden until old Supabase data migrated
             { label: "DMs Sent", value: stats?.dm_total, icon: Send, color: "cyan" },
             { label: "Posts Made", value: stats?.post_total, icon: Video, color: "rose" }
           ].map((s, i) => (
