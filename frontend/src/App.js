@@ -284,7 +284,7 @@ function Dashboard({ onNavigate }) {
               className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium transition-all whitespace-nowrap ${activeTab === tab.id?"bg-violet-600 text-white shadow-lg shadow-violet-500/20":"text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800"}`}
               data-testid={`tab-${tab.id}`}>
               <tab.icon className="w-3.5 h-3.5" />{tab.label}
-              {tab.count !== undefined && <span className={`text-xs px-1.5 py-0.5 rounded-full ${activeTab===tab.id?"bg-white/20":"bg-zinc-800"}`}>{(tab.count||0).toLocaleString()}</span>}
+              {/* {tab.count !== undefined && <span className={`text-xs px-1.5 py-0.5 rounded-full ${activeTab===tab.id?"bg-white/20":"bg-zinc-800"}`}>{(tab.count||0).toLocaleString()}</span>} */}
             </button>
           ))}
         </div>
