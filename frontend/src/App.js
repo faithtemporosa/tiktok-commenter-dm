@@ -63,16 +63,19 @@ function Dashboard({ onNavigate }) {
       // Use local midnight for "today" calculation
       const now = new Date();
       const localMidnight = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0);
-      const todayISO = localMidnight.toISOString();
+      // Use date-only format to match bot's timestamp format (YYYY-MM-DD HH:MM:SS)
+      const todayISO = now.toISOString().split('T')[0]; // Just the date part: 2026-04-01
       const weekAgo = new Date(localMidnight); weekAgo.setDate(weekAgo.getDate() - 7);
+      const weekISO = weekAgo.toISOString().split('T')[0];
       const monthAgo = new Date(localMidnight); monthAgo.setMonth(monthAgo.getMonth() - 1);
+      const monthISO = monthAgo.toISOString().split('T')[0];
 
       // Fetch counts (removed head:true for compatibility)
       const [totalRes, todayRes, weekRes, monthRes, dmRes, dmTodayRes, postRes, postTodayRes, brandRes] = await Promise.all([
         supabase.from('comment_reports').select('id', { count: 'exact' }),
         supabase.from('comment_reports').select('id', { count: 'exact' }).gte('timestamp', todayISO),
-        supabase.from('comment_reports').select('id', { count: 'exact' }).gte('timestamp', weekAgo.toISOString()),
-        supabase.from('comment_reports').select('id', { count: 'exact' }).gte('timestamp', monthAgo.toISOString()),
+        supabase.from('comment_reports').select('id', { count: 'exact' }).gte('timestamp', weekISO),
+        supabase.from('comment_reports').select('id', { count: 'exact' }).gte('timestamp', monthISO),
         supabase.from('dm_reports').select('id', { count: 'exact' }),
         supabase.from('dm_reports').select('id', { count: 'exact' }).gte('timestamp', todayISO),
         supabase.from('post_reports').select('id', { count: 'exact' }),
