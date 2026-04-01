@@ -261,12 +261,12 @@ function Dashboard({ onNavigate }) {
         </div>
 
         {/* Stats */}
-        <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
+        <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-6 gap-3 mb-6">
           {[
-            // { label: "This Month", value: stats?.month_comments, icon: Calendar, color: "violet" }, // Hidden until old Supabase data migrated
+            { label: "This Month", value: stats?.month_comments, icon: Calendar, color: "violet" },
             { label: "This Week", value: stats?.week_comments, icon: TrendingUp, color: "blue" },
             { label: "Today", value: stats?.today_comments, icon: Sparkles, color: "emerald" },
-            // { label: "All Comments", value: stats?.total_comments, icon: MessageCircle, color: "zinc" }, // Hidden until old Supabase data migrated
+            { label: "All Comments", value: stats?.total_comments, icon: MessageCircle, color: "zinc" },
             { label: "DMs Sent", value: stats?.dm_total, icon: Send, color: "cyan" },
             { label: "Posts Made", value: stats?.post_total, icon: Video, color: "rose" }
           ].map((s, i) => (
@@ -284,7 +284,7 @@ function Dashboard({ onNavigate }) {
               className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium transition-all whitespace-nowrap ${activeTab === tab.id?"bg-violet-600 text-white shadow-lg shadow-violet-500/20":"text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800"}`}
               data-testid={`tab-${tab.id}`}>
               <tab.icon className="w-3.5 h-3.5" />{tab.label}
-              {/* {tab.count !== undefined && <span className={`text-xs px-1.5 py-0.5 rounded-full ${activeTab===tab.id?"bg-white/20":"bg-zinc-800"}`}>{(tab.count||0).toLocaleString()}</span>} */}
+              {tab.count !== undefined && <span className={`text-xs px-1.5 py-0.5 rounded-full ${activeTab===tab.id?"bg-white/20":"bg-zinc-800"}`}>{(tab.count||0).toLocaleString()}</span>}
             </button>
           ))}
         </div>
