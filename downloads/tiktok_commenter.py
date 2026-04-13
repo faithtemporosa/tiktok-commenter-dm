@@ -82,6 +82,57 @@ DM_TARGETS_FILE = "tiktok_dm_targets.json"
 POST_QUEUE_FILE = "tiktok_post_queue.json"
 POST_HISTORY_FILE = "tiktok_post_history.json"
 SCREENSHOTS_FOLDER = "comment_screenshots"
+NOT_LOGGED_IN_FILE = "not_logged_in_browsers.json"
+
+# Track browsers that are not logged in
+not_logged_in_browsers = []
+
+def load_not_logged_in():
+    """Load list of browsers that are not logged in"""
+    global not_logged_in_browsers
+    try:
+        with open(NOT_LOGGED_IN_FILE, 'r') as f:
+            data = json.load(f)
+            not_logged_in_browsers = data.get("browsers", [])
+    except:
+        not_logged_in_browsers = []
+
+def save_not_logged_in():
+    """Save list of browsers that are not logged in"""
+    try:
+        with open(NOT_LOGGED_IN_FILE, 'w') as f:
+            json.dump({
+                "browsers": not_logged_in_browsers,
+                "last_updated": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                "count": len(not_logged_in_browsers)
+            }, f, indent=2)
+    except:
+        pass
+
+def track_not_logged_in(profile_name, source="unknown"):
+    """Track a browser that is not logged in"""
+    global not_logged_in_browsers
+    entry = {
+        "profile": profile_name,
+        "detected_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+        "source": source  # commenter, dm, repost
+    }
+    # Check if already tracked
+    existing = [b for b in not_logged_in_browsers if b.get("profile") == profile_name]
+    if not existing:
+        not_logged_in_browsers.append(entry)
+        save_not_logged_in()
+        print(f"  📝 Tracked not-logged-in: {profile_name}")
+
+def clear_not_logged_in():
+    """Clear the not logged in list"""
+    global not_logged_in_browsers
+    not_logged_in_browsers = []
+    save_not_logged_in()
+
+def get_not_logged_in_list():
+    """Get list of not logged in browsers"""
+    return not_logged_in_browsers
 
 # Create screenshots folder if it doesn't exist
 import os
@@ -546,13 +597,15 @@ def start_check_replies():
                 
                 browser_data = open_browser(profile_id)
                 if browser_data:
-                    ws_endpoint = browser_data.get("ws", {}).get("puppeteer")
-                    if ws_endpoint:
-                        time.sleep(3)
-                        new_replies = run_check_replies(ws_endpoint, profile_name)
-                        total_new += len(new_replies)
-                    close_browser(profile_id)
-                
+                    try:
+                        ws_endpoint = browser_data.get("ws", {}).get("puppeteer")
+                        if ws_endpoint:
+                            time.sleep(3)
+                            new_replies = run_check_replies(ws_endpoint, profile_name)
+                            total_new += len(new_replies)
+                    finally:
+                        close_browser(profile_id)
+
                 time.sleep(5)  # Delay between profiles
             
             # Generate AI drafts for new replies
@@ -640,13 +693,15 @@ def start_send_approved():
                 
                 browser_data = open_browser(profile.get("user_id"))
                 if browser_data:
-                    ws_endpoint = browser_data.get("ws", {}).get("puppeteer")
-                    if ws_endpoint:
-                        time.sleep(3)
-                        sent = run_send_approved_replies(ws_endpoint, profile_name)
-                        total_sent += sent
-                    close_browser(profile.get("user_id"))
-                
+                    try:
+                        ws_endpoint = browser_data.get("ws", {}).get("puppeteer")
+                        if ws_endpoint:
+                            time.sleep(3)
+                            sent = run_send_approved_replies(ws_endpoint, profile_name)
+                            total_sent += sent
+                    finally:
+                        close_browser(profile.get("user_id"))
+
                 time.sleep(10)  # Delay between profiles
             
         except Exception as e:
@@ -703,16 +758,22 @@ def set_tiktok_username(profile_name, tiktok_username):
 
 # Load mapping on startup
 load_profile_mapping()
+load_not_logged_in()
 
 # Repost schedule: Monday = brand content, Tue-Sun = social media content
 BRAND_SEARCH_TERMS = [
     "bumpconnect", "bump connect", "kollabsy", "bumpsyndicate", "bump syndicate",
-    "bumpconnect.xyz", "kollabsy.xyz", "bumpsyndicate.xyz",
+    "bumpconnect.com", "kollabsy.xyz", "bumpsyndicate.xyz",
 ]
 SOCIAL_MEDIA_SEARCH_TERMS = [
     "social media tips", "content creator tips", "social media marketing",
     "grow your following", "social media strategy", "creator economy",
     "tiktok growth", "influencer tips", "content creation", "digital marketing",
+]
+
+# Source accounts to repost from - scrapes their latest videos
+REPOST_SOURCE_ACCOUNTS = [
+    "lifeadventuresafterfifty",
 ]
 
 # Post Queue - auto-populated by scheduler
@@ -735,7 +796,7 @@ post_status = {
 }
 
 # Scheduler state
-scheduler_running = True
+scheduler_running = False  # Disabled - was running daily reposts
 
 automation_status = {
     "running": False,
@@ -1530,10 +1591,15 @@ def collect_followers(page, account, limit=100):
 
 def run_dm_automation_for_profile(ws_endpoint, profile_name):
     """Run DM automation for a single profile - NEW VERSION with brand search"""
+    # Check if automation was stopped
+    if not dm_status["running"]:
+        dm_log(f"  [{profile_name}] ⏹ Stopped")
+        return 0
+
     if not HAS_PLAYWRIGHT:
         dm_log("✗ Playwright not installed!")
         return 0
-    
+
     dms_sent = 0
     max_dms = dm_settings.get("max_dms_per_profile", 100)
     
@@ -1573,6 +1639,7 @@ def run_dm_automation_for_profile(ws_endpoint, profile_name):
                 time.sleep(3)
                 if "login" in page.url.lower():
                     dm_log(f"  ⚠ NOT LOGGED IN - Skipping profile")
+                    track_not_logged_in(profile_name, source="dm")
                     browser.close()
                     return -1
                 dm_log(f"  ✓ Logged in")
@@ -1729,25 +1796,35 @@ def run_dm_automation_for_profile(ws_endpoint, profile_name):
 
 def process_dm_profile(profile_id, profile_name):
     """Process a single profile for DM automation"""
+    # Check if automation was stopped before opening browser
+    if not dm_status["running"]:
+        dm_log(f"  [{profile_name}] ⏹ Stopped before opening browser")
+        return 0
+
     dm_log(f"▶ Starting DM: {profile_name}")
     dm_status["current_profile"] = profile_name
-    
+
+    # Double-check running status before opening browser
+    if not dm_status["running"]:
+        dm_log(f"  [{profile_name}] ⏹ Stopped")
+        return 0
+
     browser_data = open_browser(profile_id)
     if not browser_data:
         dm_log(f"  ✗ Failed to open browser")
         return 0
-    
-    ws_endpoint = browser_data.get("ws", {}).get("puppeteer")
-    if not ws_endpoint:
-        dm_log(f"  ✗ No WebSocket endpoint")
+
+    try:
+        ws_endpoint = browser_data.get("ws", {}).get("puppeteer")
+        if not ws_endpoint:
+            dm_log(f"  ✗ No WebSocket endpoint")
+            return 0
+
+        time.sleep(3)
+        dms_sent = run_dm_automation_for_profile(ws_endpoint, profile_name)
+    finally:
         close_browser(profile_id)
-        return 0
-    
-    time.sleep(3)
-    dms_sent = run_dm_automation_for_profile(ws_endpoint, profile_name)
-    
-    close_browser(profile_id)
-    dm_log(f"  → Browser closed")
+        dm_log(f"  → Browser closed")
     
     return dms_sent
 
@@ -2065,8 +2142,9 @@ def scrape_and_repost(page, profile_name, search_terms, content_type):
         
         if "login" in page.url.lower():
             post_log(f"  Not logged in, skipping")
+            track_not_logged_in(profile_name, source="repost")
             return 0
-        
+
         page.evaluate("window.scrollBy(0, 400)")
         time.sleep(2)
         
@@ -2326,44 +2404,226 @@ def scrape_and_repost(page, profile_name, search_terms, content_type):
         post_log(f"  Scrape error: {str(e)[:80]}")
     return reposts_made
 
-def run_repost_for_profile(profile_id, profile_name):
+def repost_from_source_accounts(page, profile_name):
+    """Repost videos from source accounts (REPOST_SOURCE_ACCOUNTS list)"""
+    max_reposts = post_settings["max_reposts_per_day"]
+    remaining = max_reposts - get_reposts_today(profile_name)
+    if remaining <= 0:
+        post_log(f"  Already at {max_reposts} reposts today, skipping")
+        return 0
+
+    post_log(f"  Need {remaining} repost(s) from source accounts")
+    reposts_made = 0
+
+    # Get the logged-in TikTok username
+    tiktok_username = get_tiktok_username(profile_name)
+    if not tiktok_username:
+        try:
+            page.goto("https://www.tiktok.com/profile", wait_until="domcontentloaded", timeout=30000)
+            time.sleep(3)
+            current_url = page.url
+            if "/@" in current_url:
+                match = re.search(r'/@([^/?]+)', current_url)
+                if match:
+                    tiktok_username = match.group(1)
+                    set_tiktok_username(profile_name, tiktok_username)
+                    post_log(f"  Logged in as: @{tiktok_username}")
+        except:
+            pass
+
+    if "login" in page.url.lower():
+        post_log(f"  Not logged in, skipping")
+        track_not_logged_in(profile_name, source="repost_source")
+        return 0
+
+    # Pick a random source account
+    source_account = random.choice(REPOST_SOURCE_ACCOUNTS)
+    post_log(f"  Source account: @{source_account}")
+
+    try:
+        # Navigate to source account's profile
+        page.goto(f"https://www.tiktok.com/@{source_account}", wait_until="domcontentloaded", timeout=60000)
+        time.sleep(5)
+
+        # Scroll to load videos
+        page.evaluate("window.scrollBy(0, 400)")
+        time.sleep(2)
+
+        # Get video links from their profile
+        video_links = page.evaluate('''() => {
+            const links = [];
+            document.querySelectorAll('a[href*="/video/"]').forEach(a => {
+                if (a.href && !links.includes(a.href)) links.push(a.href);
+            });
+            return links.slice(0, 10);
+        }''')
+
+        post_log(f"  Found {len(video_links)} videos from @{source_account}")
+        random.shuffle(video_links)
+
+        for video_url in video_links[:remaining + 3]:
+            if reposts_made >= remaining or not post_status["running"]:
+                break
+            try:
+                post_log(f"  Opening: ...{video_url[-30:]}")
+                page.goto(video_url, wait_until="domcontentloaded", timeout=30000)
+                time.sleep(4)
+
+                # Click the Share button
+                post_log(f"  → Clicking share button...")
+                share_clicked = page.evaluate('''() => {
+                    const selectors = [
+                        '[data-e2e="share-icon"]',
+                        '[data-e2e="video-share-icon"]',
+                        '[data-e2e*="share"]',
+                        'button[aria-label*="Share"]',
+                        '[class*="ButtonShare"]',
+                        '[class*="share-icon"]'
+                    ];
+                    for (const sel of selectors) {
+                        const el = document.querySelector(sel);
+                        if (el && el.offsetParent !== null) {
+                            el.click();
+                            return true;
+                        }
+                    }
+                    return false;
+                }''')
+
+                if not share_clicked:
+                    post_log(f"  ✗ Share button not found")
+                    continue
+
+                time.sleep(2)
+
+                # Click the Repost button in the share modal
+                post_log(f"  → Clicking repost button...")
+                repost_clicked = page.evaluate('''() => {
+                    const repostSelectors = [
+                        '[data-e2e="share-repost"]',
+                        '[data-e2e*="repost"]',
+                        'div[class*="Repost"]',
+                        'button:has-text("Repost")',
+                        'span:has-text("Repost")'
+                    ];
+                    for (const sel of repostSelectors) {
+                        try {
+                            const el = document.querySelector(sel);
+                            if (el && el.offsetParent !== null) {
+                                el.click();
+                                return true;
+                            }
+                        } catch(e) {}
+                    }
+                    const allElements = document.querySelectorAll('div, button, span');
+                    for (const el of allElements) {
+                        if (el.textContent.trim() === 'Repost' && el.offsetParent !== null) {
+                            el.click();
+                            return true;
+                        }
+                    }
+                    return false;
+                }''')
+
+                if repost_clicked:
+                    time.sleep(2)
+                    post_log(f"  ✓ Repost clicked!")
+
+                    reposts_made += 1
+                    record_repost(profile_name)
+
+                    # Build repost_url
+                    repost_url = f"https://www.tiktok.com/@{tiktok_username}?tab=reposts" if tiktok_username else None
+
+                    entry = {
+                        "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                        "profile": profile_name,
+                        "video": video_url,
+                        "repost_url": repost_url,
+                        "tiktok_username": tiktok_username,
+                        "caption": f"Reposted from @{source_account}",
+                        "status": "reposted",
+                        "content_type": "source_account",
+                        "source_account": source_account,
+                    }
+                    post_status["history"].append(entry)
+                    post_status["posts_made"] += 1
+                    save_post_data()
+
+                    post_log(f"  ✓ Done! ({reposts_made}/{remaining})")
+                    if reposts_made < remaining:
+                        delay = random.randint(post_settings["min_delay"], post_settings["max_delay"])
+                        post_log(f"  Waiting {delay}s...")
+                        for _ in range(delay):
+                            if not post_status["running"]:
+                                break
+                            time.sleep(1)
+                else:
+                    post_log(f"  ✗ Repost button not found")
+            except Exception as e:
+                post_log(f"  Error: {str(e)[:60]}")
+    except Exception as e:
+        post_log(f"  Source account error: {str(e)[:80]}")
+    return reposts_made
+
+def run_repost_for_profile(profile_id, profile_name, use_source_accounts=False):
     """Open browser and run repost for one profile"""
-    search_terms, content_type = get_todays_search_terms()
-    day_name = datetime.now().strftime("%A")
-    post_log(f"[{profile_name}] {day_name}: {content_type} content")
+    # Check if automation was stopped before opening browser
+    if not post_status["running"]:
+        post_log(f"  [{profile_name}] ⏹ Stopped before opening browser")
+        return 0
+
+    if use_source_accounts:
+        post_log(f"[{profile_name}] Reposting from source accounts")
+        content_type = "source_account"
+    else:
+        search_terms, content_type = get_todays_search_terms()
+        day_name = datetime.now().strftime("%A")
+        post_log(f"[{profile_name}] {day_name}: {content_type} content")
+
     post_status["current_profile"] = profile_name
-    
+
     if get_reposts_today(profile_name) >= post_settings["max_reposts_per_day"]:
         post_log(f"  At daily limit, skipping")
         return 0
-    
+
+    # Double-check running status before opening browser
+    if not post_status["running"]:
+        post_log(f"  [{profile_name}] ⏹ Stopped")
+        return 0
+
     browser_data = open_browser(profile_id)
     if not browser_data:
         post_log(f"  Failed to open browser")
         return 0
-    ws_endpoint = browser_data.get("ws", {}).get("puppeteer")
-    if not ws_endpoint:
-        post_log(f"  No WebSocket endpoint")
+
+    try:
+        ws_endpoint = browser_data.get("ws", {}).get("puppeteer")
+        if not ws_endpoint:
+            post_log(f"  No WebSocket endpoint")
+            return 0
+
+        time.sleep(3)
+        reposts = 0
+        if HAS_PLAYWRIGHT:
+            try:
+                with sync_playwright() as p:
+                    browser = p.chromium.connect_over_cdp(ws_endpoint)
+                    context = browser.contexts[0] if browser.contexts else browser.new_context()
+                    page = context.pages[0] if context.pages else context.new_page()
+                    if use_source_accounts:
+                        reposts = repost_from_source_accounts(page, profile_name)
+                    else:
+                        reposts = scrape_and_repost(page, profile_name, search_terms, content_type)
+                    browser.close()
+            except Exception as e:
+                post_log(f"  Playwright error: {str(e)[:80]}")
+    finally:
         close_browser(profile_id)
-        return 0
-    
-    time.sleep(3)
-    reposts = 0
-    if HAS_PLAYWRIGHT:
-        try:
-            with sync_playwright() as p:
-                browser = p.chromium.connect_over_cdp(ws_endpoint)
-                context = browser.contexts[0] if browser.contexts else browser.new_context()
-                page = context.pages[0] if context.pages else context.new_page()
-                reposts = scrape_and_repost(page, profile_name, search_terms, content_type)
-                browser.close()
-        except Exception as e:
-            post_log(f"  Playwright error: {str(e)[:80]}")
-    close_browser(profile_id)
     post_log(f"  Done. Reposts: {reposts}")
     return reposts
 
-def start_repost_automation():
+def start_repost_automation(use_source_accounts=False):
     """Start automated repost across all profiles"""
     if post_status["running"]:
         return False
@@ -2374,6 +2634,9 @@ def start_repost_automation():
     search_terms, content_type = get_todays_search_terms()
     day_name = datetime.now().strftime("%A")
     today_str = datetime.now().strftime("%Y-%m-%d")
+
+    if use_source_accounts:
+        content_type = "source_accounts"
 
     # Sort profiles numerically: tt1, tt2, tt3, ... tt10, tt11, etc.
     def sort_key(p):
@@ -2394,7 +2657,10 @@ def start_repost_automation():
 
     post_log("=" * 50)
     post_log(f"Auto Repost - {day_name}, {today_str}")
-    post_log(f"Content: {'Brand (Bump Connect/Kollabsy/Bump Syndicate)' if content_type == 'brand' else 'Social Media'}")
+    if use_source_accounts:
+        post_log(f"Content: Source Accounts ({', '.join(REPOST_SOURCE_ACCOUNTS[:3])}...)")
+    else:
+        post_log(f"Content: {'Brand (Bump Connect/Kollabsy/Bump Syndicate)' if content_type == 'brand' else 'Social Media'}")
     post_log(f"Profiles: {len(sorted_profiles)} | Max {post_settings['max_reposts_per_day']}/profile/day")
     post_log(f"Order: {', '.join([p.get('name', p.get('user_id'))[:6] for p in sorted_profiles[:5]])}...")
     post_log("=" * 50)
@@ -2408,7 +2674,7 @@ def start_repost_automation():
                 pid = profile.get("user_id")
                 pname = profile.get("name", pid)
                 post_status["progress"] = i + 1
-                total_reposts += run_repost_for_profile(pid, pname)
+                total_reposts += run_repost_for_profile(pid, pname, use_source_accounts)
                 if i < len(profiles) - 1 and post_status["running"]:
                     delay = random.randint(30, 60)
                     post_log(f"Next profile in {delay}s...")
@@ -2487,26 +2753,26 @@ def close_browser(profile_id):
 # Promotional comments - natural with website links
 PROMO_COMMENTS = {
     "Bump Connect": [
-        "omg this reminds me of something I saw on Bump Connect 😂 bumpconnect.xyz",
-        "the creator community on Bump Connect would love this - bumpconnect.xyz",
-        "giving Bump Connect vibes fr fr ✨ bumpconnect.xyz",
-        "this is the type of content we share on Bump Connect 🔥 bumpconnect.xyz",
-        "you should post this on Bump Connect too! bumpconnect.xyz",
-        "I found so many creators like you on Bump Connect - check bumpconnect.xyz",
-        "Bump Connect creators are doing stuff like this 👀 bumpconnect.xyz",
-        "love this! the Bump Connect community needs to see this - bumpconnect.xyz",
-        "this is why I love Bump Connect bumpconnect.xyz 🙌",
-        "just shared this with my Bump Connect group - join at bumpconnect.xyz",
-        "Bump Connect vibes ✨ bumpconnect.xyz",
-        "anyone else here from Bump Connect? 🙋 bumpconnect.xyz",
-        "this would blow up on Bump Connect - bumpconnect.xyz",
-        "Bump Connect creators doing it right 💯 bumpconnect.xyz",
-        "found you through Bump Connect btw! bumpconnect.xyz",
-        "Bump Connect fam where you at 🔥 bumpconnect.xyz",
-        "this creator gets it, Bump Connect type content - bumpconnect.xyz",
-        "saving this for my Bump Connect friends 😂 bumpconnect.xyz",
-        "if you're a creator check out bumpconnect.xyz 🚀",
-        "creators supporting creators 🙌 bumpconnect.xyz",
+        "omg this reminds me of something I saw on Bump Connect 😂 bumpconnect.com",
+        "the creator community on Bump Connect would love this - bumpconnect.com",
+        "giving Bump Connect vibes fr fr ✨ bumpconnect.com",
+        "this is the type of content we share on Bump Connect 🔥 bumpconnect.com",
+        "you should post this on Bump Connect too! bumpconnect.com",
+        "I found so many creators like you on Bump Connect - check bumpconnect.com",
+        "Bump Connect creators are doing stuff like this 👀 bumpconnect.com",
+        "love this! the Bump Connect community needs to see this - bumpconnect.com",
+        "this is why I love Bump Connect bumpconnect.com 🙌",
+        "just shared this with my Bump Connect group - join at bumpconnect.com",
+        "Bump Connect vibes ✨ bumpconnect.com",
+        "anyone else here from Bump Connect? 🙋 bumpconnect.com",
+        "this would blow up on Bump Connect - bumpconnect.com",
+        "Bump Connect creators doing it right 💯 bumpconnect.com",
+        "found you through Bump Connect btw! bumpconnect.com",
+        "Bump Connect fam where you at 🔥 bumpconnect.com",
+        "this creator gets it, Bump Connect type content - bumpconnect.com",
+        "saving this for my Bump Connect friends 😂 bumpconnect.com",
+        "if you're a creator check out bumpconnect.com 🚀",
+        "creators supporting creators 🙌 bumpconnect.com",
     ],
     "Kollabsy": [
         "this is the collab energy we need ✨ kollabsy.xyz",
@@ -2586,145 +2852,262 @@ def safe_wait_for_video(page, timeout=15000):
     return False, None
 
 def check_login_status(page):
-    """Check if user is logged in to TikTok"""
+    """Check if user is logged in to TikTok - IMPROVED to detect sidebar Log in button"""
     try:
         # Check URL for login redirect
         if "login" in page.url.lower() or "signup" in page.url.lower():
             return False
-        
-        # Check for login prompts in page
+
+        # Check for login buttons/prompts in page (more aggressive detection)
         login_indicators = page.evaluate('''() => {
-            const text = document.body.innerText.toLowerCase();
-            // Check for login modal or buttons
+            // Method 1: Check for data-e2e login button
             if (document.querySelector('[data-e2e="login-button"]')) return true;
             if (document.querySelector('[class*="LoginModal"]')) return true;
-            if (document.querySelector('a[href*="/login"]')) {
-                // Only return true if it's a prominent login prompt
-                const loginLinks = document.querySelectorAll('a[href*="/login"]');
-                for (let link of loginLinks) {
-                    if (link.offsetHeight > 30) return true;
+
+            // Method 2: Check for "Log in" button text in sidebar or anywhere prominent
+            const buttons = document.querySelectorAll('button, a, div[role="button"]');
+            for (let btn of buttons) {
+                const text = (btn.textContent || '').trim().toLowerCase();
+                // Exact match for "log in" button (the red button in sidebar)
+                if (text === 'log in' || text === 'login') {
+                    // Check if it's visible and reasonably sized (not a tiny link)
+                    if (btn.offsetParent !== null && btn.offsetHeight > 20) {
+                        return true;
+                    }
                 }
             }
+
+            // Method 3: Check sidebar specifically for Login button
+            const sidebar = document.querySelector('[class*="SideNav"], [class*="Sidebar"], nav');
+            if (sidebar) {
+                const sidebarText = sidebar.innerText.toLowerCase();
+                if (sidebarText.includes('log in') && !sidebarText.includes('log out')) {
+                    return true;
+                }
+            }
+
+            // Method 4: Check for login links that are prominent
+            const loginLinks = document.querySelectorAll('a[href*="/login"]');
+            for (let link of loginLinks) {
+                if (link.offsetParent !== null && link.offsetHeight > 30) return true;
+            }
+
+            // Method 5: Check comments section for "Log in" button
+            const commentSection = document.querySelector('[class*="Comment"], [data-e2e*="comment"]');
+            if (commentSection) {
+                const commentButtons = commentSection.querySelectorAll('button');
+                for (let btn of commentButtons) {
+                    const text = (btn.textContent || '').trim().toLowerCase();
+                    if (text === 'log in' || text === 'login') {
+                        return true;
+                    }
+                }
+            }
+
             return false;
         }''')
-        
+
         return not login_indicators
     except:
         return True  # Assume logged in if check fails
 
 def click_comment_button(page):
-    """Click the comment button with updated selectors for 2025 TikTok"""
+    """Click the comment button with updated selectors for 2026 TikTok"""
     # Close any open dialogs first
     try:
         page.keyboard.press("Escape")
         time.sleep(0.3)
     except:
         pass
-    
-    # Updated selectors for TikTok 2025
+
+    # Updated selectors for TikTok 2026
     result = page.evaluate('''() => {
+        // Helper to check if element is share-related
+        function isShareElement(el) {
+            if (!el) return false;
+            const text = (el.textContent || '').toLowerCase();
+            const ariaLabel = (el.getAttribute('aria-label') || '').toLowerCase();
+            const className = (el.className || '').toLowerCase();
+            const dataE2e = (el.getAttribute('data-e2e') || '').toLowerCase();
+            return text.includes('share') || ariaLabel.includes('share') ||
+                   className.includes('share') || dataE2e.includes('share') ||
+                   text.includes('copy') || ariaLabel.includes('copy');
+        }
+
         // Method 1: data-e2e attribute (most reliable)
         let btn = document.querySelector('[data-e2e="comment-icon"]');
-        if (btn) { btn.click(); return {success: true, method: 'data-e2e-comment-icon'}; }
-        
+        if (btn && !isShareElement(btn)) { btn.click(); return {success: true, method: 'data-e2e-comment-icon'}; }
+
         // Method 2: Browse comment icon
         btn = document.querySelector('[data-e2e="browse-comment-icon"]');
-        if (btn) { btn.click(); return {success: true, method: 'data-e2e-browse-comment'}; }
-        
-        // Method 3: aria-label variations
-        const commentLabels = ['comment', 'comments', 'kommentar', 'commenti', 'comentar', 'commenter', 'comentário'];
-        for (let label of commentLabels) {
-            btn = document.querySelector('[aria-label*="' + label + '" i]');
-            if (btn && !btn.closest('[class*="share" i]') && btn.offsetParent) { 
-                btn.click(); 
-                return {success: true, method: 'aria-label-' + label}; 
+        if (btn && !isShareElement(btn)) { btn.click(); return {success: true, method: 'data-e2e-browse-comment'}; }
+
+        // Method 3: Video comment icon
+        btn = document.querySelector('[data-e2e="video-comment-icon"]');
+        if (btn && !isShareElement(btn)) { btn.click(); return {success: true, method: 'data-e2e-video-comment'}; }
+
+        // Method 4: Look for comment count/number near a clickable element
+        const allElements = document.querySelectorAll('button, [role="button"], span[class*="Count"], span[class*="Number"]');
+        for (let el of allElements) {
+            const text = el.textContent || '';
+            const parent = el.closest('button, [role="button"], [class*="Comment"]');
+            // Check if this looks like a comment count (numbers like 123, 1.2K, etc)
+            if (/^[\\d.]+[KMB]?$/i.test(text.trim()) && parent && !isShareElement(parent)) {
+                // Check if the parent container has comment-related classes
+                const containerClass = (parent.className || '') + (parent.parentElement?.className || '');
+                if (containerClass.toLowerCase().includes('comment')) {
+                    parent.click();
+                    return {success: true, method: 'comment-count'};
+                }
             }
         }
-        
-        // Method 4: Find by SVG path (comment bubble icon)
-        const svgs = document.querySelectorAll('svg');
-        for (let svg of svgs) {
-            const path = svg.querySelector('path');
-            if (path) {
-                const d = path.getAttribute('d') || '';
-                // Comment bubble typically has specific path patterns
-                if (d.includes('M12') && d.includes('C') && svg.closest('button, [role="button"]')) {
-                    const parent = svg.closest('button, [role="button"]');
-                    if (parent && parent.offsetParent) {
-                        parent.click();
-                        return {success: true, method: 'svg-path'};
+
+        // Method 5: aria-label variations (be more specific)
+        const commentLabels = ['comment', 'comments'];
+        for (let label of commentLabels) {
+            const elements = document.querySelectorAll('[aria-label*="' + label + '" i]');
+            for (let el of elements) {
+                if (el && !isShareElement(el) && !isShareElement(el.parentElement) && el.offsetParent) {
+                    // Extra check: make sure it's not in a share container
+                    const container = el.closest('[class*="Share"], [data-e2e*="share"]');
+                    if (!container) {
+                        el.click();
+                        return {success: true, method: 'aria-label-' + label};
                     }
                 }
             }
         }
-        
-        // Method 5: Action bar - comment is usually 2nd after like
-        const actionBar = document.querySelector('[class*="DivActionItemContainer"], [class*="ActionBar"]');
-        if (actionBar) {
-            const buttons = actionBar.querySelectorAll('button, [role="button"]');
-            if (buttons.length >= 2) {
-                buttons[1].click();
-                return {success: true, method: 'action-bar-index'};
-            }
-        }
-        
-        // Method 6: Find by sibling of like button
-        const likeBtn = document.querySelector('[data-e2e="like-icon"], [data-e2e="browse-like-icon"]');
-        if (likeBtn) {
-            const container = likeBtn.closest('[class*="Container"], [class*="Item"]');
-            if (container && container.nextElementSibling) {
-                const btn = container.nextElementSibling.querySelector('button, [role="button"]') || container.nextElementSibling;
-                if (btn.offsetParent) {
-                    btn.click();
-                    return {success: true, method: 'like-sibling'};
+
+        // Method 6: Find the comment bubble SVG specifically (chat bubble shape)
+        // Comment bubble SVG usually has a tail/pointer at the bottom
+        const svgs = document.querySelectorAll('svg');
+        for (let svg of svgs) {
+            const paths = svg.querySelectorAll('path');
+            for (let path of paths) {
+                const d = path.getAttribute('d') || '';
+                // Comment bubble specific patterns - look for bubble with tail
+                // Avoid share icon which is typically an arrow
+                if (d.includes('M') && !d.includes('arrow') &&
+                    (d.includes('bubble') || d.includes('chat') ||
+                     (d.includes('c') && d.includes('z') && d.length > 100))) {
+                    const parent = svg.closest('button, [role="button"]');
+                    if (parent && parent.offsetParent && !isShareElement(parent)) {
+                        parent.click();
+                        return {success: true, method: 'svg-bubble'};
+                    }
                 }
             }
         }
-        
-        return {success: false};
+
+        // Method 7: Action bar - find by position relative to like button
+        const likeBtn = document.querySelector('[data-e2e="like-icon"], [data-e2e="browse-like-icon"], [data-e2e="video-like-icon"]');
+        if (likeBtn) {
+            const actionContainer = likeBtn.closest('[class*="ActionBar"], [class*="DivActionItem"], [class*="ButtonContainer"]');
+            if (actionContainer) {
+                const buttons = actionContainer.parentElement?.querySelectorAll('button, [role="button"]') || [];
+                // Comment is typically second button after like
+                for (let i = 0; i < buttons.length; i++) {
+                    const btn = buttons[i];
+                    const dataE2e = btn.getAttribute('data-e2e') || '';
+                    if (dataE2e.includes('comment') && !isShareElement(btn)) {
+                        btn.click();
+                        return {success: true, method: 'action-bar-comment'};
+                    }
+                }
+            }
+        }
+
+        return {success: false, method: 'none'};
     }''')
-    
+
     return result
 
 def find_and_focus_comment_input(page):
-    """Find and focus the comment input field"""
+    """Find and focus the comment input field - updated for 2026 TikTok UI"""
     result = page.evaluate('''() => {
-        // Method 1: data-e2e attributes
-        const selectors = [
-            '[data-e2e="comment-input"]',
-            '[data-e2e="comment-text-input"]',
-            '[class*="DivInputEditorContainer"] [contenteditable="true"]',
-            '[class*="CommentInputContainer"] [contenteditable="true"]',
+        // Method 1: Look for "Add comment..." placeholder (most specific)
+        const placeholderSelectors = [
+            '[placeholder="Add comment..."]',
+            '[placeholder*="Add comment" i]',
             '[placeholder*="comment" i]',
-            '[placeholder*="Add a comment" i]',
-            '[placeholder*="commento" i]',
-            '[placeholder*="Aggiungi" i]',
-            'div[contenteditable="true"][data-contents="true"]',
-            'div[contenteditable="true"]'
+            '[aria-placeholder*="Add comment" i]',
+            '[aria-placeholder*="comment" i]'
         ];
-        
-        for (let sel of selectors) {
+
+        for (let sel of placeholderSelectors) {
             const el = document.querySelector(sel);
-            if (el && el.offsetParent) {
+            if (el && el.offsetParent !== null) {
                 el.click();
                 el.focus();
                 return {success: true, method: sel};
             }
         }
-        
-        // Try finding by class patterns
-        const editables = document.querySelectorAll('[contenteditable="true"]');
-        for (let el of editables) {
-            if (el.offsetParent && el.offsetHeight > 20 && el.offsetHeight < 200) {
+
+        // Method 2: data-e2e attributes
+        const dataE2eSelectors = [
+            '[data-e2e="comment-input"]',
+            '[data-e2e="comment-text-input"]',
+            '[data-e2e="comment-input-container"] input',
+            '[data-e2e="comment-input-container"] [contenteditable]'
+        ];
+
+        for (let sel of dataE2eSelectors) {
+            const el = document.querySelector(sel);
+            if (el && el.offsetParent !== null) {
                 el.click();
                 el.focus();
-                return {success: true, method: 'contenteditable-search'};
+                return {success: true, method: sel};
             }
         }
-        
+
+        // Method 3: Class-based selectors
+        const classSelectors = [
+            '[class*="DivInputEditorContainer"] [contenteditable="true"]',
+            '[class*="CommentInput"] [contenteditable="true"]',
+            '[class*="DivCommentInput"] [contenteditable="true"]',
+            '[class*="DivInputContainer"] input',
+            '[class*="public-DraftEditor-content"]',
+            '[class*="DraftEditor-root"] [contenteditable="true"]'
+        ];
+
+        for (let sel of classSelectors) {
+            const el = document.querySelector(sel);
+            if (el && el.offsetParent !== null) {
+                el.click();
+                el.focus();
+                return {success: true, method: sel};
+            }
+        }
+
+        // Method 4: Find by contenteditable near comment section
+        const commentSection = document.querySelector('[class*="CommentList"], [data-e2e="comment-list"]');
+        if (commentSection) {
+            const container = commentSection.closest('[class*="Container"]') || commentSection.parentElement;
+            const input = container?.querySelector('[contenteditable="true"], input[type="text"]');
+            if (input && input.offsetParent !== null) {
+                input.click();
+                input.focus();
+                return {success: true, method: 'comment-section-input'};
+            }
+        }
+
+        // Method 5: Any contenteditable that looks like comment input
+        const editables = document.querySelectorAll('[contenteditable="true"]');
+        for (let el of editables) {
+            if (el.offsetParent && el.offsetHeight > 15 && el.offsetHeight < 150) {
+                // Check if it's in the comment area (right side of video)
+                const rect = el.getBoundingClientRect();
+                if (rect.x > window.innerWidth / 2) {
+                    el.click();
+                    el.focus();
+                    return {success: true, method: 'contenteditable-right-side'};
+                }
+            }
+        }
+
         return {success: false};
     }''')
-    
+
     return result
 
 def click_post_button(page):
@@ -2777,9 +3160,10 @@ def process_single_video_with_retry(page, video_num, profile_name, target_videos
             
             current_url = page.url
             
-            # Check for login redirect
+            # Check for login redirect - this is called on EVERY video attempt
             if not check_login_status(page):
-                log(f"    ⚠ Login required - skipping profile")
+                log(f"    ⚠ NOT LOGGED IN - skipping this browser")
+                track_not_logged_in(profile_name, source="commenter")
                 return False, "login_required"
             
             # Handle hashtag/search grid view
@@ -2819,10 +3203,47 @@ def process_single_video_with_retry(page, video_num, profile_name, target_videos
                 
                 log(f"    ✓ Clicked video ({click_result.get('method')})")
                 time.sleep(3)
-                
-                # Verify we're on video page
-                if "/video/" not in page.url:
+
+                # Verify video opened - check for URL change OR modal/overlay
+                video_opened = page.evaluate('''() => {
+                    // Check 1: URL contains /video/
+                    if (window.location.href.includes('/video/')) return true;
+
+                    // Check 2: Video modal/overlay is visible
+                    const modalSelectors = [
+                        '[class*="DivBrowserModeContainer"]',
+                        '[class*="DivVideoContainer"]',
+                        '[data-e2e="browse-video"]',
+                        '[data-e2e="video-player"]',
+                        'video[src]',
+                        '[class*="DivContentContainer"] video',
+                        '[class*="VideoPlayer"]'
+                    ];
+                    for (const sel of modalSelectors) {
+                        const el = document.querySelector(sel);
+                        if (el && el.offsetParent !== null) return true;
+                    }
+
+                    // Check 3: Comments section is visible (means video is open)
+                    const commentSelectors = [
+                        '[data-e2e="comment-input"]',
+                        '[data-e2e="comment-icon"]',
+                        '[class*="CommentInput"]',
+                        '[placeholder*="comment"]'
+                    ];
+                    for (const sel of commentSelectors) {
+                        const el = document.querySelector(sel);
+                        if (el && el.offsetParent !== null) return true;
+                    }
+
+                    return false;
+                }''')
+
+                if not video_opened:
                     log(f"    ⚠ Video didn't open, retrying...")
+                    # Try pressing Escape first to close any partial modal
+                    page.keyboard.press("Escape")
+                    time.sleep(0.5)
                     continue
                 
                 # Capture the actual video URL after it loads
@@ -2859,34 +3280,71 @@ def process_single_video_with_retry(page, video_num, profile_name, target_videos
                 log(f"    ⏭ Already commented, skipping")
                 return True, "skipped"
 
-            # Step 1: Open comments
-            log(f"    → Opening comments...")
-            comment_result = click_comment_button(page)
-            
-            if not comment_result.get('success'):
-                log(f"    ⚠ Could not open comments")
-                if attempt < MAX_RETRIES - 1:
-                    time.sleep(RETRY_DELAY)
-                    continue
-                return False, "no_comments"
-            
-            log(f"    ✓ Comments opened ({comment_result.get('method')})")
-            time.sleep(2)
-            
-            # Check if share dialog opened instead
-            share_check = page.evaluate('''() => {
-                const shareIndicators = ['copy link', 'share to', 'send to'];
-                const text = document.body.innerText.toLowerCase();
-                return shareIndicators.some(ind => text.includes(ind));
+            # Step 1: Navigate directly to video page if we have the URL
+            if "/video/" in current_url and "/tag/" in page.url:
+                log(f"    → Opening video page directly...")
+                try:
+                    page.goto(current_url, wait_until="domcontentloaded", timeout=30000)
+                    time.sleep(4)
+                except:
+                    pass
+
+            # Step 2: On video page, comments should already be visible
+            # Just need to find the "Add comment..." input at the bottom
+            log(f"    → Looking for comment input...")
+
+            # Check if comment input is already visible (on video page layout)
+            comment_input_visible = page.evaluate('''() => {
+                // Look for the "Add comment..." placeholder input
+                const selectors = [
+                    '[placeholder*="Add comment" i]',
+                    '[placeholder*="comment" i]',
+                    '[data-e2e="comment-input"]',
+                    '[class*="DivCommentInput"] [contenteditable]',
+                    '[class*="CommentInput"]',
+                    'div[contenteditable="true"][class*="public-DraftEditor"]',
+                    '[class*="DraftEditor-root"]'
+                ];
+                for (const sel of selectors) {
+                    const el = document.querySelector(sel);
+                    if (el && el.offsetParent !== null) {
+                        return {found: true, selector: sel};
+                    }
+                }
+                return {found: false};
             }''')
-            
-            if share_check:
-                log(f"    ⚠ Share dialog opened instead, closing...")
-                page.keyboard.press("Escape")
-                time.sleep(1)
-                if attempt < MAX_RETRIES - 1:
-                    continue
-                return False, "wrong_dialog"
+
+            if comment_input_visible.get('found'):
+                log(f"    ✓ Comment input visible ({comment_input_visible.get('selector')})")
+            else:
+                # Comments not visible, try clicking the comment icon
+                log(f"    → Comments not visible, clicking comment button...")
+                comment_result = click_comment_button(page)
+
+                if comment_result.get('success'):
+                    log(f"    ✓ Clicked ({comment_result.get('method')})")
+                    time.sleep(2)
+
+                    # Check if share dialog opened instead
+                    share_check = page.evaluate('''() => {
+                        const shareIndicators = ['copy link', 'share to', 'send to', 'embed', 'whatsapp'];
+                        const text = document.body.innerText.toLowerCase();
+                        return shareIndicators.some(ind => text.includes(ind));
+                    }''')
+
+                    if share_check:
+                        log(f"    ⚠ Share dialog opened instead, closing...")
+                        page.keyboard.press("Escape")
+                        time.sleep(1)
+                        if attempt < MAX_RETRIES - 1:
+                            continue
+                        return False, "wrong_dialog"
+                else:
+                    log(f"    ⚠ Could not open comments")
+                    if attempt < MAX_RETRIES - 1:
+                        time.sleep(RETRY_DELAY)
+                        continue
+                    return False, "no_comments"
             
             # Step 2: Find comment input
             log(f"    → Finding input...")
@@ -2965,11 +3423,16 @@ def process_single_video_with_retry(page, video_num, profile_name, target_videos
 def run_tiktok_commenter(ws_endpoint, profile_name, sheet_name):
     """Connect to browser and comment on TikTok videos - IMPROVED VERSION"""
     global commented_videos
-    
+
+    # Check if automation was stopped
+    if not automation_status["running"]:
+        log(f"  [{profile_name}] ⏹ Stopped")
+        return False
+
     if not HAS_PLAYWRIGHT:
         log("  ✗ Playwright not installed!")
         return False
-    
+
     videos_commented = 0
     target_videos = settings["videos_per_profile"]
     consecutive_failures = 0
@@ -2985,19 +3448,40 @@ def run_tiktok_commenter(ws_endpoint, profile_name, sheet_name):
             
             log(f"  ✓ Connected")
 
-            # Auto-detect TikTok username and save to mapping
+            # Auto-detect TikTok username and check login status
             try:
                 page.goto("https://www.tiktok.com/profile", wait_until="domcontentloaded", timeout=20000)
                 time.sleep(2)
                 current_url = page.url
+
+                # Check if redirected to login page
+                if "login" in current_url.lower() or "signup" in current_url.lower():
+                    log(f"  ⚠ NOT LOGGED IN - Skipping browser")
+                    track_not_logged_in(profile_name, source="commenter")
+                    browser.close()
+                    return False
+
                 if "/@" in current_url:
                     match = re.search(r'/@([^/?]+)', current_url)
                     if match:
                         detected_username = match.group(1)
                         set_tiktok_username(profile_name, detected_username)
                         log(f"  📱 Account: @{detected_username}")
-            except:
-                pass
+                else:
+                    # No username detected - might not be logged in
+                    log(f"  ⚠ No account detected - checking login status...")
+                    # Check if login button is visible
+                    login_visible = page.evaluate('''() => {
+                        const loginBtn = document.querySelector('[data-e2e="login-button"], a[href*="login"]');
+                        return loginBtn && loginBtn.offsetParent !== null;
+                    }''')
+                    if login_visible:
+                        log(f"  ⚠ NOT LOGGED IN - Skipping browser")
+                        track_not_logged_in(profile_name, source="commenter")
+                        browser.close()
+                        return False
+            except Exception as e:
+                log(f"  ⚠ Profile check error: {str(e)[:40]}")
 
             # Close extra TikTok tabs only, keep AdsPower tab
             log(f"  → Cleaning up TikTok tabs...")
@@ -3052,9 +3536,10 @@ def run_tiktok_commenter(ws_endpoint, profile_name, sheet_name):
             # Check if redirected to login
             if "login" in current_url.lower() or "signup" in current_url.lower():
                 log(f"  ⚠ NOT LOGGED IN - Closing browser automatically")
+                track_not_logged_in(profile_name, source="commenter")
                 browser.close()
                 return False
-            
+
             # Also check page content for login prompts
             try:
                 login_check = page.evaluate('''() => {
@@ -3066,6 +3551,7 @@ def run_tiktok_commenter(ws_endpoint, profile_name, sheet_name):
                 }''')
                 if login_check:
                     log(f"  ⚠ LOGIN REQUIRED - Closing browser automatically")
+                    track_not_logged_in(profile_name, source="commenter")
                     browser.close()
                     return False
             except:
@@ -3135,6 +3621,7 @@ def run_tiktok_commenter(ws_endpoint, profile_name, sheet_name):
                     consecutive_failures += 1
                     if result == "login_required":
                         log(f"  ⚠ Profile not logged in, stopping")
+                        track_not_logged_in(profile_name, source="commenter")
                         break
                     log(f"    ⚠ Failed: {result}")
                 
@@ -3191,33 +3678,42 @@ def run_tiktok_commenter(ws_endpoint, profile_name, sheet_name):
 
 def run_single_profile(profile_id, sheet_name):
     """Run automation for a single profile - used for parallel execution"""
+    # Check if automation was stopped before opening browser
+    if not automation_status["running"]:
+        return False
+
     profile = next((p for p in profiles if p.get("user_id") == profile_id), None)
     if not profile:
         return False
-    
+
     profile_name = profile.get("name", profile_id)
-    
+
+    # Double-check running status before opening browser
+    if not automation_status["running"]:
+        log(f"  [{profile_name}] ⏹ Stopped before opening browser")
+        return False
+
     log(f"\n🚀 [{profile_name}] Starting...")
     log(f"  [{profile_name}] Sheet: {sheet_name}")
-    
+
     # Open browser
     browser_data = open_browser(profile_id)
     if not browser_data:
         log(f"  [{profile_name}] ✗ Failed to open browser")
         return False
-    
-    ws_endpoint = browser_data.get("ws", {}).get("puppeteer")
-    if not ws_endpoint:
-        log(f"  [{profile_name}] ✗ No WebSocket")
+
+    try:
+        ws_endpoint = browser_data.get("ws", {}).get("puppeteer")
+        if not ws_endpoint:
+            log(f"  [{profile_name}] ✗ No WebSocket")
+            return False
+
+        # Run commenter
+        success = run_tiktok_commenter(ws_endpoint, profile_name, sheet_name)
+    finally:
+        # Close browser
+        log(f"  [{profile_name}] Closing browser...")
         close_browser(profile_id)
-        return False
-    
-    # Run commenter
-    success = run_tiktok_commenter(ws_endpoint, profile_name, sheet_name)
-    
-    # Close browser
-    log(f"  [{profile_name}] Closing browser...")
-    close_browser(profile_id)
     
     if success:
         automation_status["completed"].append(profile_id)
@@ -4387,6 +4883,20 @@ def api_stop():
     automation_status["running"] = False
     return jsonify({"ok": True})
 
+@app.route('/api/not-logged-in', methods=['GET'])
+def api_get_not_logged_in():
+    """Get list of browsers that are not logged in"""
+    return jsonify({
+        "browsers": get_not_logged_in_list(),
+        "count": len(get_not_logged_in_list())
+    })
+
+@app.route('/api/not-logged-in/clear', methods=['POST'])
+def api_clear_not_logged_in():
+    """Clear the not logged in browsers list"""
+    clear_not_logged_in()
+    return jsonify({"ok": True})
+
 @app.route('/api/clear-logs', methods=['POST'])
 def api_clear_logs():
     automation_status["logs"] = []
@@ -4731,8 +5241,22 @@ def api_post_settings():
 def api_post_start():
     if post_status["running"]:
         return jsonify({"error": "Repost automation already running"}), 400
-    success = start_repost_automation()
+    use_source = request.json.get("use_source_accounts", False) if request.json else False
+    success = start_repost_automation(use_source_accounts=use_source)
     return jsonify({"ok": success})
+
+@app.route('/api/post/start-source', methods=['POST'])
+def api_post_start_source():
+    """Start reposting from source accounts (e.g., lifeadventuresafterfifty)"""
+    if post_status["running"]:
+        return jsonify({"error": "Repost automation already running"}), 400
+    success = start_repost_automation(use_source_accounts=True)
+    return jsonify({"ok": success})
+
+@app.route('/api/post/source-accounts', methods=['GET'])
+def api_get_source_accounts():
+    """Get list of source accounts for reposting"""
+    return jsonify({"accounts": REPOST_SOURCE_ACCOUNTS})
 
 @app.route('/api/post/stop', methods=['POST'])
 def api_post_stop():
