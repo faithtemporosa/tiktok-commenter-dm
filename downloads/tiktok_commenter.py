@@ -24,6 +24,7 @@ import threading
 import random
 import traceback
 import asyncio
+import webbrowser
 from datetime import datetime, timedelta
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from flask import Flask, render_template_string, jsonify, request
@@ -5346,4 +5347,6 @@ if __name__ == "__main__":
     sched_thread = threading.Thread(target=scheduler_loop, daemon=True)
     sched_thread.start()
     print("  Scheduler running (checks scheduled posts every 30s)")
+    # Auto-open browser after short delay
+    threading.Timer(1.5, lambda: webbrowser.open("http://localhost:9000")).start()
     app.run(host="0.0.0.0", port=9000, debug=False)
