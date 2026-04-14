@@ -387,6 +387,47 @@ function Dashboard({ onNavigate }) {
         {/* TARGETS */}
         {activeTab === "targets" && (
           <div data-testid="targets-tab">
+            {/* Control Panel */}
+            <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-4 mb-4 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <Target className="w-5 h-5 text-amber-400" />
+                <span className="font-medium">Target Commenter</span>
+                {targetRunning ? (
+                  <span className="flex items-center gap-1 px-2 py-1 rounded bg-emerald-500/20 text-emerald-400 text-xs"><Play className="w-3 h-3" />Running</span>
+                ) : (
+                  <span className="flex items-center gap-1 px-2 py-1 rounded bg-zinc-700 text-zinc-400 text-xs"><Pause className="w-3 h-3" />Stopped</span>
+                )}
+              </div>
+              <div className="flex items-center gap-2">
+                {!targetRunning ? (
+                  <button
+                    onClick={async () => {
+                      try {
+                        const res = await fetch('http://localhost:9000/api/target-accounts/start', { method: 'POST' });
+                        const data = await res.json();
+                        if (data.ok) { fetchTargetLogs(); }
+                      } catch (err) { console.error(err); }
+                    }}
+                    className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-xs transition-all"
+                  >
+                    <Play className="w-3.5 h-3.5" />Start
+                  </button>
+                ) : (
+                  <button
+                    onClick={async () => {
+                      try {
+                        await fetch('http://localhost:9000/api/target-accounts/stop', { method: 'POST' });
+                        fetchTargetLogs();
+                      } catch (err) { console.error(err); }
+                    }}
+                    className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-red-600 hover:bg-red-500 text-xs transition-all"
+                  >
+                    <Pause className="w-3.5 h-3.5" />Stop
+                  </button>
+                )}
+              </div>
+            </div>
+
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
               <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-4 text-center">
                 <div className="text-2xl font-bold text-amber-400">{targetStats?.accounts?.length || 0}</div>
