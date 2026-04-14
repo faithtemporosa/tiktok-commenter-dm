@@ -219,18 +219,26 @@ def fetch_verification_code(email, max_attempts=30):
     try:
         service = get_gmail_service()
         if not service:
+            print(f"    Gmail service unavailable")
             return None
         query = f'from:tiktok to:{email} subject:(verification OR code) is:unread newer_than:10m'
+        print(f"    Searching for TikTok email to {email}...")
 
         for attempt in range(max_attempts):
             results = service.users().messages().list(userId='me', q=query, maxResults=5).execute()
             messages = results.get('messages', [])
 
             if messages:
+                print(f"    Found {len(messages)} email(s), extracting code...")
                 msg = service.users().messages().get(userId='me', id=messages[0]['id'], format='full').execute()
                 headers = msg['payload']['headers']
                 subject = next((h['value'] for h in headers if h['name'].lower() == 'subject'), '')
+                from_header = next((h['value'] for h in headers if h['name'].lower() == 'from'), '')
 
+                print(f"    Email from: {from_header}")
+                print(f"    Subject: {subject}")
+
+                # Try to find code in subject
                 code_match = re.search(r'(\d{6})', subject)
                 if code_match:
                     code = code_match.group(1)
@@ -238,9 +246,29 @@ def fetch_verification_code(email, max_attempts=30):
                                                      body={'removeLabelIds': ['UNREAD']}).execute()
                     return code
 
+                # Try to find code in email body if not in subject
+                try:
+                    if 'parts' in msg['payload']:
+                        for part in msg['payload']['parts']:
+                            if part['mimeType'] == 'text/plain' and 'data' in part['body']:
+                                import base64
+                                body_text = base64.urlsafe_b64decode(part['body']['data']).decode('utf-8')
+                                code_match = re.search(r'(\d{6})', body_text)
+                                if code_match:
+                                    code = code_match.group(1)
+                                    print(f"    Found code in email body: {code}")
+                                    service.users().messages().modify(userId='me', id=messages[0]['id'],
+                                                                     body={'removeLabelIds': ['UNREAD']}).execute()
+                                    return code
+                except Exception as body_err:
+                    print(f"    Could not parse email body: {str(body_err)[:40]}")
+
             if attempt < max_attempts - 1:
+                if attempt % 6 == 0 and attempt > 0:  # Print status every 30 seconds
+                    print(f"    Still waiting for code... ({attempt * 5}s elapsed)")
                 time.sleep(5)
 
+        print(f"    No verification email received after {max_attempts * 5} seconds")
         return None
     except Exception as e:
         print(f"    Error fetching code: {str(e)[:60]}")
@@ -319,9 +347,30 @@ def auto_signup(page, browser_name):
         time.sleep(0.5)
 
         # Click send code
-        page.locator('button:has-text("Send code"), button:has-text("Envoyer")').click(timeout=10000)
-        print(f'    [{browser_name}] Code requested...', flush=True)
-        time.sleep(3)
+        try:
+            send_btn = page.locator('button:has-text("Send code"), button:has-text("Envoyer")').first
+            send_btn.click(timeout=10000)
+            print(f'    [{browser_name}] Send code button clicked', flush=True)
+            time.sleep(2)
+
+            # Verify code was sent by looking for "Resend code" button
+            try:
+                resend_btn = page.locator('button:has-text("Resend"), button:has-text("Resend code"), button:has-text("Renvoyer")').first
+                if resend_btn.is_visible(timeout=3000):
+                    print(f'    [{browser_name}] ✓ Code sent successfully (Resend button visible)', flush=True)
+                else:
+                    print(f'    [{browser_name}] ⚠ Resend button not found - code may not have sent', flush=True)
+            except:
+                print(f'    [{browser_name}] ⚠ Could not verify if code was sent', flush=True)
+
+            # Take screenshot to verify current state
+            screenshot_path = f'/Users/faithtemporosa/tiktok-commenter-dm/tiktok-commenter-dm/downloads/signup_{browser_name}_after_send.png'
+            page.screenshot(path=screenshot_path)
+            print(f'    [{browser_name}] Screenshot saved: {screenshot_path}', flush=True)
+            time.sleep(1)
+        except Exception as e:
+            print(f'    [{browser_name}] Error clicking send code: {str(e)[:60]}', flush=True)
+            return False, None
 
         # Get verification code
         code = fetch_verification_code(email)
@@ -338,6 +387,26 @@ def auto_signup(page, browser_name):
         # Submit
         page.locator('button[type="submit"], button:has-text("Next"), button:has-text("Suivant")').click(timeout=10000)
         time.sleep(5)
+
+        # Set username - TikTok prompts for username after email verification
+        try:
+            # Generate username from email (e.g., forestcore740@... -> forestcore740)
+            username_base = email.split('@')[0]
+
+            # Look for username input field
+            username_input = page.locator('input[name="uniqueId"], input[placeholder*="username"], input[placeholder*="Username"]').first
+            if username_input.is_visible(timeout=5000):
+                username_input.fill(username_base)
+                time.sleep(1)
+                print(f'    [{browser_name}] Username set to: {username_base}', flush=True)
+
+                # Click next/submit button to continue
+                page.locator('button[type="submit"], button:has-text("Next"), button:has-text("Suivant"), button:has-text("Sign up")').first.click(timeout=10000)
+                time.sleep(3)
+            else:
+                print(f'    [{browser_name}] No username input found, may be auto-assigned', flush=True)
+        except Exception as username_err:
+            print(f'    [{browser_name}] Username setup: {str(username_err)[:50]}', flush=True)
 
         # Check if signup succeeded
         page.goto('https://www.tiktok.com/profile', timeout=15000)
