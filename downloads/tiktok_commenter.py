@@ -3877,7 +3877,7 @@ DASHBOARD_HTML = """
             <h3>📊 Daily Target</h3>
             <div class="target-stats">
                 <div class="target-stat"><div class="num" id="profileCount">0</div><div class="lbl">Profiles</div></div>
-                <div class="target-stat"><div class="num" id="videosPerProfile">10</div><div class="lbl">Videos/Profile</div></div>
+                <div class="target-stat"><div class="num" id="videosPerProfile">5</div><div class="lbl">Videos/Profile</div></div>
                 <div class="target-stat"><div class="num" id="dailyTarget">0</div><div class="lbl">Daily Target</div></div>
                 <div class="target-stat"><div class="num">2</div><div class="lbl">Parallel</div></div>
             </div>
@@ -3913,7 +3913,7 @@ DASHBOARD_HTML = """
                         <div style="font-size:11px;color:#71717a;margin-bottom:10px;">Leave empty for For You page, or enter hashtag like #fitness</div>
                         <div class="setting-row"><label>Min delay (s):</label><input type="number" id="mind" value="30"></div>
                         <div class="setting-row"><label>Max delay (s):</label><input type="number" id="maxd" value="60"></div>
-                        <div class="setting-row"><label>Videos/profile:</label><input type="number" id="vpp" value="100"></div>
+                        <div class="setting-row"><label>Videos/profile:</label><input type="number" id="vpp" value="5"></div>
                         <div class="setting-row"><label>Parallel browsers:</label><input type="number" id="parallel" value="2" min="1" max="10"></div>
                         <div style="font-size:12px;color:#71717a;margin-top:8px;">⚡ Run 1-10 browsers at a time (2-3 recommended for stability)</div>
                     </div>
