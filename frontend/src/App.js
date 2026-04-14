@@ -7,7 +7,7 @@ import Settings from "./pages/Settings";
 import {
   MessageCircle, TrendingUp, Calendar, RefreshCw, ExternalLink, Sparkles, BarChart3, Clock,
   Upload, Download, Terminal, Play, Pause, Send, Video, CalendarClock, Settings as SettingsIcon,
-  Home, ChevronLeft, Users
+  Home, ChevronLeft, Users, Target, Eye, Heart
 } from "lucide-react";
 
 const REFRESH_INTERVAL = 10000;
@@ -42,6 +42,7 @@ function Dashboard({ onNavigate }) {
   const [profileMappings, setProfileMappings] = useState({});
   const [accounts, setAccounts] = useState([]);
   const [accountsTotal, setAccountsTotal] = useState(0);
+  const [targetStats, setTargetStats] = useState({ accounts: [], totals: { views: 0, comments: 0, browsers: 0 } });
   const fileInputRef = useRef(null);
   const logsContainerRef = useRef(null);
 
@@ -52,6 +53,19 @@ function Dashboard({ onNavigate }) {
       if (res.ok) {
         const data = await res.json();
         setProfileMappings(data);
+      }
+    } catch (err) {
+      // Bot not running, ignore
+    }
+  }, []);
+
+  // Fetch target accounts stats from local bot
+  const fetchTargetStats = useCallback(async () => {
+    try {
+      const res = await fetch('http://localhost:9000/api/target-accounts/summary');
+      if (res.ok) {
+        const data = await res.json();
+        setTargetStats(data);
       }
     } catch (err) {
       // Bot not running, ignore
@@ -138,9 +152,9 @@ function Dashboard({ onNavigate }) {
 
   const fetchAll = useCallback(async () => {
     setLoading(true);
-    await Promise.all([fetchStats(), fetchReports(), fetchLogs(), fetchDmReports(), fetchPostReports(), fetchProfileMappings(), fetchAccounts()]);
+    await Promise.all([fetchStats(), fetchReports(), fetchLogs(), fetchDmReports(), fetchPostReports(), fetchProfileMappings(), fetchAccounts(), fetchTargetStats()]);
     setLoading(false);
-  }, [fetchStats, fetchReports, fetchLogs, fetchDmReports, fetchPostReports, fetchProfileMappings, fetchAccounts]);
+  }, [fetchStats, fetchReports, fetchLogs, fetchDmReports, fetchPostReports, fetchProfileMappings, fetchAccounts, fetchTargetStats]);
 
   const handleFileImport = async (event) => {
     const file = event.target.files[0]; if (!file) return;
@@ -211,6 +225,7 @@ function Dashboard({ onNavigate }) {
 
   const tabs = [
     { id: "comments", label: "Comments", icon: MessageCircle, count: stats?.total_comments },
+    { id: "targets", label: "Targets", icon: Target, count: targetStats?.accounts?.length },
     { id: "dms", label: "DMs", icon: Send, count: stats?.dm_total },
     { id: "posts", label: "Posts", icon: Video, count: stats?.post_total },
     { id: "accounts", label: "Accounts", icon: Users, count: accountsTotal },
@@ -340,6 +355,78 @@ function Dashboard({ onNavigate }) {
                       <td className="px-4 py-3"><span className={`px-2 py-0.5 rounded text-xs ${r.search_query === 'FYP' ? 'text-amber-400 bg-amber-500/20' : 'text-blue-400 bg-blue-500/20'}`}>{r.search_query || 'FYP'}</span></td>
                       <td className="px-4 py-3"><a href={r.video_url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-violet-400 hover:text-violet-300 text-xs"><ExternalLink className="w-3 h-3" />View</a></td>
                       <td className="px-4 py-3">{r.screenshot ? <a href={r.screenshot.startsWith('http') ? r.screenshot : `http://localhost:9000/screenshots/${r.screenshot}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-emerald-400 hover:text-emerald-300 text-xs">📸 Screenshot</a> : r.video_url ? <a href={r.video_url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-amber-400 hover:text-amber-300 text-xs">🔗 Video</a> : <span className="text-zinc-600 text-xs">-</span>}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+
+        {/* TARGETS */}
+        {activeTab === "targets" && (
+          <div data-testid="targets-tab">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
+              <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-4 text-center">
+                <div className="text-2xl font-bold text-amber-400">{targetStats?.accounts?.length || 0}</div>
+                <div className="text-xs text-zinc-500">Target Accounts</div>
+              </div>
+              <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-4 text-center">
+                <div className="text-2xl font-bold text-cyan-400 flex items-center justify-center gap-1"><Eye className="w-5 h-5" />{(targetStats?.totals?.views || 0).toLocaleString()}</div>
+                <div className="text-xs text-zinc-500">Videos Viewed</div>
+              </div>
+              <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-4 text-center">
+                <div className="text-2xl font-bold text-emerald-400">{(targetStats?.totals?.comments || 0).toLocaleString()}</div>
+                <div className="text-xs text-zinc-500">Total Comments</div>
+              </div>
+              <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-4 text-center">
+                <div className="text-2xl font-bold text-violet-400">{(targetStats?.totals?.browsers || 0).toLocaleString()}</div>
+                <div className="text-xs text-zinc-500">Browsers Engaged</div>
+              </div>
+            </div>
+
+            <div className="bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden">
+              <div className="bg-zinc-800/50 px-4 py-3 flex items-center gap-3">
+                <Target className="w-4 h-4 text-amber-400" />
+                <h3 className="text-sm font-semibold">Target Account Performance</h3>
+              </div>
+              <table className="w-full text-sm" data-testid="targets-table">
+                <thead className="bg-zinc-800/50">
+                  <tr>
+                    <th className="text-left px-4 py-3 font-medium text-zinc-400">Account</th>
+                    <th className="text-center px-4 py-3 font-medium text-zinc-400">Videos</th>
+                    <th className="text-center px-4 py-3 font-medium text-zinc-400">Comments</th>
+                    <th className="text-center px-4 py-3 font-medium text-zinc-400">Browsers</th>
+                    <th className="text-left px-4 py-3 font-medium text-zinc-400">Last Updated</th>
+                    <th className="text-left px-4 py-3 font-medium text-zinc-400">Profile</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {!targetStats?.accounts?.length ? (
+                    <tr><td colSpan="6" className="text-center py-12 text-zinc-500">
+                      <Target className="w-6 h-6 mx-auto mb-2 opacity-50" />
+                      No target accounts data yet. Run the target commenter script to start tracking.
+                    </td></tr>
+                  ) : targetStats.accounts.map((acc, i) => (
+                    <tr key={acc.username || i} className="border-t border-zinc-800 hover:bg-zinc-800/30" data-testid={`target-row-${i}`}>
+                      <td className="px-4 py-3">
+                        <span className="px-2 py-0.5 rounded bg-amber-500/20 text-amber-400 text-xs font-medium">@{acc.username}</span>
+                      </td>
+                      <td className="px-4 py-3 text-center">
+                        <span className="flex items-center justify-center gap-1 text-cyan-400"><Eye className="w-3 h-3" />{(acc.views || 0).toLocaleString()}</span>
+                      </td>
+                      <td className="px-4 py-3 text-center">
+                        <span className="text-emerald-400">{(acc.comments || 0).toLocaleString()}</span>
+                      </td>
+                      <td className="px-4 py-3 text-center">
+                        <span className="text-violet-400">{(acc.browsers || 0).toLocaleString()}</span>
+                      </td>
+                      <td className="px-4 py-3 text-zinc-400 text-xs">{acc.last_updated || '-'}</td>
+                      <td className="px-4 py-3">
+                        <a href={`https://www.tiktok.com/@${acc.username}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-violet-400 hover:text-violet-300 text-xs">
+                          <ExternalLink className="w-3 h-3" />View
+                        </a>
+                      </td>
                     </tr>
                   ))}
                 </tbody>
