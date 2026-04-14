@@ -3943,12 +3943,19 @@ DASHBOARD_HTML = """
                     <span>🎯 Target Account Commenter</span>
                     <span id="target-status" style="color:#71717a;font-size:12px;padding:4px 8px;background:#27272a;border-radius:4px;">⏸ Stopped</span>
                 </div>
+                <div class="settings" style="margin-bottom:16px;">
+                    <div class="setting-row">
+                        <label>Parallel browsers:</label>
+                        <input type="number" id="target-parallel" value="2" min="1" max="10" style="width:80px;">
+                    </div>
+                    <div style="font-size:12px;color:#71717a;margin-top:8px;">⚡ Run 1-10 browsers at a time (2-3 recommended for stability)</div>
+                </div>
                 <div style="display:flex;gap:12px;margin-bottom:16px;">
                     <button class="btn btn-success" id="target-startb" onclick="startTargets()">▶ Start</button>
                     <button class="btn btn-danger" id="target-stopb" onclick="stopTargets()" style="display:none">⏹ Stop</button>
                 </div>
                 <div style="font-size:12px;color:#a1a1aa;margin-bottom:12px;">
-                    Comments on specific target accounts with all browsers. Each browser views all videos and comments on 2.
+                    Comments on specific target accounts with all browsers. Each browser views all videos and comments on 2. Timing: 5-23s randomized delays.
                 </div>
                 <div class="stats">
                     <div class="stat"><div class="stat-value" id="target-views">0</div><div class="stat-label">Videos Viewed</div></div>
@@ -4415,7 +4422,8 @@ DASHBOARD_HTML = """
         }
         async function startTargets(){
             try{
-                const r=await fetch('/api/target-accounts/start',{method:'POST'});
+                const parallel=document.getElementById('target-parallel').value;
+                const r=await fetch('/api/target-accounts/start',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({parallel:+parallel})});
                 const d=await r.json();
                 if(d.ok){updTargets();setTimeout(updTargets,2000);}else{alert('Failed to start: '+d.message);}
             }catch(e){alert('Error: '+e.message);}
@@ -5520,14 +5528,19 @@ def api_start_target_commenter():
         if result.returncode == 0:
             return jsonify({'ok': False, 'message': 'Target commenter is already running'})
 
-        # Start the script
+        # Get parallel browsers setting from request
+        data = request.json or {}
+        parallel = data.get('parallel', 2)
+        parallel = max(1, min(10, int(parallel)))  # Clamp between 1 and 10
+
+        # Start the script with parallel argument
         subprocess.Popen(
-            ['python3', '-u', 'comment_target_accounts.py'],
+            ['python3', '-u', 'comment_target_accounts.py', f'--parallel={parallel}'],
             stdout=open('comment_target_run.log', 'w'),
             stderr=subprocess.STDOUT,
             start_new_session=True
         )
-        return jsonify({'ok': True, 'message': 'Target commenter started'})
+        return jsonify({'ok': True, 'message': f'Target commenter started with {parallel} parallel browsers'})
     except Exception as e:
         return jsonify({'ok': False, 'message': str(e)})
 

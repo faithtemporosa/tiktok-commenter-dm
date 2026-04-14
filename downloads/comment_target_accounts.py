@@ -13,6 +13,8 @@ import random
 import json
 import re
 import pickle
+import sys
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from playwright.sync_api import sync_playwright
 from googleapiclient.discovery import build
 
@@ -110,6 +112,7 @@ TARGET_ACCOUNTS = [
 # Settings
 COMMENTS_PER_ACCOUNT = 2  # Comment on 2 videos per account
 VIEW_ALL_VIDEOS = True     # View all videos before commenting
+PARALLEL_BROWSERS = 2      # Number of browsers to run in parallel
 
 # Comments by niche - customize as needed
 NICHE_COMMENTS = {
@@ -420,7 +423,7 @@ def view_and_comment_on_profile(page, account, browser_name):
         for idx, video_url in enumerate(videos):
             try:
                 page.goto(video_url, timeout=30000)
-                time.sleep(random.uniform(2, 4))  # Watch for a bit
+                time.sleep(random.randint(5, 23))  # Watch for a bit
                 videos_viewed += 1
 
                 # Comment only on selected videos
@@ -517,7 +520,7 @@ def view_and_comment_on_profile(page, account, browser_name):
                     else:
                         print(f'    ✗ Could not click comment icon on video {idx+1}', flush=True)
 
-                    time.sleep(random.randint(3, 6))
+                    time.sleep(random.randint(5, 23))
 
             except Exception as e:
                 print(f'    Video {idx+1} error: {str(e)[:40]}', flush=True)
@@ -574,6 +577,73 @@ def get_all_browsers():
 
     return browsers
 
+def process_browser(browser, browser_idx, total_browsers):
+    """Process a single browser through all target accounts"""
+    user_id = browser['user_id']
+    browser_name = browser['name']
+
+    print(f'\n[{browser_idx+1}/{total_browsers}] {browser_name} - Processing {len(TARGET_ACCOUNTS)} accounts', flush=True)
+
+    ws_url = open_browser(user_id)
+    if not ws_url:
+        print(f'  Failed to open browser', flush=True)
+        return {'success': False, 'videos': 0, 'comments': 0}
+
+    browser_videos = 0
+    browser_comments = 0
+
+    try:
+        with sync_playwright() as p:
+            browser_conn = p.chromium.connect_over_cdp(ws_url)
+            context = browser_conn.contexts[0]
+            page = context.pages[0] if context.pages else context.new_page()
+
+            # CHECK LOGIN STATUS FIRST
+            print(f'  Checking login status...', flush=True)
+            is_logged_in, username = check_login_status(page)
+
+            if not is_logged_in:
+                print(f'  ⚠ {browser_name} NOT logged in - running auto-signup...', flush=True)
+                signup_success, new_username = auto_signup(page, browser_name)
+
+                if not signup_success:
+                    print(f'  ✗ Signup failed for {browser_name}, skipping...', flush=True)
+                    browser_conn.close()
+                    close_browser(user_id)
+                    return {'success': False, 'videos': 0, 'comments': 0}
+
+                username = new_username
+                print(f'  ✓ {browser_name} now logged in as @{username}', flush=True)
+            else:
+                print(f'  ✓ {browser_name} logged in as @{username}', flush=True)
+
+            # Process ALL target accounts with this browser
+            for acc_idx, account in enumerate(TARGET_ACCOUNTS):
+                print(f'  [{acc_idx+1}/{len(TARGET_ACCOUNTS)}] @{account}', flush=True)
+
+                videos, comments = view_and_comment_on_profile(page, account, browser_name)
+                browser_videos += videos
+                browser_comments += comments
+
+                # Update stats for this target account
+                update_account_stats(account, videos, comments, browser_name)
+
+                # Wait between accounts
+                if acc_idx < len(TARGET_ACCOUNTS) - 1:
+                    time.sleep(random.randint(5, 23))
+
+            browser_conn.close()
+
+    except Exception as e:
+        print(f'  Browser error: {e}', flush=True)
+        close_browser(user_id)
+        return {'success': False, 'videos': browser_videos, 'comments': browser_comments}
+
+    close_browser(user_id)
+    print(f'  {browser_name} done: {browser_videos} videos viewed, {browser_comments} comments', flush=True)
+
+    return {'success': True, 'videos': browser_videos, 'comments': browser_comments}
+
 def main():
     print('=' * 60)
     print('  Target Account Commenter - ALL BROWSERS')
@@ -584,6 +654,7 @@ def main():
     print(f'\nSettings:')
     print(f'  - View all videos per account: {VIEW_ALL_VIDEOS}')
     print(f'  - Comments per account: {COMMENTS_PER_ACCOUNT}')
+    print(f'  - Parallel browsers: {PARALLEL_BROWSERS}')
     print()
 
     # Get ALL browsers
@@ -606,84 +677,34 @@ def main():
     browsers_completed = 0
     browsers_failed = 0
 
-    # Process each browser
-    for browser_idx, browser in enumerate(browsers):
-        user_id = browser['user_id']
-        browser_name = browser['name']
+    # Process browsers in parallel
+    with ThreadPoolExecutor(max_workers=PARALLEL_BROWSERS) as executor:
+        # Submit all browser tasks
+        future_to_browser = {}
+        for idx, browser in enumerate(browsers):
+            future = executor.submit(process_browser, browser, idx, len(browsers))
+            future_to_browser[future] = browser
 
-        print(f'\n[{browser_idx+1}/{len(browsers)}] {browser_name} - Processing {len(TARGET_ACCOUNTS)} accounts')
-
-        ws_url = open_browser(user_id)
-        if not ws_url:
-            print(f'  Failed to open browser')
-            browsers_failed += 1
-            continue
-
-        browser_videos = 0
-        browser_comments = 0
-
-        try:
-            with sync_playwright() as p:
-                browser_conn = p.chromium.connect_over_cdp(ws_url)
-                context = browser_conn.contexts[0]
-                page = context.pages[0] if context.pages else context.new_page()
-
-                # CHECK LOGIN STATUS FIRST
-                print(f'  Checking login status...', flush=True)
-                is_logged_in, username = check_login_status(page)
-
-                if not is_logged_in:
-                    print(f'  ⚠ {browser_name} NOT logged in - running auto-signup...', flush=True)
-                    signup_success, new_username = auto_signup(page, browser_name)
-
-                    if not signup_success:
-                        print(f'  ✗ Signup failed for {browser_name}, skipping...', flush=True)
-                        browser_conn.close()
-                        close_browser(user_id)
-                        browsers_failed += 1
-                        continue
-
-                    username = new_username
-                    print(f'  ✓ {browser_name} now logged in as @{username}', flush=True)
+        # Collect results as they complete
+        for future in as_completed(future_to_browser):
+            browser = future_to_browser[future]
+            try:
+                result = future.result()
+                total_videos_viewed += result['videos']
+                total_comments += result['comments']
+                if result['success']:
+                    browsers_completed += 1
                 else:
-                    print(f'  ✓ {browser_name} logged in as @{username}', flush=True)
+                    browsers_failed += 1
 
-                # Process ALL target accounts with this browser
-                for acc_idx, account in enumerate(TARGET_ACCOUNTS):
-                    print(f'  [{acc_idx+1}/{len(TARGET_ACCOUNTS)}] @{account}')
+                # Progress update
+                completed = browsers_completed + browsers_failed
+                if completed % 10 == 0:
+                    print(f'\n  === Progress: {completed}/{len(browsers)} browsers, {total_comments} total comments ===\n', flush=True)
 
-                    videos, comments = view_and_comment_on_profile(page, account, browser_name)
-                    browser_videos += videos
-                    browser_comments += comments
-
-                    # Update stats for this target account
-                    update_account_stats(account, videos, comments, browser_name)
-
-                    # Wait between accounts
-                    if acc_idx < len(TARGET_ACCOUNTS) - 1:
-                        time.sleep(random.randint(5, 10))
-
-                browser_conn.close()
-
-        except Exception as e:
-            print(f'  Browser error: {e}')
-            browsers_failed += 1
-
-        close_browser(user_id)
-
-        total_videos_viewed += browser_videos
-        total_comments += browser_comments
-        browsers_completed += 1
-
-        print(f'  {browser_name} done: {browser_videos} videos viewed, {browser_comments} comments')
-
-        # Progress update every 10 browsers
-        if (browser_idx + 1) % 10 == 0:
-            print(f'\n  === Progress: {browser_idx+1}/{len(browsers)} browsers, {total_comments} total comments ===\n')
-
-        # Wait between browsers
-        if browser_idx < len(browsers) - 1:
-            time.sleep(random.randint(3, 8))
+            except Exception as e:
+                print(f'  Error processing browser {browser["name"]}: {e}', flush=True)
+                browsers_failed += 1
 
     # Final Summary
     print(f'\n{"=" * 60}')
@@ -696,4 +717,11 @@ def main():
     print(f'{"=" * 60}')
 
 if __name__ == "__main__":
+    # Parse command line arguments
+    if len(sys.argv) > 1 and sys.argv[1].startswith('--parallel='):
+        try:
+            PARALLEL_BROWSERS = int(sys.argv[1].split('=')[1])
+            PARALLEL_BROWSERS = max(1, min(10, PARALLEL_BROWSERS))  # Clamp between 1 and 10
+        except:
+            pass
     main()
