@@ -25,6 +25,13 @@ PROFILE_MAPPING_PATH = 'tiktok_profile_mapping.json'
 GMAIL_TOKEN_PATH = 'gmail_token.pickle'
 TARGET_STATS_PATH = 'target_accounts_stats.json'
 COMMENTED_VIDEOS_PATH = 'target_commented_videos.json'
+ACCOUNT_CREATION_DATES_PATH = 'account_creation_dates.json'
+DAILY_ACTIVITY_PATH = 'daily_activity_tracker.json'
+
+# New account limits
+NEW_ACCOUNT_DAYS = 30  # Consider account "new" for first 30 days
+NEW_ACCOUNT_DAILY_FOLLOWS = 2
+NEW_ACCOUNT_DAILY_COMMENTS = 2
 
 def normalize_video_url(video_url):
     """Extract just the video ID from a TikTok URL to ensure consistent tracking.
@@ -54,6 +61,106 @@ def save_commented_video(video_url):
         commented = set(list(commented)[-10000:])
     with open(COMMENTED_VIDEOS_PATH, 'w') as f:
         json.dump(list(commented), f)
+
+def load_account_creation_dates():
+    """Load account creation dates"""
+    try:
+        with open(ACCOUNT_CREATION_DATES_PATH, 'r') as f:
+            return json.load(f)
+    except:
+        return {}
+
+def save_account_creation_date(browser_name):
+    """Save when an account was created"""
+    from datetime import datetime
+    dates = load_account_creation_dates()
+    if browser_name not in dates:
+        dates[browser_name] = datetime.now().strftime('%Y-%m-%d')
+        with open(ACCOUNT_CREATION_DATES_PATH, 'w') as f:
+            json.dump(dates, f, indent=2)
+
+def is_new_account(browser_name):
+    """Check if account is new (within NEW_ACCOUNT_DAYS days)"""
+    from datetime import datetime, timedelta
+    dates = load_account_creation_dates()
+    if browser_name not in dates:
+        return False
+
+    creation_date = datetime.strptime(dates[browser_name], '%Y-%m-%d')
+    days_old = (datetime.now() - creation_date).days
+    return days_old <= NEW_ACCOUNT_DAYS
+
+def load_daily_activity():
+    """Load daily activity tracker"""
+    try:
+        with open(DAILY_ACTIVITY_PATH, 'r') as f:
+            return json.load(f)
+    except:
+        return {}
+
+def get_today_activity(browser_name):
+    """Get today's follow and comment count for a browser"""
+    from datetime import datetime
+    today = datetime.now().strftime('%Y-%m-%d')
+    activity = load_daily_activity()
+
+    if browser_name not in activity:
+        return {'follows': 0, 'comments': 0}
+
+    if today not in activity[browser_name]:
+        return {'follows': 0, 'comments': 0}
+
+    return activity[browser_name][today]
+
+def record_follow(browser_name):
+    """Record a follow action for today"""
+    from datetime import datetime
+    today = datetime.now().strftime('%Y-%m-%d')
+    activity = load_daily_activity()
+
+    if browser_name not in activity:
+        activity[browser_name] = {}
+
+    if today not in activity[browser_name]:
+        activity[browser_name][today] = {'follows': 0, 'comments': 0}
+
+    activity[browser_name][today]['follows'] += 1
+
+    with open(DAILY_ACTIVITY_PATH, 'w') as f:
+        json.dump(activity, f, indent=2)
+
+def record_comment(browser_name):
+    """Record a comment action for today"""
+    from datetime import datetime
+    today = datetime.now().strftime('%Y-%m-%d')
+    activity = load_daily_activity()
+
+    if browser_name not in activity:
+        activity[browser_name] = {}
+
+    if today not in activity[browser_name]:
+        activity[browser_name][today] = {'follows': 0, 'comments': 0}
+
+    activity[browser_name][today]['comments'] += 1
+
+    with open(DAILY_ACTIVITY_PATH, 'w') as f:
+        json.dump(activity, f, indent=2)
+
+def can_follow_today(browser_name):
+    """Check if account can follow more accounts today"""
+    if not is_new_account(browser_name):
+        return True  # No limit for established accounts
+
+    today_activity = get_today_activity(browser_name)
+    return today_activity['follows'] < NEW_ACCOUNT_DAILY_FOLLOWS
+
+def can_comment_today(browser_name):
+    """Check if account can comment more today"""
+    if not is_new_account(browser_name):
+        return True  # No limit for established accounts
+
+    today_activity = get_today_activity(browser_name)
+    return today_activity['comments'] < NEW_ACCOUNT_DAILY_COMMENTS
 
 def load_target_stats():
     """Load existing target account stats from JSON"""
@@ -426,6 +533,9 @@ def auto_signup(page, browser_name):
             with open(PROFILE_MAPPING_PATH, 'w') as f:
                 json.dump(mapping, f, indent=2)
 
+            # Save account creation date for new account limits
+            save_account_creation_date(browser_name)
+
             return True, username
 
         return False, None
@@ -442,13 +552,36 @@ def view_and_comment_on_profile(page, account, browser_name):
 
     videos_viewed = 0
     comments_made = 0
+    followed = False
 
     # Load already commented videos to avoid re-commenting
     already_commented = load_commented_videos()
 
+    # Check if this is a new account and what limits apply
+    is_new = is_new_account(browser_name)
+    if is_new:
+        today_activity = get_today_activity(browser_name)
+        print(f'    New account - Today: {today_activity["follows"]}/{NEW_ACCOUNT_DAILY_FOLLOWS} follows, {today_activity["comments"]}/{NEW_ACCOUNT_DAILY_COMMENTS} comments', flush=True)
+
     try:
         page.goto(f'https://www.tiktok.com/@{account}', timeout=30000)
         time.sleep(4)
+
+        # Try to follow the account (if allowed)
+        if can_follow_today(browser_name):
+            try:
+                # Look for follow button
+                follow_btn = page.locator('button[data-e2e="follow-button"], button:has-text("Follow"), button:has-text("Suivre")').first
+                if follow_btn.is_visible(timeout=3000):
+                    follow_btn.click()
+                    time.sleep(2)
+                    record_follow(browser_name)
+                    followed = True
+                    print(f'    ✓ Followed @{account}', flush=True)
+            except Exception as follow_err:
+                pass  # Already following or button not found
+        else:
+            print(f'    ⚠ Daily follow limit reached for new account', flush=True)
 
         # Scroll to load more videos
         for _ in range(3):
@@ -479,7 +612,11 @@ def view_and_comment_on_profile(page, account, browser_name):
         # Find videos we haven't commented on yet (normalize URLs to video IDs for comparison)
         uncommented_indices = [i for i, v in enumerate(videos) if normalize_video_url(v) not in already_commented]
 
-        if uncommented_indices:
+        # Check if we can comment today (for new accounts)
+        if not can_comment_today(browser_name):
+            comment_indices = set()
+            print(f'    Daily comment limit reached for new account, will only view', flush=True)
+        elif uncommented_indices:
             # Select which videos to comment on (2 random ones from uncommented)
             comment_indices = set(random.sample(uncommented_indices, min(COMMENTS_PER_ACCOUNT, len(uncommented_indices))))
             print(f'    {len(uncommented_indices)} videos available for commenting (skipping {len(videos) - len(uncommented_indices)} already commented)', flush=True)
@@ -495,8 +632,8 @@ def view_and_comment_on_profile(page, account, browser_name):
                 time.sleep(random.randint(5, 23))  # Watch for a bit
                 videos_viewed += 1
 
-                # Comment only on selected videos
-                if idx in comment_indices:
+                # Comment only on selected videos (and if allowed for new accounts)
+                if idx in comment_indices and can_comment_today(browser_name):
                     comment = random.choice(comments_pool)
                     commented = False
 
@@ -584,6 +721,9 @@ def view_and_comment_on_profile(page, account, browser_name):
 
                             # Save this video as commented to prevent re-commenting
                             save_commented_video(video_url)
+
+                            # Record comment for daily limit tracking
+                            record_comment(browser_name)
                         else:
                             print(f'    ✗ Could not find comment input on video {idx+1}', flush=True)
                     else:
@@ -594,7 +734,8 @@ def view_and_comment_on_profile(page, account, browser_name):
             except Exception as e:
                 print(f'    Video {idx+1} error: {str(e)[:40]}', flush=True)
 
-        print(f'    Viewed {videos_viewed} videos, made {comments_made} comments', flush=True)
+        follow_status = f', followed @{account}' if followed else ''
+        print(f'    Viewed {videos_viewed} videos, made {comments_made} comments{follow_status}', flush=True)
         return videos_viewed, comments_made
 
     except Exception as e:
