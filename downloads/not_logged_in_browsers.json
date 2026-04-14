@@ -1,0 +1,16 @@
+{
+  "browsers": [
+    {
+      "profile": "tt40",
+      "detected_at": "2026-04-13 16:40:01",
+      "source": "commenter"
+    },
+    {
+      "profile": "tt150",
+      "detected_at": "2026-04-14 00:53:53",
+      "source": "commenter"
+    }
+  ],
+  "last_updated": "2026-04-14 00:53:53",
+  "count": 2
+}

@@ -1,0 +1,90 @@
+<string>:24: SyntaxWarning: "\!" is an invalid escape sequence. Such sequences will not work in the future. Did you mean "\\!"? A raw string is also an option.
+<string>:25: SyntaxWarning: "\!" is an invalid escape sequence. Such sequences will not work in the future. Did you mean "\\!"? A raw string is also an option.
+<string>:26: SyntaxWarning: "\!" is an invalid escape sequence. Such sequences will not work in the future. Did you mean "\\!"? A raw string is also an option.
+<string>:27: SyntaxWarning: "\!" is an invalid escape sequence. Such sequences will not work in the future. Did you mean "\\!"? A raw string is also an option.
+<string>:28: SyntaxWarning: "\!" is an invalid escape sequence. Such sequences will not work in the future. Did you mean "\\!"? A raw string is also an option.
+<string>:93: SyntaxWarning: "\!" is an invalid escape sequence. Such sequences will not work in the future. Did you mean "\\!"? A raw string is also an option.
+<string>:93: SyntaxWarning: "\!" is an invalid escape sequence. Such sequences will not work in the future. Did you mean "\\!"? A raw string is also an option.
+<string>:95: SyntaxWarning: "\!" is an invalid escape sequence. Such sequences will not work in the future. Did you mean "\\!"? A raw string is also an option.
+<string>:95: SyntaxWarning: "\!" is an invalid escape sequence. Such sequences will not work in the future. Did you mean "\\!"? A raw string is also an option.
+<string>:95: SyntaxWarning: "\!" is an invalid escape sequence. Such sequences will not work in the future. Did you mean "\\!"? A raw string is also an option.
+<string>:97: SyntaxWarning: "\!" is an invalid escape sequence. Such sequences will not work in the future. Did you mean "\\!"? A raw string is also an option.
+<string>:97: SyntaxWarning: "\!" is an invalid escape sequence. Such sequences will not work in the future. Did you mean "\\!"? A raw string is also an option.
+<string>:99: SyntaxWarning: "\!" is an invalid escape sequence. Such sequences will not work in the future. Did you mean "\\!"? A raw string is also an option.
+<string>:99: SyntaxWarning: "\!" is an invalid escape sequence. Such sequences will not work in the future. Did you mean "\\!"? A raw string is also an option.
+<string>:99: SyntaxWarning: "\!" is an invalid escape sequence. Such sequences will not work in the future. Did you mean "\\!"? A raw string is also an option.
+<string>:101: SyntaxWarning: "\!" is an invalid escape sequence. Such sequences will not work in the future. Did you mean "\\!"? A raw string is also an option.
+<string>:101: SyntaxWarning: "\!" is an invalid escape sequence. Such sequences will not work in the future. Did you mean "\\!"? A raw string is also an option.
+<string>:101: SyntaxWarning: "\!" is an invalid escape sequence. Such sequences will not work in the future. Did you mean "\\!"? A raw string is also an option.
+<string>:101: SyntaxWarning: "\!" is an invalid escape sequence. Such sequences will not work in the future. Did you mean "\\!"? A raw string is also an option.
+Using 10 browsers for 7 accounts
+
+[1/7] Processing @flockboynation with tt505
+  [tt505] Visiting @flockboynation...
+  [tt505] Found 5 videos
+  [tt505] Opening video...
+  [tt505] Could not comment: Locator.click: Timeout 5000ms exceeded.
+Call log:
+
+
+[2/7] Processing @happyandyaya with tt504
+  [tt504] Visiting @happyandyaya...
+  [tt504] Found 5 videos
+  [tt504] Opening video...
+  [tt504] Could not comment: Locator.click: Timeout 5000ms exceeded.
+Call log:
+
+
+[3/7] Processing @catalyst_supps with tt503
+  [tt503] Visiting @catalyst_supps...
+  [tt503] Found 5 videos
+  [tt503] Opening video...
+  [tt503] Could not comment: Locator.click: Timeout 5000ms exceeded.
+Call log:
+
+
+[4/7] Processing @aisoiq with tt502
+  [tt502] Visiting @aisoiq...
+  [tt502] Found 5 videos
+  [tt502] Opening video...
+  [tt502] Could not comment: Locator.click: Timeout 5000ms exceeded.
+Call log:
+
+
+[5/7] Processing @lifeadventuresafterfifty with tt501
+  [tt501] Visiting @lifeadventuresafterfifty...
+  [tt501] Found 5 videos
+  [tt501] Opening video...
+  [tt501] ✓ Commented on @lifeadventuresafterfifty: "Living the dream\! Love it"
+  [tt501] Opening video...
+  [tt501] Could not comment: Locator.click: Timeout 5000ms exceeded.
+Call log:
+
+
+[6/7] Processing @ventur_3 with tt500
+  [tt500] Visiting @ventur_3...
+  [tt500] Found 5 videos
+  [tt500] Opening video...
+  [tt500] Could not comment: Locator.click: Timeout 5000ms exceeded.
+Call log:
+
+  [tt500] Opening video...
+  [tt500] Could not comment: Locator.click: Timeout 5000ms exceeded.
+Call log:
+
+
+[7/7] Processing @thehouseofgracehuxley with tt499
+  [tt499] Visiting @thehouseofgracehuxley...
+  [tt499] Found 5 videos
+  [tt499] Opening video...
+  [tt499] Could not comment: Locator.click: Timeout 5000ms exceeded.
+Call log:
+
+  [tt499] Opening video...
+  [tt499] Could not comment: Locator.click: Timeout 5000ms exceeded.
+Call log:
+
+
+==================================================
+COMPLETE: 1 comments on 7 accounts
+==================================================

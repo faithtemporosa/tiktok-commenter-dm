@@ -453,22 +453,28 @@ def auto_signup(page, browser_name):
         page.locator('input[type="password"]').fill(password)
         time.sleep(0.5)
 
-        # Click send code
+        # Click send code - click twice until "Resend code" appears
         try:
-            send_btn = page.locator('button:has-text("Send code"), button:has-text("Envoyer")').first
-            send_btn.click(timeout=10000)
-            print(f'    [{browser_name}] Send code button clicked', flush=True)
-            time.sleep(2)
+            for attempt in range(2):
+                send_btn = page.locator('button:has-text("Send code"), button:has-text("Envoyer")').first
+                if send_btn.is_visible(timeout=3000):
+                    send_btn.click()
+                    print(f'    [{browser_name}] Send code button clicked (attempt {attempt + 1})', flush=True)
+                    time.sleep(3)
+                else:
+                    break
 
             # Verify code was sent by looking for "Resend code" button
+            resend_visible = False
             try:
                 resend_btn = page.locator('button:has-text("Resend"), button:has-text("Resend code"), button:has-text("Renvoyer")').first
                 if resend_btn.is_visible(timeout=3000):
                     print(f'    [{browser_name}] ✓ Code sent successfully (Resend button visible)', flush=True)
+                    resend_visible = True
                 else:
-                    print(f'    [{browser_name}] ⚠ Resend button not found - code may not have sent', flush=True)
+                    print(f'    [{browser_name}] ⚠ Resend button not found - trying to continue anyway', flush=True)
             except:
-                print(f'    [{browser_name}] ⚠ Could not verify if code was sent', flush=True)
+                print(f'    [{browser_name}] ⚠ Could not verify if code was sent - continuing', flush=True)
 
             # Take screenshot to verify current state
             screenshot_path = f'/Users/faithtemporosa/tiktok-commenter-dm/tiktok-commenter-dm/downloads/signup_{browser_name}_after_send.png'

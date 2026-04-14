@@ -117,4 +117,4 @@ class WebpackHealthPlugin {
   }
 }
 
-module.exports = WebpackHealthPlugin;
+module.exports = WebpackHealthPlugin

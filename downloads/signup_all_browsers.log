@@ -1,0 +1,2749 @@
+Fetching browsers...
+Processing 505 browsers (starting from tt1)
+
+============================================================
+[1/505] tt1... (login_check=False) ✗ Logged out - signing up...
+    → Signup: vividflame644@automateyourbizz.xyz / vividflame58
+    ✗ Signup error: Locator.click: Timeout 30000ms exceeded.
+Call log:
+  - waiting for locator("[rol
+    ✗ Signup failed
+[2/505] tt2... (login_check=False) ✗ Logged out - signing up...
+    → Signup: solarfield424@automateyourbizz.xyz / solarfield57
+    ✗ Signup error: Locator.click: Timeout 30000ms exceeded.
+Call log:
+  - waiting for locator("[rol
+    ✗ Signup failed
+[3/505] tt3... (login_check=False) ✗ Logged out - signing up...
+    → Signup: zenflame254@automateyourbizz.xyz / zenflame60
+    ✗ Signup error: Locator.click: Timeout 30000ms exceeded.
+Call log:
+  - waiting for locator("[rol
+    ✗ Signup failed
+[4/505] tt4... (login_check=False) ✗ Logged out - signing up...
+    → Signup: fluxmoon374@automateyourbizz.xyz / fluxmoon60
+    ✗ Signup error: Locator.click: Timeout 30000ms exceeded.
+Call log:
+  - waiting for locator("[rol
+    ✗ Signup failed
+[5/505] tt5... (login_check=False) ✗ Logged out - signing up...
+    → Signup: prismmoon155@automateyourbizz.xyz / prismmoon49
+    ✗ Signup error: Locator.click: Timeout 30000ms exceeded.
+Call log:
+  - waiting for locator("[rol
+    ✗ Signup failed
+[6/505] tt6... (login_check=False) ✗ Logged out - signing up...
+    → Signup: pixelmoon941@automateyourbizz.xyz / pixelmoon78
+    ✗ Signup error: Locator.click: Timeout 30000ms exceeded.
+Call log:
+  - waiting for locator("[rol
+    ✗ Signup failed
+[7/505] tt7... (login_check=False) ✗ Logged out - signing up...
+    → Signup: prismflame201@automateyourbizz.xyz / prismflame29
+    ✗ Signup error: Locator.click: Timeout 30000ms exceeded.
+Call log:
+  - waiting for locator("[rol
+    ✗ Signup failed
+[8/505] tt8... (login_check=False) ✗ Logged out - signing up...
+    → Signup: lunarflame726@automateyourbizz.xyz / lunarflame14
+    ✗ Signup error: Locator.click: Timeout 30000ms exceeded.
+Call log:
+  - waiting for locator("[rol
+    ✗ Signup failed
+[9/505] tt9... (login_check=False) ✗ Logged out - signing up...
+    → Signup: prismflame365@automateyourbizz.xyz / prismflame73
+    ✗ Signup error: Locator.click: Timeout 30000ms exceeded.
+Call log:
+  - waiting for locator("[rol
+    ✗ Signup failed
+[10/505] tt10... (login_check=False) ✗ Logged out - signing up...
+    → Signup: lunartrack377@automateyourbizz.xyz / lunartrack58
+    ✗ Signup error: Locator.click: Timeout 30000ms exceeded.
+Call log:
+  - waiting for locator("[rol
+    ✗ Signup failed
+[11/505] tt11... (login_check=False) ✗ Logged out - signing up...
+    → Signup: echotrack811@automateyourbizz.xyz / echotrack39
+    ✗ Signup error: Locator.click: Timeout 30000ms exceeded.
+Call log:
+  - waiting for locator("[rol
+    ✗ Signup failed
+[12/505] tt12... (login_check=False) ✗ Logged out - signing up...
+    → Signup: zenglow314@automateyourbizz.xyz / zenglow78
+    ✗ Signup error: Locator.click: Timeout 30000ms exceeded.
+Call log:
+  - waiting for locator("[rol
+    ✗ Signup failed
+[13/505] tt13... (login_check=False) ✗ Logged out - signing up...
+    → Signup: lunarpulse262@automateyourbizz.xyz / lunarpulse46
+    ✗ Signup error: Locator.click: Timeout 30000ms exceeded.
+Call log:
+  - waiting for locator("[rol
+    ✗ Signup failed
+[14/505] tt14... (login_check=False) ✗ Logged out - signing up...
+    → Signup: lunarpulse118@automateyourbizz.xyz / lunarpulse48
+    ✗ Signup error: Locator.click: Timeout 30000ms exceeded.
+Call log:
+  - waiting for locator("[rol
+    ✗ Signup failed
+[15/505] tt15... (login_check=False) ✗ Logged out - signing up...
+    → Signup: atomicwave337@automateyourbizz.xyz / atomicwave39
+    ✗ Signup error: Locator.click: Timeout 30000ms exceeded.
+Call log:
+  - waiting for locator("[rol
+    ✗ Signup failed
+[16/505] tt16... (login_check=False) ✗ Logged out - signing up...
+    → Signup: vividecho187@automateyourbizz.xyz / vividecho19
+    ✗ Signup error: Locator.click: Timeout 30000ms exceeded.
+Call log:
+  - waiting for locator("[rol
+    ✗ Signup failed
+[17/505] tt17... ✗ Error: Page.goto: Timeout 60000ms exceeded.
+Call log:
+  -
+[18/505] tt18... (login_check=False) ✗ Logged out - signing up...
+    → Signup: pixelstream957@automateyourbizz.xyz / pixelstream73
+    → Sending code...
+    → Code: 193157
+    → Saved 46 cookies to tiktok_cookies/tt18_cookies.json
+    ✓ Signup complete! @pixelstream73
+[19/505] tt19... (login_check=False) ✗ Logged out - signing up...
+    → Signup: vividcore715@automateyourbizz.xyz / vividcore88
+    → Sending code...
+    → Code: 200303
+    → Saved 44 cookies to tiktok_cookies/tt19_cookies.json
+    ✓ Signup complete! @vividcore88
+[20/505] tt20... (login_check=False) ✗ Logged out - signing up...
+    → Signup: vividecho512@automateyourbizz.xyz / vividecho43
+    ✗ Signup error: Locator.click: Timeout 30000ms exceeded.
+Call log:
+  - waiting for locator("[rol
+    ✗ Signup failed
+[21/505] tt21... (login_check=False) ✗ Logged out - signing up...
+    → Signup: fluxpath819@automateyourbizz.xyz / fluxpath37
+    ✗ Signup error: Locator.click: Timeout 30000ms exceeded.
+Call log:
+  - waiting for locator("[rol
+    ✗ Signup failed
+[22/505] tt22... (login_check=False) ✗ Logged out - signing up...
+    → Signup: prismfield857@automateyourbizz.xyz / prismfield30
+    ✗ Signup error: Locator.click: Timeout 30000ms exceeded.
+Call log:
+  - waiting for locator("[rol
+    ✗ Signup failed
+[23/505] tt23... (login_check=False) ✗ Logged out - signing up...
+    → Signup: echostream908@automateyourbizz.xyz / echostream14
+    ✗ Signup error: Locator.click: Timeout 30000ms exceeded.
+Call log:
+  - waiting for locator("[rol
+    ✗ Signup failed
+[24/505] tt24... (login_check=False) ✗ Logged out - signing up...
+    → Signup: fluxwave371@automateyourbizz.xyz / fluxwave20
+    ✗ Signup error: Locator.click: Timeout 30000ms exceeded.
+Call log:
+  - waiting for locator("[rol
+    ✗ Signup failed
+[25/505] tt25... (login_check=False) ✗ Logged out - signing up...
+    → Signup: atomicecho951@automateyourbizz.xyz / atomicecho32
+    ✗ Signup error: Locator.click: Timeout 30000ms exceeded.
+Call log:
+  - waiting for locator("[rol
+    ✗ Signup failed
+[26/505] tt26... (login_check=False) ✗ Logged out - signing up...
+    → Signup: brightspark207@automateyourbizz.xyz / brightspark57
+    ✗ Signup error: Locator.click: Timeout 30000ms exceeded.
+Call log:
+  - waiting for locator("[rol
+    ✗ Signup failed
+[27/505] tt27... (login_check=False) ✗ Logged out - signing up...
+    → Signup: vividverse971@automateyourbizz.xyz / vividverse48
+    ✗ Signup error: Locator.click: Timeout 30000ms exceeded.
+Call log:
+  - waiting for locator("[rol
+    ✗ Signup failed
+[28/505] tt28... (login_check=False) ✗ Logged out - signing up...
+    → Signup: brightscope993@automateyourbizz.xyz / brightscope80
+    ✗ Signup error: Locator.click: Timeout 30000ms exceeded.
+Call log:
+  - waiting for locator("[rol
+    ✗ Signup failed
+[29/505] tt29... (login_check=False) ✗ Logged out - signing up...
+    → Signup: novaverse654@automateyourbizz.xyz / novaverse66
+    ✗ Signup error: Locator.click: Timeout 30000ms exceeded.
+Call log:
+  - waiting for locator("[rol
+    ✗ Signup failed
+[30/505] tt30... (login_check=False) ✗ Logged out - signing up...
+    → Signup: cosmicphoenix575@automateyourbizz.xyz / cosmicphoenix47
+    ✗ Signup error: Locator.click: Timeout 30000ms exceeded.
+Call log:
+  - waiting for locator("[rol
+    ✗ Signup failed
+[31/505] tt31... (login_check=False) ✗ Logged out - signing up...
+    → Signup: solarstream484@automateyourbizz.xyz / solarstream10
+    → Sending code...
+    → Code: 741546
+    → Saved 44 cookies to tiktok_cookies/tt31_cookies.json
+    ✓ Signup complete! @solarstream10
+[32/505] tt32... (login_check=False) ✗ Logged out - signing up...
+    → Signup: vividpulse723@automateyourbizz.xyz / vividpulse15
+    ✗ Signup error: Locator.click: Timeout 30000ms exceeded.
+Call log:
+  - waiting for locator("[rol
+    ✗ Signup failed
+[33/505] tt33... (login_check=False) ✗ Logged out - signing up...
+    → Signup: echoflame489@automateyourbizz.xyz / echoflame16
+    ✗ Signup error: Locator.click: Timeout 30000ms exceeded.
+Call log:
+  - waiting for locator("[rol
+    ✗ Signup failed
+[34/505] tt34... (login_check=False) ✗ Logged out - signing up...
+    → Signup: brighttrack958@automateyourbizz.xyz / brighttrack69
+    ✗ Signup error: Locator.click: Timeout 30000ms exceeded.
+Call log:
+  - waiting for locator("[rol
+    ✗ Signup failed
+[35/505] tt35... (login_check=False) ✗ Logged out - signing up...
+    → Signup: lunarpath884@automateyourbizz.xyz / lunarpath32
+    ✗ Signup error: Locator.click: Timeout 30000ms exceeded.
+Call log:
+  - waiting for locator("[rol
+    ✗ Signup failed
+[36/505] tt36... (login_check=False) ✗ Logged out - signing up...
+    → Signup: echofield982@automateyourbizz.xyz / echofield89
+    → Sending code...
+    → Code: 933093
+    → Saved 43 cookies to tiktok_cookies/tt36_cookies.json
+    ✓ Signup complete! @echofield89
+[37/505] tt37... (login_check=False) ✗ Logged out - signing up...
+    → Signup: swiftscope244@automateyourbizz.xyz / swiftscope91
+    ✗ Signup error: Locator.click: Timeout 30000ms exceeded.
+Call log:
+  - waiting for locator("[rol
+    ✗ Signup failed
+[38/505] tt38... (login_check=False) ✗ Logged out - signing up...
+    → Signup: solarpulse412@automateyourbizz.xyz / solarpulse35
+    → Sending code...
+    → Code: 265459
+    → Saved 42 cookies to tiktok_cookies/tt38_cookies.json
+    ✓ Signup complete! @solarpulse35
+[39/505] tt39... (login_check=False) ✗ Logged out - signing up...
+    → Signup: swiftscope279@automateyourbizz.xyz / swiftscope73
+    ✗ Signup error: Locator.click: Timeout 30000ms exceeded.
+Call log:
+  - waiting for locator("[rol
+    ✗ Signup failed
+[40/505] tt40... (login_check=False) ✗ Logged out - signing up...
+    → Signup: lunarpath681@automateyourbizz.xyz / lunarpath82
+    ✗ Signup error: Locator.click: Timeout 30000ms exceeded.
+Call log:
+  - waiting for locator("[rol
+    ✗ Signup failed
+[41/505] tt41... (login_check=False) ✗ Logged out - signing up...
+    → Signup: novaphoenix158@automateyourbizz.xyz / novaphoenix91
+    ✗ Signup error: Locator.click: Timeout 30000ms exceeded.
+Call log:
+  - waiting for locator("[rol
+    ✗ Signup failed
+[42/505] tt42... (login_check=False) ✗ Logged out - signing up...
+    → Signup: novaglow251@automateyourbizz.xyz / novaglow34
+    ✗ Signup error: Locator.click: Timeout 30000ms exceeded.
+Call log:
+  - waiting for locator("[rol
+    ✗ Signup failed
+[43/505] tt43... (login_check=False) ✗ Logged out - signing up...
+    → Signup: swiftmoon793@automateyourbizz.xyz / swiftmoon19
+    → Sending code...
+    → Code: 313531
+    → Saved 43 cookies to tiktok_cookies/tt43_cookies.json
+    ✓ Signup complete! @swiftmoon19
+[44/505] tt44... (login_check=False) ✗ Logged out - signing up...
+    → Signup: cosmicstar145@automateyourbizz.xyz / cosmicstar43
+    ✗ Signup error: Locator.click: Timeout 30000ms exceeded.
+Call log:
+  - waiting for locator("[rol
+    ✗ Signup failed
+[45/505] tt45... (login_check=False) ✗ Logged out - signing up...
+    → Signup: fluxstar693@automateyourbizz.xyz / fluxstar24
+    → Sending code...
+    → Code: 021897
+    → Saved 34 cookies to tiktok_cookies/tt45_cookies.json
+    ✓ Signup complete! @fluxstar24
+[46/505] tt46... (login_check=False) ✗ Logged out - signing up...
+    → Signup: crystalglow735@automateyourbizz.xyz / crystalglow59
+    ✗ Signup error: Locator.click: Timeout 30000ms exceeded.
+Call log:
+  - waiting for locator("[rol
+    ✗ Signup failed
+[47/505] tt47... (login_check=False) ✗ Logged out - signing up...
+    → Signup: novaspark475@automateyourbizz.xyz / novaspark40
+    → Sending code...
+    → Code: 755198
+    → Saved 34 cookies to tiktok_cookies/tt47_cookies.json
+    ✓ Signup complete! @novaspark40
+[48/505] tt48... (login_check=False) ✗ Logged out - signing up...
+    → Signup: prismecho265@automateyourbizz.xyz / prismecho76
+    ✗ Signup error: Locator.click: Timeout 30000ms exceeded.
+Call log:
+  - waiting for locator("[rol
+    ✗ Signup failed
+[49/505] tt49... (login_check=False) ✗ Logged out - signing up...
+    → Signup: vividpulse375@automateyourbizz.xyz / vividpulse38
+    ✗ Signup error: Locator.click: Timeout 30000ms exceeded.
+Call log:
+  - waiting for locator("[rol
+    ✗ Signup failed
+[50/505] tt50... (login_check=False) ✗ Logged out - signing up...
+    → Signup: vividfield516@automateyourbizz.xyz / vividfield15
+    ✗ Signup error: Locator.click: Timeout 30000ms exceeded.
+Call log:
+  - waiting for locator("[rol
+    ✗ Signup failed
+[51/505] tt51... (login_check=False) ✗ Logged out - signing up...
+    → Signup: zenfield997@automateyourbizz.xyz / zenfield83
+    ✗ Signup error: Locator.click: Timeout 30000ms exceeded.
+Call log:
+  - waiting for locator("[rol
+    ✗ Signup failed
+[52/505] tt52... (login_check=False) ✗ Logged out - signing up...
+    → Signup: cosmicscope971@automateyourbizz.xyz / cosmicscope52
+    ✗ Signup error: Locator.click: Timeout 30000ms exceeded.
+Call log:
+  - waiting for locator("[rol
+    ✗ Signup failed
+[53/505] tt53... (login_check=False) ✗ Logged out - signing up...
+    → Signup: fluxglow779@automateyourbizz.xyz / fluxglow82
+    → Sending code...
+    → Code: 107134
+    → Saved 34 cookies to tiktok_cookies/tt53_cookies.json
+    ✓ Signup complete! @fluxglow82
+[54/505] tt54... (login_check=False) ✗ Logged out - signing up...
+    → Signup: solarspark507@automateyourbizz.xyz / solarspark17
+    → Sending code...
+    → Code: 080318
+    → Saved 36 cookies to tiktok_cookies/tt54_cookies.json
+    ✓ Signup complete! @solarspark17
+[55/505] tt55... (login_check=False) ✗ Logged out - signing up...
+    → Signup: vividflame831@automateyourbizz.xyz / vividflame65
+    → Sending code...
+    → Code: 650184
+    → Saved 36 cookies to tiktok_cookies/tt55_cookies.json
+    ✓ Signup complete! @vividflame65
+[56/505] tt56... (login_check=False) ✗ Logged out - signing up...
+    → Signup: brightstream654@automateyourbizz.xyz / brightstream77
+    ✗ Signup error: Locator.click: Timeout 30000ms exceeded.
+Call log:
+  - waiting for locator("[rol
+    ✗ Signup failed
+[57/505] tt57... (login_check=False) ✗ Logged out - signing up...
+    → Signup: vividmoon419@automateyourbizz.xyz / vividmoon11
+    → Sending code...
+    → Code: 129713
+    → Saved 35 cookies to tiktok_cookies/tt57_cookies.json
+    ✓ Signup complete! @vividmoon11
+[58/505] tt58... (login_check=False) ✗ Logged out - signing up...
+    → Signup: driftflame364@automateyourbizz.xyz / driftflame57
+    → Sending code...
+    → Code: 499196
+    → Saved 36 cookies to tiktok_cookies/tt58_cookies.json
+    ✓ Signup complete! @driftflame57
+[59/505] tt59... (login_check=False) ✗ Logged out - signing up...
+    → Signup: lunarscope441@automateyourbizz.xyz / lunarscope87
+    ✗ Signup error: Locator.click: Timeout 30000ms exceeded.
+Call log:
+  - waiting for locator("[rol
+    ✗ Signup failed
+[60/505] tt60... (login_check=False) ✗ Logged out - signing up...
+    → Signup: novaspark233@automateyourbizz.xyz / novaspark26
+    → Sending code...
+    → Code: 822158
+    → Saved 35 cookies to tiktok_cookies/tt60_cookies.json
+    ✓ Signup complete! @novaspark26
+[61/505] tt61... (login_check=False) ✗ Logged out - signing up...
+    → Signup: brightwave614@automateyourbizz.xyz / brightwave83
+    → Sending code...
+    → Code: 135718
+    → Saved 35 cookies to tiktok_cookies/tt61_cookies.json
+    ✓ Signup complete! @brightwave83
+[62/505] tt62... (login_check=False) ✗ Logged out - signing up...
+    → Signup: cosmicpath555@automateyourbizz.xyz / cosmicpath46
+    → Sending code...
+    → Code: 514773
+    → Saved 36 cookies to tiktok_cookies/tt62_cookies.json
+    ✓ Signup complete! @cosmicpath46
+[63/505] tt63... ✗ Error: Page.goto: net::ERR_TUNNEL_CONNECTION_FAILED at ht
+[64/505] tt64... ✗ Error: Page.goto: net::ERR_TUNNEL_CONNECTION_FAILED at ht
+[65/505] tt65... ✗ Error: Page.goto: net::ERR_TUNNEL_CONNECTION_FAILED at ht
+[66/505] tt66... ✗ Error: Page.goto: net::ERR_TUNNEL_CONNECTION_FAILED at ht
+[67/505] tt67... (login_check=False) ✗ Logged out - signing up...
+    → Signup: swiftwave780@automateyourbizz.xyz / swiftwave45
+    → Sending code...
+    → Code: 363920
+    → Saved 35 cookies to tiktok_cookies/tt67_cookies.json
+    ✓ Signup complete! @swiftwave45
+[68/505] tt68... (login_check=False) ✗ Logged out - signing up...
+    → Signup: swiftglow376@automateyourbizz.xyz / swiftglow20
+    → Sending code...
+    → Code: 006709
+    → Saved 34 cookies to tiktok_cookies/tt68_cookies.json
+    ✓ Signup complete! @swiftglow20
+[69/505] tt69... (login_check=False) ✗ Logged out - signing up...
+    → Signup: pixelverse995@automateyourbizz.xyz / pixelverse70
+    ✗ Signup error: Locator.click: Timeout 30000ms exceeded.
+Call log:
+  - waiting for locator("[rol
+    ✗ Signup failed
+[70/505] tt70... (login_check=False) ✗ Logged out - signing up...
+    → Signup: crystaltrack878@automateyourbizz.xyz / crystaltrack24
+    → Sending code...
+    → Code: 807935
+    → Saved 35 cookies to tiktok_cookies/tt70_cookies.json
+    ✓ Signup complete! @crystaltrack24
+[71/505] tt71... (login_check=False) ✗ Logged out - signing up...
+    → Signup: pixelfield703@automateyourbizz.xyz / pixelfield58
+    ✗ Signup error: Locator.click: Timeout 30000ms exceeded.
+Call log:
+  - waiting for locator("[rol
+    ✗ Signup failed
+[72/505] tt72... (login_check=False) ✗ Logged out - signing up...
+    → Signup: novamoon143@automateyourbizz.xyz / novamoon76
+    → Sending code...
+    → Code: 911232
+    → Saved 33 cookies to tiktok_cookies/tt72_cookies.json
+    ✓ Signup complete! @novamoon76
+[73/505] tt73... (login_check=False) ✗ Logged out - signing up...
+    → Signup: atomictrack801@automateyourbizz.xyz / atomictrack95
+    → Sending code...
+    → Code: 367740
+    → Saved 35 cookies to tiktok_cookies/tt73_cookies.json
+    ✓ Signup complete! @atomictrack95
+[74/505] tt74... (login_check=False) ✗ Logged out - signing up...
+    → Signup: crystalphoenix403@automateyourbizz.xyz / crystalphoenix14
+    → Sending code...
+    → Code: 754223
+    → Saved 33 cookies to tiktok_cookies/tt74_cookies.json
+    ✓ Signup complete! @crystalphoenix14
+[75/505] tt75... (login_check=False) ✗ Logged out - signing up...
+    → Signup: lunarecho353@automateyourbizz.xyz / lunarecho68
+    → Sending code...
+    → Code: 855936
+    → Saved 34 cookies to tiktok_cookies/tt75_cookies.json
+    ✓ Signup complete! @lunarecho68
+[76/505] tt76... (login_check=False) ✗ Logged out - signing up...
+    → Signup: brightwave912@automateyourbizz.xyz / brightwave18
+    → Sending code...
+    → Code: 982732
+    → Saved 36 cookies to tiktok_cookies/tt76_cookies.json
+    ✓ Signup complete! @brightwave18
+[77/505] tt77... (login_check=False) ✗ Logged out - signing up...
+    → Signup: novastar220@automateyourbizz.xyz / novastar27
+    → Sending code...
+    → Code: 627586
+    → Saved 33 cookies to tiktok_cookies/tt77_cookies.json
+    ✓ Signup complete! @novastar27
+[78/505] tt78... (login_check=False) ✗ Logged out - signing up...
+    → Signup: neonflame429@automateyourbizz.xyz / neonflame28
+    → Sending code...
+    → Code: 088537
+    → Saved 33 cookies to tiktok_cookies/tt78_cookies.json
+    ✓ Signup complete! @neonflame28
+[79/505] tt79... (login_check=False) ✗ Logged out - signing up...
+    → Signup: driftwave753@automateyourbizz.xyz / driftwave98
+    → Sending code...
+    → Code: 740565
+    → Saved 35 cookies to tiktok_cookies/tt79_cookies.json
+    ✓ Signup complete! @driftwave98
+[80/505] tt80... (login_check=False) ✗ Logged out - signing up...
+    → Signup: solarverse796@automateyourbizz.xyz / solarverse76
+    → Sending code...
+    → Code: 498560
+    → Saved 35 cookies to tiktok_cookies/tt80_cookies.json
+    ✓ Signup complete! @solarverse76
+[81/505] tt81... (login_check=False) ✗ Logged out - signing up...
+    → Signup: neonmoon686@automateyourbizz.xyz / neonmoon72
+    → Sending code...
+    → Code: 482176
+    → Saved 33 cookies to tiktok_cookies/tt81_cookies.json
+    ✓ Signup complete! @neonmoon72
+[82/505] tt82... (login_check=False) ✗ Logged out - signing up...
+    → Signup: crystalpath114@automateyourbizz.xyz / crystalpath18
+    → Sending code...
+    → Code: 281991
+    → Saved 35 cookies to tiktok_cookies/tt82_cookies.json
+    ✓ Signup complete! @crystalpath18
+[83/505] tt83... (login_check=False) ✗ Logged out - signing up...
+    → Signup: brightverse915@automateyourbizz.xyz / brightverse93
+    → Sending code...
+    → Code: 105312
+    → Saved 37 cookies to tiktok_cookies/tt83_cookies.json
+    ✓ Signup complete! @brightverse93
+[84/505] tt84... (login_check=False) ✗ Logged out - signing up...
+    → Signup: novaglow182@automateyourbizz.xyz / novaglow87
+    → Sending code...
+    → Code: 542852
+    → Saved 34 cookies to tiktok_cookies/tt84_cookies.json
+    ✓ Signup complete! @novaglow87
+[85/505] tt85... (login_check=False) ✗ Logged out - signing up...
+    → Signup: driftflame506@automateyourbizz.xyz / driftflame52
+    → Sending code...
+    → Code: 329459
+    → Saved 15 cookies to tiktok_cookies/tt85_cookies.json
+    ✓ Signup complete! @driftflame52
+[86/505] tt86... (login_check=False) ✗ Logged out - signing up...
+    → Signup: novaflame973@automateyourbizz.xyz / novaflame45
+    → Sending code...
+    → Code: 902139
+    → Saved 15 cookies to tiktok_cookies/tt86_cookies.json
+    ✓ Signup complete! @novaflame45
+[87/505] tt87... (login_check=False) ✗ Logged out - signing up...
+    → Signup: fluxstar523@automateyourbizz.xyz / fluxstar75
+    → Sending code...
+    → Code: 703755
+    → Saved 16 cookies to tiktok_cookies/tt87_cookies.json
+    ✓ Signup complete! @fluxstar75
+[88/505] tt88... (login_check=False) ✗ Logged out - signing up...
+    → Signup: swiftmoon587@automateyourbizz.xyz / swiftmoon67
+    → Sending code...
+    → Code: 475042
+    → Saved 16 cookies to tiktok_cookies/tt88_cookies.json
+    ✓ Signup complete! @swiftmoon67
+[89/505] tt89... (login_check=False) ✗ Logged out - signing up...
+    → Signup: prismecho449@automateyourbizz.xyz / prismecho28
+    → Sending code...
+    → Code: 813475
+    → Saved 34 cookies to tiktok_cookies/tt89_cookies.json
+    ✓ Signup complete! @prismecho28
+[90/505] tt90... (login_check=False) ✗ Logged out - signing up...
+    → Signup: brightpath333@automateyourbizz.xyz / brightpath66
+    → Sending code...
+    → Code: 473996
+    → Saved 17 cookies to tiktok_cookies/tt90_cookies.json
+    ✓ Signup complete! @brightpath66
+[91/505] tt91... (login_check=False) ✗ Logged out - signing up...
+    → Signup: prismflame394@automateyourbizz.xyz / prismflame55
+    → Sending code...
+    → Code: 662231
+    → Saved 15 cookies to tiktok_cookies/tt91_cookies.json
+    ✓ Signup complete! @prismflame55
+[92/505] tt92... (login_check=False) ✗ Logged out - signing up...
+    → Signup: fluxflame251@automateyourbizz.xyz / fluxflame56
+    → Sending code...
+    → Code: 200003
+    → Saved 15 cookies to tiktok_cookies/tt92_cookies.json
+    ✓ Signup complete! @fluxflame56
+[93/505] tt93... (login_check=False) ✗ Logged out - signing up...
+    → Signup: brightphoenix991@automateyourbizz.xyz / brightphoenix85
+    → Sending code...
+    → Code: 176942
+    → Saved 15 cookies to tiktok_cookies/tt93_cookies.json
+    ✓ Signup complete! @brightphoenix85
+[94/505] tt94... (login_check=False) ✗ Logged out - signing up...
+    → Signup: atomicmoon205@automateyourbizz.xyz / atomicmoon26
+    → Sending code...
+    → Code: 808410
+    → Saved 34 cookies to tiktok_cookies/tt94_cookies.json
+    ✓ Signup complete! @atomicmoon26
+[95/505] tt95... (login_check=False) ✗ Logged out - signing up...
+    → Signup: zenflame185@automateyourbizz.xyz / zenflame27
+    ✗ Signup error: Locator.click: Timeout 30000ms exceeded.
+Call log:
+  - waiting for locator("[rol
+    ✗ Signup failed
+[96/505] tt96... (login_check=False) ✗ Logged out - signing up...
+    → Signup: swiftecho657@automateyourbizz.xyz / swiftecho87
+    → Sending code...
+    ✗ No code
+    ✗ Signup failed
+[97/505] tt97... (login_check=False) ✗ Logged out - signing up...
+    → Signup: driftcore280@automateyourbizz.xyz / driftcore32
+    ✗ Signup error: Locator.click: Timeout 30000ms exceeded.
+Call log:
+  - waiting for locator("[rol
+    ✗ Signup failed
+[98/505] tt98... (login_check=False) ✗ Logged out - signing up...
+    → Signup: brightcore243@automateyourbizz.xyz / brightcore21
+    ✗ Signup error: Locator.click: Timeout 30000ms exceeded.
+Call log:
+  - waiting for locator("[rol
+    ✗ Signup failed
+[99/505] tt99... ✗ Error: Page.goto: net::ERR_PROXY_AUTH_REQUESTED at https:
+[100/505] tt100... (login_check=False) ✗ Logged out - signing up...
+    → Signup: zenwave804@automateyourbizz.xyz / zenwave23
+    ✗ Signup error: Locator.click: Timeout 30000ms exceeded.
+Call log:
+  - waiting for locator("[rol
+    ✗ Signup failed
+[101/505] tt101... (login_check=False) ✗ Logged out - signing up...
+    → Signup: swiftscope169@automateyourbizz.xyz / swiftscope24
+    ✗ Signup error: Locator.click: Timeout 30000ms exceeded.
+Call log:
+  - waiting for locator("[rol
+    ✗ Signup failed
+[102/505] tt102... (login_check=False) ✗ Logged out - signing up...
+    → Signup: crystalpulse604@automateyourbizz.xyz / crystalpulse97
+    → Sending code...
+    ✗ No code
+    ✗ Signup failed
+[103/505] tt103... (login_check=False) ✗ Logged out - signing up...
+    → Signup: novaecho112@automateyourbizz.xyz / novaecho91
+    ✗ Signup error: Locator.click: Timeout 30000ms exceeded.
+Call log:
+  - waiting for locator("[rol
+    ✗ Signup failed
+[104/505] tt104... (login_check=False) ✗ Logged out - signing up...
+    → Signup: atomicspark256@automateyourbizz.xyz / atomicspark73
+    ✗ Signup error: Locator.click: Timeout 30000ms exceeded.
+Call log:
+  - waiting for locator("[rol
+    ✗ Signup failed
+[105/505] tt105... ✗ Error: Page.goto: net::ERR_PROXY_AUTH_REQUESTED at https:
+[106/505] tt106... (login_check=False) ✗ Logged out - signing up...
+    → Signup: lunarwave267@automateyourbizz.xyz / lunarwave74
+    ✗ Signup error: Locator.click: Timeout 30000ms exceeded.
+Call log:
+  - waiting for locator("[rol
+    ✗ Signup failed
+[107/505] tt107... (login_check=False) ✗ Logged out - signing up...
+    → Signup: vividtrack579@automateyourbizz.xyz / vividtrack68
+    → Sending code...
+    → Code: 475814
+    → Saved 15 cookies to tiktok_cookies/tt107_cookies.json
+    ✓ Signup complete! @vividtrack68
+[108/505] tt108... (login_check=False) ✗ Logged out - signing up...
+    → Signup: driftmoon429@automateyourbizz.xyz / driftmoon44
+    → Sending code...
+    → Code: 172904
+    → Saved 35 cookies to tiktok_cookies/tt108_cookies.json
+    ✓ Signup complete! @driftmoon44
+[109/505] tt109... (login_check=False) ✗ Logged out - signing up...
+    → Signup: lunarstream989@automateyourbizz.xyz / lunarstream89
+    → Sending code...
+    → Code: 042028
+    → Saved 16 cookies to tiktok_cookies/tt109_cookies.json
+    ✓ Signup complete! @lunarstream89
+[110/505] tt110... (login_check=False) ✗ Logged out - signing up...
+    → Signup: pixelfield498@automateyourbizz.xyz / pixelfield46
+    → Sending code...
+    → Code: 124854
+    → Saved 16 cookies to tiktok_cookies/tt110_cookies.json
+    ✓ Signup complete! @pixelfield46
+[111/505] tt111... (login_check=False) ✗ Logged out - signing up...
+    → Signup: brightmoon144@automateyourbizz.xyz / brightmoon91
+    → Sending code...
+    → Code: 090148
+    → Saved 15 cookies to tiktok_cookies/tt111_cookies.json
+    ✓ Signup complete! @brightmoon91
+[112/505] tt112... (login_check=False) ✗ Logged out - signing up...
+    → Signup: solarecho202@automateyourbizz.xyz / solarecho80
+    → Sending code...
+    → Code: 259687
+    → Saved 15 cookies to tiktok_cookies/tt112_cookies.json
+    ✓ Signup complete! @solarecho80
+[113/505] tt113... (login_check=False) ✗ Logged out - signing up...
+    → Signup: driftpulse625@automateyourbizz.xyz / driftpulse64
+    → Sending code...
+    → Code: 683706
+    → Saved 35 cookies to tiktok_cookies/tt113_cookies.json
+    ✓ Signup complete! @driftpulse64
+[114/505] tt114... (login_check=False) ✗ Logged out - signing up...
+    → Signup: echoflame495@automateyourbizz.xyz / echoflame43
+    → Sending code...
+    → Code: 029049
+    → Saved 15 cookies to tiktok_cookies/tt114_cookies.json
+    ✓ Signup complete! @echoflame43
+[115/505] tt115... (login_check=False) ✗ Logged out - signing up...
+    → Signup: novacore502@automateyourbizz.xyz / novacore39
+    → Sending code...
+    → Code: 991343
+    → Saved 34 cookies to tiktok_cookies/tt115_cookies.json
+    ✓ Signup complete! @novacore39
+[116/505] tt116... (login_check=False) ✗ Logged out - signing up...
+    → Signup: driftwave770@automateyourbizz.xyz / driftwave20
+    → Sending code...
+    → Code: 425088
+    → Saved 16 cookies to tiktok_cookies/tt116_cookies.json
+    ✓ Signup complete! @driftwave20
+[117/505] tt117... (login_check=False) ✗ Logged out - signing up...
+    → Signup: driftwave537@automateyourbizz.xyz / driftwave25
+    → Sending code...
+    → Code: 968614
+    → Saved 15 cookies to tiktok_cookies/tt117_cookies.json
+    ✓ Signup complete! @driftwave25
+[118/505] tt118... (login_check=False) ✗ Logged out - signing up...
+    → Signup: solarecho796@automateyourbizz.xyz / solarecho37
+    → Sending code...
+    → Code: 756643
+    → Saved 15 cookies to tiktok_cookies/tt118_cookies.json
+    ✓ Signup complete! @solarecho37
+[119/505] tt119... (login_check=False) ✗ Logged out - signing up...
+    → Signup: swiftscope793@automateyourbizz.xyz / swiftscope18
+    → Sending code...
+    → Code: 112464
+    → Saved 16 cookies to tiktok_cookies/tt119_cookies.json
+    ✓ Signup complete! @swiftscope18
+[120/505] tt120... (login_check=False) ✗ Logged out - signing up...
+    → Signup: swiftecho641@automateyourbizz.xyz / swiftecho94
+    → Sending code...
+    → Code: 283279
+    → Saved 15 cookies to tiktok_cookies/tt120_cookies.json
+    ✓ Signup complete! @swiftecho94
+[121/505] tt121... (login_check=False) ✗ Logged out - signing up...
+    → Signup: novastream167@automateyourbizz.xyz / novastream72
+    → Sending code...
+    → Code: 210659
+    → Saved 16 cookies to tiktok_cookies/tt121_cookies.json
+    ✓ Signup complete! @novastream72
+[122/505] tt122... (login_check=False) ✗ Logged out - signing up...
+    → Signup: echopulse130@automateyourbizz.xyz / echopulse85
+    ✗ Signup error: Locator.click: Timeout 30000ms exceeded.
+Call log:
+  - waiting for locator("[rol
+    ✗ Signup failed
+[123/505] tt123... (login_check=False) ✗ Logged out - signing up...
+    → Signup: atomicecho824@automateyourbizz.xyz / atomicecho86
+    ✗ Signup error: Locator.click: Timeout 30000ms exceeded.
+Call log:
+  - waiting for locator("[rol
+    ✗ Signup failed
+[124/505] tt124... (login_check=False) ✗ Logged out - signing up...
+    → Signup: brightwave136@automateyourbizz.xyz / brightwave82
+    → Sending code...
+    → Code: 267351
+    → Saved 35 cookies to tiktok_cookies/tt124_cookies.json
+    ✓ Signup complete! @brightwave82
+[125/505] tt125... (login_check=False) ✗ Logged out - signing up...
+    → Signup: swifttrack788@automateyourbizz.xyz / swifttrack71
+    ✗ Signup error: Locator.click: Timeout 30000ms exceeded.
+Call log:
+  - waiting for locator("[rol
+    ✗ Signup failed
+[126/505] tt126... (login_check=False) ✗ Logged out - signing up...
+    → Signup: fluxfield435@automateyourbizz.xyz / fluxfield41
+    ✗ Signup error: Locator.click: Timeout 30000ms exceeded.
+Call log:
+  - waiting for locator("[rol
+    ✗ Signup failed
+[127/505] tt127... (login_check=False) ✗ Logged out - signing up...
+    → Signup: zenglow596@automateyourbizz.xyz / zenglow29
+    ✗ Signup error: Locator.click: Timeout 30000ms exceeded.
+Call log:
+  - waiting for locator("[rol
+    ✗ Signup failed
+[128/505] tt128... (login_check=False) ✗ Logged out - signing up...
+    → Signup: vividfield737@automateyourbizz.xyz / vividfield26
+    ✗ Signup error: Locator.click: Timeout 30000ms exceeded.
+Call log:
+  - waiting for locator("[rol
+    ✗ Signup failed
+[129/505] tt129... (login_check=False) ✗ Logged out - signing up...
+    → Signup: crystalflame859@automateyourbizz.xyz / crystalflame47
+    ✗ Signup error: Locator.click: Timeout 30000ms exceeded.
+Call log:
+  - waiting for locator("[rol
+    ✗ Signup failed
+[130/505] tt130... ✗ Error: Page.goto: net::ERR_PROXY_AUTH_REQUESTED at https:
+[131/505] tt131... (login_check=False) ✗ Logged out - signing up...
+    → Signup: crystalscope227@automateyourbizz.xyz / crystalscope48
+    ✗ Signup error: Locator.click: Timeout 30000ms exceeded.
+Call log:
+  - waiting for locator("[rol
+    ✗ Signup failed
+[132/505] tt132... (login_check=False) ✗ Logged out - signing up...
+    → Signup: pixelphoenix966@automateyourbizz.xyz / pixelphoenix18
+    → Sending code...
+    → Code: 151334
+    → Saved 36 cookies to tiktok_cookies/tt132_cookies.json
+    ✓ Signup complete! @pixelphoenix18
+[133/505] tt133... (login_check=False) ✗ Logged out - signing up...
+    → Signup: atomicglow849@automateyourbizz.xyz / atomicglow39
+    ✗ Signup error: Locator.click: Timeout 30000ms exceeded.
+Call log:
+  - waiting for locator("[rol
+    ✗ Signup failed
+[134/505] tt134... (login_check=False) ✗ Logged out - signing up...
+    → Signup: prismspark430@automateyourbizz.xyz / prismspark23
+    → Sending code...
+    → Code: 238803
+    → Saved 35 cookies to tiktok_cookies/tt134_cookies.json
+    ✓ Signup complete! @prismspark23
+[135/505] tt135... (login_check=False) ✗ Logged out - signing up...
+    → Signup: fluxwave738@automateyourbizz.xyz / fluxwave45
+    → Sending code...
+    → Code: 622079
+    → Saved 36 cookies to tiktok_cookies/tt135_cookies.json
+    ✓ Signup complete! @fluxwave45
+[136/505] tt136... (login_check=False) ✗ Logged out - signing up...
+    → Signup: solarverse721@automateyourbizz.xyz / solarverse49
+    → Sending code...
+    → Code: 387071
+    → Saved 36 cookies to tiktok_cookies/tt136_cookies.json
+    ✓ Signup complete! @solarverse49
+[137/505] tt137... (login_check=False) ✗ Logged out - signing up...
+    → Signup: lunarfield232@automateyourbizz.xyz / lunarfield32
+    → Sending code...
+    → Code: 398059
+    → Saved 36 cookies to tiktok_cookies/tt137_cookies.json
+    ✓ Signup complete! @lunarfield32
+[138/505] tt138... (login_check=False) ✗ Logged out - signing up...
+    → Signup: pixeltrack285@automateyourbizz.xyz / pixeltrack97
+    → Sending code...
+    → Code: 547821
+    → Saved 35 cookies to tiktok_cookies/tt138_cookies.json
+    ✓ Signup complete! @pixeltrack97
+[139/505] tt139... (login_check=False) ✗ Logged out - signing up...
+    → Signup: fluxmoon877@automateyourbizz.xyz / fluxmoon98
+    → Sending code...
+    → Code: 052303
+    → Saved 34 cookies to tiktok_cookies/tt139_cookies.json
+    ✓ Signup complete! @fluxmoon98
+[140/505] tt140... (login_check=False) ✗ Logged out - signing up...
+    → Signup: vividwave850@automateyourbizz.xyz / vividwave93
+    → Sending code...
+    → Code: 687286
+    → Saved 35 cookies to tiktok_cookies/tt140_cookies.json
+    ✓ Signup complete! @vividwave93
+[141/505] tt141... (login_check=False) ✗ Logged out - signing up...
+    → Signup: solarpulse542@automateyourbizz.xyz / solarpulse27
+    → Sending code...
+    → Code: 240752
+    → Saved 35 cookies to tiktok_cookies/tt141_cookies.json
+    ✓ Signup complete! @solarpulse27
+[142/505] tt142... (login_check=False) ✗ Logged out - signing up...
+    → Signup: brightscope161@automateyourbizz.xyz / brightscope33
+    → Sending code...
+    → Code: 774201
+    → Saved 35 cookies to tiktok_cookies/tt142_cookies.json
+    ✓ Signup complete! @brightscope33
+[143/505] tt143... (login_check=False) ✗ Logged out - signing up...
+    → Signup: drifttrack947@automateyourbizz.xyz / drifttrack57
+    → Sending code...
+    → Code: 264908
+    → Saved 35 cookies to tiktok_cookies/tt143_cookies.json
+    ✓ Signup complete! @drifttrack57
+[144/505] tt144... (login_check=False) ✗ Logged out - signing up...
+    → Signup: lunarecho648@automateyourbizz.xyz / lunarecho53
+    → Sending code...
+    → Code: 791944
+    → Saved 33 cookies to tiktok_cookies/tt144_cookies.json
+    ✓ Signup complete! @lunarecho53
+[145/505] tt145... (login_check=False) ✗ Logged out - signing up...
+    → Signup: brightpath253@automateyourbizz.xyz / brightpath30
+    → Sending code...
+    → Code: 408036
+    → Saved 35 cookies to tiktok_cookies/tt145_cookies.json
+    ✓ Signup complete! @brightpath30
+[146/505] tt146... ✗ Error: Page.goto: net::ERR_PROXY_AUTH_REQUESTED at https:
+[147/505] tt147... (login_check=False) ✗ Logged out - signing up...
+    → Signup: lunarverse867@automateyourbizz.xyz / lunarverse17
+    → Sending code...
+    → Code: 857641
+    → Saved 33 cookies to tiktok_cookies/tt147_cookies.json
+    ✓ Signup complete! @lunarverse17
+[148/505] tt148... (login_check=False) ✗ Logged out - signing up...
+    → Signup: solarflame400@automateyourbizz.xyz / solarflame76
+    → Sending code...
+    → Code: 807866
+    → Saved 35 cookies to tiktok_cookies/tt148_cookies.json
+    ✓ Signup complete! @solarflame76
+[149/505] tt149... (login_check=False) ✗ Logged out - signing up...
+    → Signup: echopulse741@automateyourbizz.xyz / echopulse99
+    → Sending code...
+    → Code: 142110
+    → Saved 34 cookies to tiktok_cookies/tt149_cookies.json
+    ✓ Signup complete! @echopulse99
+[150/505] tt150... (login_check=False) ✗ Logged out - signing up...
+    → Signup: brightspark640@automateyourbizz.xyz / brightspark11
+    → Sending code...
+    → Code: 974457
+    → Saved 34 cookies to tiktok_cookies/tt150_cookies.json
+    ✓ Signup complete! @brightspark11
+[151/505] tt151... (login_check=False) ✗ Logged out - signing up...
+    → Signup: vividflame845@automateyourbizz.xyz / vividflame72
+    → Sending code...
+    → Code: 933939
+    → Saved 33 cookies to tiktok_cookies/tt151_cookies.json
+    ✓ Signup complete! @vividflame72
+[152/505] tt152... (login_check=False) ✗ Logged out - signing up...
+    → Signup: brightwave974@automateyourbizz.xyz / brightwave68
+    → Sending code...
+    → Code: 430453
+    → Saved 16 cookies to tiktok_cookies/tt152_cookies.json
+    ✓ Signup complete! @brightwave68
+[153/505] tt153... (login_check=False) ✗ Logged out - signing up...
+    → Signup: brightverse309@automateyourbizz.xyz / brightverse12
+    → Sending code...
+    → Code: 625674
+    → Saved 15 cookies to tiktok_cookies/tt153_cookies.json
+    ✓ Signup complete! @brightverse12
+[154/505] tt154... (login_check=False) ✗ Logged out - signing up...
+    → Signup: fluxpulse679@automateyourbizz.xyz / fluxpulse59
+    → Sending code...
+    → Code: 456950
+    → Saved 16 cookies to tiktok_cookies/tt154_cookies.json
+    ✓ Signup complete! @fluxpulse59
+[155/505] tt155... (login_check=False) ✗ Logged out - signing up...
+    → Signup: neonscope167@automateyourbizz.xyz / neonscope26
+    → Sending code...
+    → Code: 044956
+    → Saved 15 cookies to tiktok_cookies/tt155_cookies.json
+    ✓ Signup complete! @neonscope26
+[156/505] tt156... (login_check=False) ✗ Logged out - signing up...
+    → Signup: solarspark191@automateyourbizz.xyz / solarspark18
+    → Sending code...
+    → Code: 086246
+    → Saved 16 cookies to tiktok_cookies/tt156_cookies.json
+    ✓ Signup complete! @solarspark18
+[157/505] tt157... (login_check=False) ✗ Logged out - signing up...
+    → Signup: fluxspark743@automateyourbizz.xyz / fluxspark99
+    → Sending code...
+    → Code: 049627
+    → Saved 15 cookies to tiktok_cookies/tt157_cookies.json
+    ✓ Signup complete! @fluxspark99
+[158/505] tt158... (login_check=False) ✗ Logged out - signing up...
+    → Signup: atomicstream347@automateyourbizz.xyz / atomicstream36
+    → Sending code...
+    → Code: 823216
+    → Saved 16 cookies to tiktok_cookies/tt158_cookies.json
+    ✓ Signup complete! @atomicstream36
+[159/505] tt159... (login_check=False) ✗ Logged out - signing up...
+    → Signup: fluxcore238@automateyourbizz.xyz / fluxcore72
+    → Sending code...
+    → Code: 108729
+    → Saved 15 cookies to tiktok_cookies/tt159_cookies.json
+    ✓ Signup complete! @fluxcore72
+[160/505] tt160... (login_check=False) ✗ Logged out - signing up...
+    → Signup: fluxverse777@automateyourbizz.xyz / fluxverse80
+    → Sending code...
+    → Code: 113313
+    → Saved 16 cookies to tiktok_cookies/tt160_cookies.json
+    ✓ Signup complete! @fluxverse80
+[161/505] tt161... (login_check=False) ✗ Logged out - signing up...
+    → Signup: pixelstar991@automateyourbizz.xyz / pixelstar48
+    → Sending code...
+    → Code: 984154
+    → Saved 33 cookies to tiktok_cookies/tt161_cookies.json
+    ✓ Signup complete! @pixelstar48
+[162/505] tt162... ✗ Error: Page.goto: net::ERR_TOO_MANY_RETRIES at https://ww
+[163/505] tt163... (login_check=False) ✗ Logged out - signing up...
+    → Signup: driftstar295@automateyourbizz.xyz / driftstar77
+    → Sending code...
+    → Code: 228591
+    → Saved 15 cookies to tiktok_cookies/tt163_cookies.json
+    ✓ Signup complete! @driftstar77
+[164/505] tt164... (login_check=False) ✗ Logged out - signing up...
+    → Signup: cosmicecho895@automateyourbizz.xyz / cosmicecho28
+    → Sending code...
+    → Code: 899563
+    → Saved 15 cookies to tiktok_cookies/tt164_cookies.json
+    ✓ Signup complete! @cosmicecho28
+[165/505] tt165... (login_check=False) ✗ Logged out - signing up...
+    → Signup: neoncore993@automateyourbizz.xyz / neoncore49
+    → Sending code...
+    → Code: 595617
+    → Saved 15 cookies to tiktok_cookies/tt165_cookies.json
+    ✓ Signup complete! @neoncore49
+[166/505] tt166... (login_check=False) ✗ Logged out - signing up...
+    → Signup: neonstream329@automateyourbizz.xyz / neonstream24
+    → Sending code...
+    → Code: 132758
+    → Saved 16 cookies to tiktok_cookies/tt166_cookies.json
+    ✓ Signup complete! @neonstream24
+[167/505] tt167... ✗ Error: Page.goto: net::ERR_TOO_MANY_RETRIES at https://ww
+[168/505] tt168... (login_check=False) ✗ Logged out - signing up...
+    → Signup: vividspark716@automateyourbizz.xyz / vividspark70
+    → Sending code...
+    → Code: 547315
+    → Saved 16 cookies to tiktok_cookies/tt168_cookies.json
+    ✓ Signup complete! @vividspark70
+[169/505] tt169... (login_check=False) ✗ Logged out - signing up...
+    → Signup: solarscope600@automateyourbizz.xyz / solarscope66
+    ✗ Signup error: Locator.click: Timeout 30000ms exceeded.
+Call log:
+  - waiting for locator("[rol
+    ✗ Signup failed
+[170/505] tt170... (login_check=False) ✗ Logged out - signing up...
+    → Signup: pixelflame528@automateyourbizz.xyz / pixelflame16
+    → Sending code...
+    → Code: 203139
+    → Saved 15 cookies to tiktok_cookies/tt170_cookies.json
+    ✓ Signup complete! @pixelflame16
+[171/505] tt171... (login_check=False) ✗ Logged out - signing up...
+    → Signup: pixelmoon742@automateyourbizz.xyz / pixelmoon76
+    → Sending code...
+    → Code: 206057
+    → Saved 15 cookies to tiktok_cookies/tt171_cookies.json
+    ✓ Signup complete! @pixelmoon76
+[172/505] tt172... (login_check=False) ✗ Logged out - signing up...
+    → Signup: swiftfield261@automateyourbizz.xyz / swiftfield92
+    → Sending code...
+    → Code: 854991
+    → Saved 34 cookies to tiktok_cookies/tt172_cookies.json
+    ✓ Signup complete! @swiftfield92
+[173/505] tt173... (login_check=False) ✗ Logged out - signing up...
+    → Signup: driftpath804@automateyourbizz.xyz / driftpath87
+    → Sending code...
+    → Code: 296953
+    → Saved 16 cookies to tiktok_cookies/tt173_cookies.json
+    ✓ Signup complete! @driftpath87
+[174/505] tt174... (login_check=False) ✗ Logged out - signing up...
+    → Signup: novascope480@automateyourbizz.xyz / novascope21
+    → Sending code...
+    ✗ No code
+    ✗ Signup failed
+[175/505] tt175... (login_check=False) ✗ Logged out - signing up...
+    → Signup: zenglow725@automateyourbizz.xyz / zenglow82
+    → Sending code...
+    → Code: 774595
+    → Saved 16 cookies to tiktok_cookies/tt175_cookies.json
+    ✓ Signup complete! @zenglow82
+[176/505] tt176... (login_check=False) ✗ Logged out - signing up...
+    → Signup: driftcore854@automateyourbizz.xyz / driftcore55
+    → Sending code...
+    → Code: 147097
+    → Saved 16 cookies to tiktok_cookies/tt176_cookies.json
+    ✓ Signup complete! @driftcore55
+[177/505] tt177... (login_check=False) ✗ Logged out - signing up...
+    → Signup: neonpath416@automateyourbizz.xyz / neonpath18
+    → Sending code...
+    → Code: 532957
+    → Saved 15 cookies to tiktok_cookies/tt177_cookies.json
+    ✓ Signup complete! @neonpath18
+[178/505] tt178... (login_check=False) ✗ Logged out - signing up...
+    → Signup: echopulse248@automateyourbizz.xyz / echopulse60
+    → Sending code...
+    → Code: 115044
+    → Saved 15 cookies to tiktok_cookies/tt178_cookies.json
+    ✓ Signup complete! @echopulse60
+[179/505] tt179... (login_check=False) ✗ Logged out - signing up...
+    → Signup: cosmicpulse301@automateyourbizz.xyz / cosmicpulse79
+    → Sending code...
+    → Code: 629573
+    → Saved 36 cookies to tiktok_cookies/tt179_cookies.json
+    ✓ Signup complete! @cosmicpulse79
+[180/505] tt180... (login_check=False) ✗ Logged out - signing up...
+    → Signup: driftspark719@automateyourbizz.xyz / driftspark48
+    → Sending code...
+    → Code: 263487
+    → Saved 35 cookies to tiktok_cookies/tt180_cookies.json
+    ✓ Signup complete! @driftspark48
+[181/505] tt181... (login_check=False) ✗ Logged out - signing up...
+    → Signup: zentrack713@automateyourbizz.xyz / zentrack34
+    → Sending code...
+    → Code: 278887
+    → Saved 36 cookies to tiktok_cookies/tt181_cookies.json
+    ✓ Signup complete! @zentrack34
+[182/505] tt182... (login_check=False) ✗ Logged out - signing up...
+    → Signup: prismecho118@automateyourbizz.xyz / prismecho31
+    → Sending code...
+    → Code: 640187
+    → Saved 16 cookies to tiktok_cookies/tt182_cookies.json
+    ✓ Signup complete! @prismecho31
+[183/505] tt183... (login_check=False) ✗ Logged out - signing up...
+    → Signup: swiftglow363@automateyourbizz.xyz / swiftglow93
+    → Sending code...
+    → Code: 797312
+    → Saved 15 cookies to tiktok_cookies/tt183_cookies.json
+    ✓ Signup complete! @swiftglow93
+[184/505] tt184... (login_check=False) ✗ Logged out - signing up...
+    → Signup: lunarscope510@automateyourbizz.xyz / lunarscope73
+    → Sending code...
+    → Code: 970871
+    → Saved 16 cookies to tiktok_cookies/tt184_cookies.json
+    ✓ Signup complete! @lunarscope73
+[185/505] tt185... ✗ Error: Page.goto: net::ERR_TOO_MANY_RETRIES at https://ww
+[186/505] tt186... (login_check=False) ✗ Logged out - signing up...
+    → Signup: atomicstar110@automateyourbizz.xyz / atomicstar13
+    → Sending code...
+    → Code: 300429
+    → Saved 15 cookies to tiktok_cookies/tt186_cookies.json
+    ✓ Signup complete! @atomicstar13
+[187/505] tt187... (login_check=False) ✗ Logged out - signing up...
+    → Signup: zenstar273@automateyourbizz.xyz / zenstar78
+    → Sending code...
+    → Code: 408602
+    → Saved 15 cookies to tiktok_cookies/tt187_cookies.json
+    ✓ Signup complete! @zenstar78
+[188/505] tt188... (login_check=False) ✗ Logged out - signing up...
+    → Signup: cosmicecho519@automateyourbizz.xyz / cosmicecho35
+    → Sending code...
+    → Code: 369744
+    → Saved 16 cookies to tiktok_cookies/tt188_cookies.json
+    ✓ Signup complete! @cosmicecho35
+[189/505] tt189... (login_check=False) ✗ Logged out - signing up...
+    → Signup: zenscope133@automateyourbizz.xyz / zenscope12
+    → Sending code...
+    → Code: 430689
+    → Saved 15 cookies to tiktok_cookies/tt189_cookies.json
+    ✓ Signup complete! @zenscope12
+[190/505] tt190... (login_check=False) ✗ Logged out - signing up...
+    → Signup: solarphoenix785@automateyourbizz.xyz / solarphoenix63
+    → Sending code...
+    → Code: 477819
+    → Saved 16 cookies to tiktok_cookies/tt190_cookies.json
+    ✓ Signup complete! @solarphoenix63
+[191/505] tt191... (login_check=False) ✗ Logged out - signing up...
+    → Signup: prismcore883@automateyourbizz.xyz / prismcore73
+    → Sending code...
+    → Code: 007990
+    → Saved 16 cookies to tiktok_cookies/tt191_cookies.json
+    ✓ Signup complete! @prismcore73
+[192/505] tt192... (login_check=False) ✗ Logged out - signing up...
+    → Signup: vividglow838@automateyourbizz.xyz / vividglow74
+    → Sending code...
+    → Code: 313783
+    → Saved 16 cookies to tiktok_cookies/tt192_cookies.json
+    ✓ Signup complete! @vividglow74
+[193/505] tt193... (login_check=False) ✗ Logged out - signing up...
+    → Signup: lunarverse873@automateyourbizz.xyz / lunarverse72
+    → Sending code...
+    → Code: 348313
+    → Saved 33 cookies to tiktok_cookies/tt193_cookies.json
+    ✓ Signup complete! @lunarverse72
+[194/505] tt194... (login_check=False) ✗ Logged out - signing up...
+    → Signup: vividscope444@automateyourbizz.xyz / vividscope19
+    → Sending code...
+    → Code: 087180
+    → Saved 16 cookies to tiktok_cookies/tt194_cookies.json
+    ✓ Signup complete! @vividscope19
+[195/505] tt195... (login_check=False) ✗ Logged out - signing up...
+    → Signup: novaverse744@automateyourbizz.xyz / novaverse13
+    → Sending code...
+    → Code: 711779
+    → Saved 16 cookies to tiktok_cookies/tt195_cookies.json
+    ✓ Signup complete! @novaverse13
+[196/505] tt196... (login_check=False) ✗ Logged out - signing up...
+    → Signup: cosmicflame357@automateyourbizz.xyz / cosmicflame49
+    → Sending code...
+    → Code: 702546
+    → Saved 36 cookies to tiktok_cookies/tt196_cookies.json
+    ✓ Signup complete! @cosmicflame49
+[197/505] tt197... (login_check=False) ✗ Logged out - signing up...
+    → Signup: crystalpath277@automateyourbizz.xyz / crystalpath33
+    → Sending code...
+    → Code: 428277
+    → Saved 16 cookies to tiktok_cookies/tt197_cookies.json
+    ✓ Signup complete! @crystalpath33
+[198/505] tt198... (login_check=False) ✗ Logged out - signing up...
+    → Signup: solarflame418@automateyourbizz.xyz / solarflame26
+    → Sending code...
+    → Code: 460757
+    → Saved 16 cookies to tiktok_cookies/tt198_cookies.json
+    ✓ Signup complete! @solarflame26
+[199/505] tt199... (login_check=False) ✗ Logged out - signing up...
+    → Signup: novawave394@automateyourbizz.xyz / novawave88
+    → Sending code...
+    → Code: 367772
+    → Saved 15 cookies to tiktok_cookies/tt199_cookies.json
+    ✓ Signup complete! @novawave88
+[200/505] tt200... (login_check=False) ✗ Logged out - signing up...
+    → Signup: atomicphoenix566@automateyourbizz.xyz / atomicphoenix34
+    → Sending code...
+    → Code: 947388
+    → Saved 16 cookies to tiktok_cookies/tt200_cookies.json
+    ✓ Signup complete! @atomicphoenix34
+[201/505] tt201... (login_check=False) ✗ Logged out - signing up...
+    → Signup: swiftmoon954@automateyourbizz.xyz / swiftmoon74
+    → Sending code...
+    → Code: 490987
+    → Saved 15 cookies to tiktok_cookies/tt201_cookies.json
+    ✓ Signup complete! @swiftmoon74
+[202/505] tt202... (login_check=False) ✗ Logged out - signing up...
+    → Signup: pixelflame989@automateyourbizz.xyz / pixelflame22
+    → Sending code...
+    → Code: 425471
+    → Saved 34 cookies to tiktok_cookies/tt202_cookies.json
+    ✓ Signup complete! @pixelflame22
+[203/505] tt203... (login_check=False) ✗ Logged out - signing up...
+    → Signup: zenwave876@automateyourbizz.xyz / zenwave81
+    → Sending code...
+    → Code: 020140
+    → Saved 15 cookies to tiktok_cookies/tt203_cookies.json
+    ✓ Signup complete! @zenwave81
+[204/505] tt204... (login_check=False) ✗ Logged out - signing up...
+    → Signup: crystalspark603@automateyourbizz.xyz / crystalspark15
+    → Sending code...
+    → Code: 480007
+    → Saved 16 cookies to tiktok_cookies/tt204_cookies.json
+    ✓ Signup complete! @crystalspark15
+[205/505] tt205... (login_check=False) ✗ Logged out - signing up...
+    → Signup: crystalfield659@automateyourbizz.xyz / crystalfield44
+    → Sending code...
+    → Code: 812112
+    → Saved 16 cookies to tiktok_cookies/tt205_cookies.json
+    ✓ Signup complete! @crystalfield44
+[206/505] tt206... (login_check=False) ✗ Logged out - signing up...
+    → Signup: vividfield439@automateyourbizz.xyz / vividfield30
+    → Sending code...
+    ✗ No code
+    ✗ Signup failed
+[207/505] tt207... (login_check=False) ✗ Logged out - signing up...
+    → Signup: drifttrack754@automateyourbizz.xyz / drifttrack54
+    → Sending code...
+    → Code: 126357
+    → Saved 16 cookies to tiktok_cookies/tt207_cookies.json
+    ✓ Signup complete! @drifttrack54
+[208/505] tt208... (login_check=False) ✗ Logged out - signing up...
+    → Signup: novastar619@automateyourbizz.xyz / novastar70
+    → Sending code...
+    ✗ No code
+    ✗ Signup failed
+[209/505] tt209... (login_check=False) ✗ Logged out - signing up...
+    → Signup: brightpath144@automateyourbizz.xyz / brightpath23
+    → Sending code...
+    ✗ No code
+    ✗ Signup failed
+[210/505] tt210... (login_check=False) ✗ Logged out - signing up...
+    → Signup: echocore803@automateyourbizz.xyz / echocore54
+    → Sending code...
+    → Code: 903705
+    → Saved 15 cookies to tiktok_cookies/tt210_cookies.json
+    ✓ Signup complete! @echocore54
+[211/505] tt211... (login_check=False) ✗ Logged out - signing up...
+    → Signup: cosmicglow312@automateyourbizz.xyz / cosmicglow31
+    → Sending code...
+    → Code: 211484
+    → Saved 16 cookies to tiktok_cookies/tt211_cookies.json
+    ✓ Signup complete! @cosmicglow31
+[212/505] tt212... (login_check=False) ✗ Logged out - signing up...
+    → Signup: neonstar145@automateyourbizz.xyz / neonstar39
+    → Sending code...
+    → Code: 788199
+    → Saved 16 cookies to tiktok_cookies/tt212_cookies.json
+    ✓ Signup complete! @neonstar39
+[213/505] tt213... (login_check=False) ✗ Logged out - signing up...
+    → Signup: cosmicmoon565@automateyourbizz.xyz / cosmicmoon41
+    → Sending code...
+    → Code: 579016
+    → Saved 16 cookies to tiktok_cookies/tt213_cookies.json
+    ✓ Signup complete! @cosmicmoon41
+[214/505] tt214... (login_check=False) ✗ Logged out - signing up...
+    → Signup: neonecho224@automateyourbizz.xyz / neonecho89
+    → Sending code...
+    → Code: 292496
+    → Saved 15 cookies to tiktok_cookies/tt214_cookies.json
+    ✓ Signup complete! @neonecho89
+[215/505] tt215... (login_check=False) ✗ Logged out - signing up...
+    → Signup: novaverse384@automateyourbizz.xyz / novaverse68
+    → Sending code...
+    → Code: 831089
+    → Saved 16 cookies to tiktok_cookies/tt215_cookies.json
+    ✓ Signup complete! @novaverse68
+[216/505] tt216... (login_check=False) ✗ Logged out - signing up...
+    → Signup: crystalstar886@automateyourbizz.xyz / crystalstar43
+    → Sending code...
+    → Code: 112563
+    → Saved 15 cookies to tiktok_cookies/tt216_cookies.json
+    ✓ Signup complete! @crystalstar43
+[217/505] tt217... (login_check=False) ✗ Logged out - signing up...
+    → Signup: atomicphoenix895@automateyourbizz.xyz / atomicphoenix42
+    → Sending code...
+    → Code: 674037
+    → Saved 35 cookies to tiktok_cookies/tt217_cookies.json
+    ✓ Signup complete! @atomicphoenix42
+[218/505] tt218... (login_check=False) ✗ Logged out - signing up...
+    → Signup: swiftstar307@automateyourbizz.xyz / swiftstar88
+    → Sending code...
+    → Code: 505348
+    → Saved 15 cookies to tiktok_cookies/tt218_cookies.json
+    ✓ Signup complete! @swiftstar88
+[219/505] tt219... (login_check=False) ✗ Logged out - signing up...
+    → Signup: brightphoenix779@automateyourbizz.xyz / brightphoenix97
+    → Sending code...
+    → Code: 976912
+    → Saved 16 cookies to tiktok_cookies/tt219_cookies.json
+    ✓ Signup complete! @brightphoenix97
+[220/505] tt220... (login_check=False) ✗ Logged out - signing up...
+    → Signup: echopath761@automateyourbizz.xyz / echopath77
+    → Sending code...
+    → Code: 609289
+    → Saved 16 cookies to tiktok_cookies/tt220_cookies.json
+    ✓ Signup complete! @echopath77
+[221/505] tt221... (login_check=False) ✗ Logged out - signing up...
+    → Signup: novaverse408@automateyourbizz.xyz / novaverse10
+    → Sending code...
+    → Code: 080137
+    → Saved 15 cookies to tiktok_cookies/tt221_cookies.json
+    ✓ Signup complete! @novaverse10
+[222/505] tt222... (login_check=False) ✗ Logged out - signing up...
+    → Signup: cosmicphoenix903@automateyourbizz.xyz / cosmicphoenix19
+    → Sending code...
+    → Code: 992551
+    → Saved 16 cookies to tiktok_cookies/tt222_cookies.json
+    ✓ Signup complete! @cosmicphoenix19
+[223/505] tt223... (login_check=False) ✗ Logged out - signing up...
+    → Signup: cosmicscope985@automateyourbizz.xyz / cosmicscope77
+    → Sending code...
+    → Code: 523776
+    → Saved 35 cookies to tiktok_cookies/tt223_cookies.json
+    ✓ Signup complete! @cosmicscope77
+[224/505] tt224... (login_check=False) ✗ Logged out - signing up...
+    → Signup: solarstar823@automateyourbizz.xyz / solarstar95
+    → Sending code...
+    → Code: 220553
+    → Saved 16 cookies to tiktok_cookies/tt224_cookies.json
+    ✓ Signup complete! @solarstar95
+[225/505] tt225... (login_check=False) ✗ Logged out - signing up...
+    → Signup: lunarflame215@automateyourbizz.xyz / lunarflame65
+    → Sending code...
+    → Code: 077142
+    → Saved 15 cookies to tiktok_cookies/tt225_cookies.json
+    ✓ Signup complete! @lunarflame65
+[226/505] tt226... (login_check=False) ✗ Logged out - signing up...
+    → Signup: brightwave608@automateyourbizz.xyz / brightwave58
+    → Sending code...
+    → Code: 267060
+    → Saved 16 cookies to tiktok_cookies/tt226_cookies.json
+    ✓ Signup complete! @brightwave58
+[227/505] tt227... (login_check=False) ✗ Logged out - signing up...
+    → Signup: neoncore222@automateyourbizz.xyz / neoncore59
+    → Sending code...
+    → Code: 617635
+    → Saved 35 cookies to tiktok_cookies/tt227_cookies.json
+    ✓ Signup complete! @neoncore59
+[228/505] tt228... (login_check=False) ✗ Logged out - signing up...
+    → Signup: solarscope237@automateyourbizz.xyz / solarscope19
+    → Sending code...
+    → Code: 054579
+    → Saved 35 cookies to tiktok_cookies/tt228_cookies.json
+    ✓ Signup complete! @solarscope19
+[229/505] tt229... (login_check=False) ✗ Logged out - signing up...
+    → Signup: fluxmoon414@automateyourbizz.xyz / fluxmoon89
+    → Sending code...
+    → Code: 975251
+    → Saved 35 cookies to tiktok_cookies/tt229_cookies.json
+    ✓ Signup complete! @fluxmoon89
+[230/505] tt230... (login_check=False) ✗ Logged out - signing up...
+    → Signup: crystalcore593@automateyourbizz.xyz / crystalcore43
+    → Sending code...
+    → Code: 574804
+    → Saved 16 cookies to tiktok_cookies/tt230_cookies.json
+    ✓ Signup complete! @crystalcore43
+[231/505] tt231... (login_check=False) ✗ Logged out - signing up...
+    → Signup: pixelspark200@automateyourbizz.xyz / pixelspark79
+    → Sending code...
+    → Code: 158654
+    → Saved 15 cookies to tiktok_cookies/tt231_cookies.json
+    ✓ Signup complete! @pixelspark79
+[232/505] tt232... (login_check=False) ✗ Logged out - signing up...
+    → Signup: solarfield121@automateyourbizz.xyz / solarfield14
+    → Sending code...
+    → Code: 431441
+    → Saved 15 cookies to tiktok_cookies/tt232_cookies.json
+    ✓ Signup complete! @solarfield14
+[233/505] tt233... (login_check=False) ✗ Logged out - signing up...
+    → Signup: solarspark922@automateyourbizz.xyz / solarspark56
+    → Sending code...
+    → Code: 554117
+    → Saved 16 cookies to tiktok_cookies/tt233_cookies.json
+    ✓ Signup complete! @solarspark56
+[234/505] tt234... (login_check=False) ✗ Logged out - signing up...
+    → Signup: zenfield374@automateyourbizz.xyz / zenfield41
+    → Sending code...
+    → Code: 120835
+    → Saved 15 cookies to tiktok_cookies/tt234_cookies.json
+    ✓ Signup complete! @zenfield41
+[235/505] tt235... (login_check=False) ✗ Logged out - signing up...
+    → Signup: prismstream842@automateyourbizz.xyz / prismstream84
+    → Sending code...
+    → Code: 630550
+    → Saved 15 cookies to tiktok_cookies/tt235_cookies.json
+    ✓ Signup complete! @prismstream84
+[236/505] tt236... (login_check=False) ✗ Logged out - signing up...
+    → Signup: prismscope728@automateyourbizz.xyz / prismscope27
+    → Sending code...
+    → Code: 951113
+    → Saved 16 cookies to tiktok_cookies/tt236_cookies.json
+    ✓ Signup complete! @prismscope27
+[237/505] tt237... (login_check=False) ✗ Logged out - signing up...
+    → Signup: cosmicscope500@automateyourbizz.xyz / cosmicscope24
+    → Sending code...
+    → Code: 881166
+    → Saved 35 cookies to tiktok_cookies/tt237_cookies.json
+    ✓ Signup complete! @cosmicscope24
+[238/505] tt238... (login_check=False) ✗ Logged out - signing up...
+    → Signup: vividscope382@automateyourbizz.xyz / vividscope26
+    ✗ Signup error: Locator.click: Timeout 30000ms exceeded.
+Call log:
+  - waiting for locator("[rol
+    ✗ Signup failed
+[239/505] tt239... (login_check=False) ✗ Logged out - signing up...
+    → Signup: pixelpulse637@automateyourbizz.xyz / pixelpulse59
+    → Sending code...
+    → Code: 432341
+    → Saved 15 cookies to tiktok_cookies/tt239_cookies.json
+    ✓ Signup complete! @pixelpulse59
+[240/505] tt240... (login_check=False) ✗ Logged out - signing up...
+    → Signup: brightverse600@automateyourbizz.xyz / brightverse58
+    → Sending code...
+    → Code: 170745
+    → Saved 15 cookies to tiktok_cookies/tt240_cookies.json
+    ✓ Signup complete! @brightverse58
+[241/505] tt241... (login_check=False) ✗ Logged out - signing up...
+    → Signup: prismfield531@automateyourbizz.xyz / prismfield80
+    → Sending code...
+    → Code: 910838
+    → Saved 15 cookies to tiktok_cookies/tt241_cookies.json
+    ✓ Signup complete! @prismfield80
+[242/505] tt242... (login_check=False) ✗ Logged out - signing up...
+    → Signup: neonpulse543@automateyourbizz.xyz / neonpulse26
+    → Sending code...
+    → Code: 161715
+    → Saved 33 cookies to tiktok_cookies/tt242_cookies.json
+    ✓ Signup complete! @neonpulse26
+[243/505] tt243... (login_check=False) ✗ Logged out - signing up...
+    → Signup: driftpulse444@automateyourbizz.xyz / driftpulse18
+    → Sending code...
+    → Code: 331436
+    → Saved 35 cookies to tiktok_cookies/tt243_cookies.json
+    ✓ Signup complete! @driftpulse18
+[244/505] tt244... Fetching browsers...
+Processing 262 browsers (starting from tt244)
+
+============================================================
+[1/262] tt244... (login_check=False) ✗ Logged out - signing up...
+    → Signup: driftscope736@automateyourbizz.xyz / driftscope81
+    → Sending code...
+    → Code: 446996
+    → Saved 35 cookies to tiktok_cookies/tt244_cookies.json
+    ✓ Signup complete! @driftscope81
+[2/262] tt245... (login_check=False) ✗ Logged out - signing up...
+    → Signup: neonpulse390@automateyourbizz.xyz / neonpulse67
+    → Sending code...
+    → Code: 237638
+    → Saved 34 cookies to tiktok_cookies/tt245_cookies.json
+    ✓ Signup complete! @neonpulse67
+[3/262] tt246... (login_check=False) ✗ Logged out - signing up...
+    → Signup: swiftglow484@automateyourbizz.xyz / swiftglow29
+    → Sending code...
+    → Code: 197367
+    → Saved 35 cookies to tiktok_cookies/tt246_cookies.json
+    ✓ Signup complete! @swiftglow29
+[4/262] tt247... (login_check=False) ✗ Logged out - signing up...
+    → Signup: lunarstar254@automateyourbizz.xyz / lunarstar83
+    → Sending code...
+    → Code: 825470
+    → Saved 33 cookies to tiktok_cookies/tt247_cookies.json
+    ✓ Signup complete! @lunarstar83
+[5/262] tt248... (login_check=False) ✗ Logged out - signing up...
+    → Signup: pixelwave458@automateyourbizz.xyz / pixelwave42
+    → Sending code...
+    → Code: 553045
+    → Saved 36 cookies to tiktok_cookies/tt248_cookies.json
+    ✓ Signup complete! @pixelwave42
+[6/262] tt249... (login_check=False) ✗ Logged out - signing up...
+    → Signup: driftmoon491@automateyourbizz.xyz / driftmoon26
+    → Sending code...
+    → Code: 308614
+    → Saved 35 cookies to tiktok_cookies/tt249_cookies.json
+    ✓ Signup complete! @driftmoon26
+[7/262] tt250... (login_check=False) ✗ Logged out - signing up...
+    → Signup: brightstream741@automateyourbizz.xyz / brightstream30
+    → Sending code...
+    ✗ No code
+    ✗ Signup failed
+[8/262] tt251... (login_check=False) ✗ Logged out - signing up...
+    → Signup: solarpath129@automateyourbizz.xyz / solarpath24
+    → Sending code...
+    → Code: 530565
+    → Saved 35 cookies to tiktok_cookies/tt251_cookies.json
+    ✓ Signup complete! @solarpath24
+[9/262] tt252... (login_check=False) ✗ Logged out - signing up...
+    → Signup: cosmicstream229@automateyourbizz.xyz / cosmicstream50
+    → Sending code...
+    → Code: 173331
+    → Saved 35 cookies to tiktok_cookies/tt252_cookies.json
+    ✓ Signup complete! @cosmicstream50
+[10/262] tt253... (login_check=False) ✗ Logged out - signing up...
+    → Signup: vividtrack863@automateyourbizz.xyz / vividtrack34
+    → Sending code...
+    → Code: 827794
+    → Saved 36 cookies to tiktok_cookies/tt253_cookies.json
+    ✓ Signup complete! @vividtrack34
+[11/262] tt254... (login_check=False) ✗ Logged out - signing up...
+    → Signup: pixelpulse329@automateyourbizz.xyz / pixelpulse26
+    ✗ Signup error: Locator.click: Timeout 30000ms exceeded.
+Call log:
+  - waiting for locator("[rol
+    ✗ Signup failed
+[12/262] tt255... (login_check=False) ✗ Logged out - signing up...
+    → Signup: vividflame584@automateyourbizz.xyz / vividflame65
+    → Sending code...
+    → Code: 106300
+    → Saved 33 cookies to tiktok_cookies/tt255_cookies.json
+    ✓ Signup complete! @vividflame65
+[13/262] tt256... (login_check=False) ✗ Logged out - signing up...
+    → Signup: solarphoenix820@automateyourbizz.xyz / solarphoenix69
+    → Sending code...
+    → Code: 243240
+    → Saved 36 cookies to tiktok_cookies/tt256_cookies.json
+    ✓ Signup complete! @solarphoenix69
+[14/262] tt257... (login_check=False) ✗ Logged out - signing up...
+    → Signup: fluxflame799@automateyourbizz.xyz / fluxflame99
+    → Sending code...
+    → Code: 876863
+    → Saved 35 cookies to tiktok_cookies/tt257_cookies.json
+    ✓ Signup complete! @fluxflame99
+[15/262] tt258... (login_check=False) ✗ Logged out - signing up...
+    → Signup: crystalflame475@automateyourbizz.xyz / crystalflame69
+    → Sending code...
+    → Code: 571382
+    → Saved 35 cookies to tiktok_cookies/tt258_cookies.json
+    ✓ Signup complete! @crystalflame69
+[16/262] tt259... (login_check=False) ✗ Logged out - signing up...
+    → Signup: pixelcore750@automateyourbizz.xyz / pixelcore36
+    → Sending code...
+    → Code: 576244
+    → Saved 34 cookies to tiktok_cookies/tt259_cookies.json
+    ✓ Signup complete! @pixelcore36
+[17/262] tt260... (login_check=False) ✗ Logged out - signing up...
+    → Signup: vividtrack936@automateyourbizz.xyz / vividtrack44
+    → Sending code...
+    → Code: 009830
+    → Saved 36 cookies to tiktok_cookies/tt260_cookies.json
+    ✓ Signup complete! @vividtrack44
+[18/262] tt261... (login_check=False) ✗ Logged out - signing up...
+    → Signup: vividglow841@automateyourbizz.xyz / vividglow35
+    → Sending code...
+    → Code: 049454
+    → Saved 34 cookies to tiktok_cookies/tt261_cookies.json
+    ✓ Signup complete! @vividglow35
+[19/262] tt262... (login_check=False) ✗ Logged out - signing up...
+    → Signup: driftcore142@automateyourbizz.xyz / driftcore77
+    → Sending code...
+    → Code: 186267
+    → Saved 33 cookies to tiktok_cookies/tt262_cookies.json
+    ✓ Signup complete! @driftcore77
+[20/262] tt263... (login_check=False) ✗ Logged out - signing up...
+    → Signup: vividstream376@automateyourbizz.xyz / vividstream50
+    → Sending code...
+    → Code: 078653
+    → Saved 36 cookies to tiktok_cookies/tt263_cookies.json
+    ✓ Signup complete! @vividstream50
+[21/262] tt264... (login_check=False) ✗ Logged out - signing up...
+    → Signup: zenstream446@automateyourbizz.xyz / zenstream22
+    → Sending code...
+    → Code: 371631
+    → Saved 36 cookies to tiktok_cookies/tt264_cookies.json
+    ✓ Signup complete! @zenstream22
+[22/262] tt265... (login_check=False) ✗ Logged out - signing up...
+    → Signup: neonmoon299@automateyourbizz.xyz / neonmoon48
+    → Sending code...
+    → Code: 561944
+    → Saved 34 cookies to tiktok_cookies/tt265_cookies.json
+    ✓ Signup complete! @neonmoon48
+[23/262] tt266... (login_check=False) ✗ Logged out - signing up...
+    → Signup: fluxmoon292@automateyourbizz.xyz / fluxmoon93
+    → Sending code...
+    → Code: 013027
+    → Saved 36 cookies to tiktok_cookies/tt266_cookies.json
+    ✓ Signup complete! @fluxmoon93
+[24/262] tt267... (login_check=False) ✗ Logged out - signing up...
+    → Signup: cosmicscope287@automateyourbizz.xyz / cosmicscope76
+    → Sending code...
+    ✗ No code
+    ✗ Signup failed
+[25/262] tt268... (login_check=False) ✗ Logged out - signing up...
+    → Signup: vividverse912@automateyourbizz.xyz / vividverse57
+    → Sending code...
+    → Code: 557824
+    → Saved 36 cookies to tiktok_cookies/tt268_cookies.json
+    ✓ Signup complete! @vividverse57
+[26/262] tt269... (login_check=False) ✗ Logged out - signing up...
+    → Signup: driftecho959@automateyourbizz.xyz / driftecho73
+    → Sending code...
+    → Code: 089268
+    → Saved 35 cookies to tiktok_cookies/tt269_cookies.json
+    ✓ Signup complete! @driftecho73
+[27/262] tt270... (login_check=False) ✗ Logged out - signing up...
+    → Signup: echospark917@automateyourbizz.xyz / echospark15
+    → Sending code...
+    → Code: 104648
+    → Saved 35 cookies to tiktok_cookies/tt270_cookies.json
+    ✓ Signup complete! @echospark15
+[28/262] tt271... (login_check=False) ✗ Logged out - signing up...
+    → Signup: neonflame950@automateyourbizz.xyz / neonflame74
+    → Sending code...
+    → Code: 561342
+    → Saved 35 cookies to tiktok_cookies/tt271_cookies.json
+    ✓ Signup complete! @neonflame74
+[29/262] tt272... (login_check=False) ✗ Logged out - signing up...
+    → Signup: brightcore485@automateyourbizz.xyz / brightcore61
+    → Sending code...
+    → Code: 645994
+    → Saved 35 cookies to tiktok_cookies/tt272_cookies.json
+    ✓ Signup complete! @brightcore61
+[30/262] tt273... (login_check=False) ✗ Logged out - signing up...
+    → Signup: swiftverse588@automateyourbizz.xyz / swiftverse63
+    → Sending code...
+    → Code: 213959
+    → Saved 36 cookies to tiktok_cookies/tt273_cookies.json
+    ✓ Signup complete! @swiftverse63
+[31/262] tt274... (login_check=False) ✗ Logged out - signing up...
+    → Signup: zenstream459@automateyourbizz.xyz / zenstream77
+    → Sending code...
+    → Code: 276956
+    → Saved 36 cookies to tiktok_cookies/tt274_cookies.json
+    ✓ Signup complete! @zenstream77
+[32/262] tt275... (login_check=False) ✗ Logged out - signing up...
+    → Signup: novaecho518@automateyourbizz.xyz / novaecho26
+    → Sending code...
+    → Code: 954954
+    → Saved 33 cookies to tiktok_cookies/tt275_cookies.json
+    ✓ Signup complete! @novaecho26
+[33/262] tt276... (login_check=False) ✗ Logged out - signing up...
+    → Signup: driftfield525@automateyourbizz.xyz / driftfield32
+    → Sending code...
+    → Code: 508169
+    → Saved 36 cookies to tiktok_cookies/tt276_cookies.json
+    ✓ Signup complete! @driftfield32
+[34/262] tt277... (login_check=False) ✗ Logged out - signing up...
+    → Signup: solarmoon810@automateyourbizz.xyz / solarmoon75
+    → Sending code...
+    → Code: 224609
+    → Saved 33 cookies to tiktok_cookies/tt277_cookies.json
+    ✓ Signup complete! @solarmoon75
+[35/262] tt278... ✗ Error: Page.goto: net::ERR_TIMED_OUT at https://www.tikto
+[36/262] tt279... (login_check=False) ✗ Logged out - signing up...
+    → Signup: zencore350@automateyourbizz.xyz / zencore58
+    → Sending code...
+    → Code: 676810
+    → Saved 35 cookies to tiktok_cookies/tt279_cookies.json
+    ✓ Signup complete! @zencore58
+[37/262] tt280... (login_check=False) ✗ Logged out - signing up...
+    → Signup: prismscope373@automateyourbizz.xyz / prismscope22
+    → Sending code...
+    ✗ No code
+    ✗ Signup failed
+[38/262] tt281... (login_check=False) ✗ Logged out - signing up...
+    → Signup: solarwave602@automateyourbizz.xyz / solarwave53
+    → Sending code...
+    → Code: 954280
+    → Saved 35 cookies to tiktok_cookies/tt281_cookies.json
+    ✓ Signup complete! @solarwave53
+[39/262] tt282... (login_check=False) ✗ Logged out - signing up...
+    → Signup: neonverse313@automateyourbizz.xyz / neonverse22
+    → Sending code...
+    → Code: 629674
+    → Saved 33 cookies to tiktok_cookies/tt282_cookies.json
+    ✓ Signup complete! @neonverse22
+[40/262] tt283... (login_check=False) ✗ Logged out - signing up...
+    → Signup: lunartrack736@automateyourbizz.xyz / lunartrack19
+    → Sending code...
+    → Code: 646389
+    → Saved 36 cookies to tiktok_cookies/tt283_cookies.json
+    ✓ Signup complete! @lunartrack19
+[41/262] tt284... (login_check=False) ✗ Logged out - signing up...
+    → Signup: driftmoon219@automateyourbizz.xyz / driftmoon66
+    → Sending code...
+    → Code: 440033
+    → Saved 33 cookies to tiktok_cookies/tt284_cookies.json
+    ✓ Signup complete! @driftmoon66
+[42/262] tt285... (login_check=False) ✗ Logged out - signing up...
+    → Signup: pixelpulse138@automateyourbizz.xyz / pixelpulse45
+    → Sending code...
+    → Code: 486812
+    → Saved 34 cookies to tiktok_cookies/tt285_cookies.json
+    ✓ Signup complete! @pixelpulse45
+[43/262] tt286... (login_check=False) ✗ Logged out - signing up...
+    → Signup: crystaltrack134@automateyourbizz.xyz / crystaltrack96
+    → Sending code...
+    → Code: 692533
+    → Saved 35 cookies to tiktok_cookies/tt286_cookies.json
+    ✓ Signup complete! @crystaltrack96
+[44/262] tt287... (login_check=False) ✗ Logged out - signing up...
+    → Signup: fluxecho502@automateyourbizz.xyz / fluxecho38
+    ✗ Signup error: Locator.click: Timeout 30000ms exceeded.
+Call log:
+  - waiting for locator("[rol
+    ✗ Signup failed
+[45/262] tt288... (login_check=False) ✗ Logged out - signing up...
+    → Signup: novatrack957@automateyourbizz.xyz / novatrack23
+    ✗ Signup error: Locator.click: Timeout 30000ms exceeded.
+Call log:
+  - waiting for locator("[rol
+    ✗ Signup failed
+[46/262] tt289... (login_check=False) ✗ Logged out - signing up...
+    → Signup: cosmicglow493@automateyourbizz.xyz / cosmicglow48
+    ✗ Signup error: Locator.click: Timeout 30000ms exceeded.
+Call log:
+  - waiting for locator("[rol
+    ✗ Signup failed
+[47/262] tt290... (login_check=False) ✗ Logged out - signing up...
+    → Signup: swiftphoenix412@automateyourbizz.xyz / swiftphoenix42
+    → Sending code...
+    → Code: 224284
+    → Saved 36 cookies to tiktok_cookies/tt290_cookies.json
+    ✓ Signup complete! @swiftphoenix42
+[48/262] tt291... (login_check=False) ✗ Logged out - signing up...
+    → Signup: lunarwave325@automateyourbizz.xyz / lunarwave59
+    ✗ Signup error: Locator.click: Timeout 30000ms exceeded.
+Call log:
+  - waiting for locator("[rol
+    ✗ Signup failed
+[49/262] tt292... (login_check=False) ✗ Logged out - signing up...
+    → Signup: pixelscope995@automateyourbizz.xyz / pixelscope39
+    ✗ Signup error: Locator.click: Timeout 30000ms exceeded.
+Call log:
+  - waiting for locator("[rol
+    ✗ Signup failed
+[50/262] tt293... (login_check=False) ✗ Logged out - signing up...
+    → Signup: novaflame311@automateyourbizz.xyz / novaflame35
+    ✗ Signup error: Locator.click: Timeout 30000ms exceeded.
+Call log:
+  - waiting for locator("[rol
+    ✗ Signup failed
+[51/262] tt294... ✗ Error: Page.goto: net::ERR_TIMED_OUT at https://www.tikto
+[52/262] tt295... (login_check=False) ✗ Logged out - signing up...
+    → Signup: fluxphoenix921@automateyourbizz.xyz / fluxphoenix52
+    ✗ Signup error: Locator.click: Timeout 30000ms exceeded.
+Call log:
+  - waiting for locator("[rol
+    ✗ Signup failed
+[53/262] tt296... (login_check=False) ✗ Logged out - signing up...
+    → Signup: driftglow234@automateyourbizz.xyz / driftglow78
+    → Sending code...
+    → Code: 595763
+    → Saved 36 cookies to tiktok_cookies/tt296_cookies.json
+    ✓ Signup complete! @driftglow78
+[54/262] tt297... (login_check=False) ✗ Logged out - signing up...
+    → Signup: cosmicpulse865@automateyourbizz.xyz / cosmicpulse25
+    ✗ Signup error: Locator.click: Timeout 30000ms exceeded.
+Call log:
+  - waiting for locator("[rol
+    ✗ Signup failed
+[55/262] tt298... (login_check=False) ✗ Logged out - signing up...
+    → Signup: prismecho677@automateyourbizz.xyz / prismecho19
+    ✗ Signup error: Locator.click: Timeout 30000ms exceeded.
+Call log:
+  - waiting for locator("[rol
+    ✗ Signup failed
+[56/262] tt299... (login_check=False) ✗ Logged out - signing up...
+    → Signup: brightphoenix449@automateyourbizz.xyz / brightphoenix80
+    ✗ Signup error: Locator.click: Timeout 30000ms exceeded.
+Call log:
+  - waiting for locator("[rol
+    ✗ Signup failed
+[57/262] tt300... (login_check=False) ✗ Logged out - signing up...
+    → Signup: driftglow104@automateyourbizz.xyz / driftglow87
+    ✗ Signup error: Locator.click: Timeout 30000ms exceeded.
+Call log:
+  - waiting for locator("[rol
+    ✗ Signup failed
+[58/262] tt301... (login_check=False) ✗ Logged out - signing up...
+    → Signup: novastar589@automateyourbizz.xyz / novastar49
+    ✗ Signup error: Locator.click: Timeout 30000ms exceeded.
+Call log:
+  - waiting for locator("[rol
+    ✗ Signup failed
+[59/262] tt302... (login_check=False) ✗ Logged out - signing up...
+    → Signup: atomicmoon373@automateyourbizz.xyz / atomicmoon37
+    ✗ Signup error: Locator.click: Timeout 30000ms exceeded.
+Call log:
+  - waiting for locator("[rol
+    ✗ Signup failed
+[60/262] tt303... (login_check=False) ✗ Logged out - signing up...
+    → Signup: lunarstream218@automateyourbizz.xyz / lunarstream97
+    ✗ Signup error: Locator.click: Timeout 30000ms exceeded.
+Call log:
+  - waiting for locator("[rol
+    ✗ Signup failed
+[61/262] tt304... (login_check=False) ✗ Logged out - signing up...
+    → Signup: crystalstream102@automateyourbizz.xyz / crystalstream38
+    ✗ Signup error: Locator.click: Timeout 30000ms exceeded.
+Call log:
+  - waiting for locator("[rol
+    ✗ Signup failed
+[62/262] tt305... (login_check=False) ✗ Logged out - signing up...
+    → Signup: echomoon722@automateyourbizz.xyz / echomoon39
+    → Sending code...
+    → Code: 958730
+    → Saved 35 cookies to tiktok_cookies/tt305_cookies.json
+    ✓ Signup complete! @echomoon39
+[63/262] tt306... (login_check=False) ✗ Logged out - signing up...
+    → Signup: echoglow724@automateyourbizz.xyz / echoglow78
+    → Sending code...
+    → Code: 960617
+    → Saved 35 cookies to tiktok_cookies/tt306_cookies.json
+    ✓ Signup complete! @echoglow78
+[64/262] tt307... (login_check=False) ✗ Logged out - signing up...
+    → Signup: prismphoenix534@automateyourbizz.xyz / prismphoenix28
+    → Sending code...
+    → Code: 308371
+    → Saved 35 cookies to tiktok_cookies/tt307_cookies.json
+    ✓ Signup complete! @prismphoenix28
+[65/262] tt308... ✗ Error: Page.goto: net::ERR_PROXY_AUTH_REQUESTED at https:
+[66/262] tt309... (login_check=False) ✗ Logged out - signing up...
+    → Signup: crystalcore502@automateyourbizz.xyz / crystalcore42
+    → Sending code...
+    → Code: 520016
+    → Saved 36 cookies to tiktok_cookies/tt309_cookies.json
+    ✓ Signup complete! @crystalcore42
+[67/262] tt310... ✗ Error: Page.goto: net::ERR_PROXY_AUTH_REQUESTED at https:
+[68/262] tt311... (login_check=False) ✗ Logged out - signing up...
+    → Signup: fluxecho164@automateyourbizz.xyz / fluxecho53
+    → Sending code...
+    → Code: 472773
+    → Saved 35 cookies to tiktok_cookies/tt311_cookies.json
+    ✓ Signup complete! @fluxecho53
+[69/262] tt312... (login_check=False) ✗ Logged out - signing up...
+    → Signup: echowave775@automateyourbizz.xyz / echowave30
+    → Sending code...
+    → Code: 940262
+    → Saved 34 cookies to tiktok_cookies/tt312_cookies.json
+    ✓ Signup complete! @echowave30
+[70/262] tt313... (login_check=False) ✗ Logged out - signing up...
+    → Signup: cosmicglow135@automateyourbizz.xyz / cosmicglow66
+    → Sending code...
+    → Code: 673488
+    → Saved 35 cookies to tiktok_cookies/tt313_cookies.json
+    ✓ Signup complete! @cosmicglow66
+[71/262] tt314... (login_check=False) ✗ Logged out - signing up...
+    → Signup: swiftcore616@automateyourbizz.xyz / swiftcore80
+    → Sending code...
+    → Code: 643091
+    → Saved 35 cookies to tiktok_cookies/tt314_cookies.json
+    ✓ Signup complete! @swiftcore80
+[72/262] tt315... (login_check=False) ✗ Logged out - signing up...
+    → Signup: fluxwave372@automateyourbizz.xyz / fluxwave82
+    → Sending code...
+    → Code: 212469
+    → Saved 36 cookies to tiktok_cookies/tt315_cookies.json
+    ✓ Signup complete! @fluxwave82
+[73/262] tt316... (login_check=False) ✗ Logged out - signing up...
+    → Signup: driftmoon615@automateyourbizz.xyz / driftmoon24
+    → Sending code...
+    → Code: 482714
+    → Saved 36 cookies to tiktok_cookies/tt316_cookies.json
+    ✓ Signup complete! @driftmoon24
+[74/262] tt317... (login_check=False) ✗ Logged out - signing up...
+    → Signup: crystalecho973@automateyourbizz.xyz / crystalecho32
+    → Sending code...
+    → Code: 042434
+    → Saved 33 cookies to tiktok_cookies/tt317_cookies.json
+    ✓ Signup complete! @crystalecho32
+[75/262] tt318... (login_check=False) ✗ Logged out - signing up...
+    → Signup: novaphoenix508@automateyourbizz.xyz / novaphoenix88
+    → Sending code...
+    → Code: 680784
+    → Saved 35 cookies to tiktok_cookies/tt318_cookies.json
+    ✓ Signup complete! @novaphoenix88
+[76/262] tt319... (login_check=False) ✗ Logged out - signing up...
+    → Signup: prismspark505@automateyourbizz.xyz / prismspark77
+    → Sending code...
+    → Code: 699018
+    → Saved 35 cookies to tiktok_cookies/tt319_cookies.json
+    ✓ Signup complete! @prismspark77
+[77/262] tt320... (login_check=False) ✗ Logged out - signing up...
+    → Signup: brightfield406@automateyourbizz.xyz / brightfield43
+    → Sending code...
+    → Code: 532626
+    → Saved 35 cookies to tiktok_cookies/tt320_cookies.json
+    ✓ Signup complete! @brightfield43
+[78/262] tt321... (login_check=False) ✗ Logged out - signing up...
+    → Signup: vividglow723@automateyourbizz.xyz / vividglow28
+    → Sending code...
+    → Code: 746357
+    → Saved 35 cookies to tiktok_cookies/tt321_cookies.json
+    ✓ Signup complete! @vividglow28
+[79/262] tt322... (login_check=False) ✗ Logged out - signing up...
+    → Signup: zenfield460@automateyourbizz.xyz / zenfield18
+    → Sending code...
+    → Code: 643166
+    → Saved 34 cookies to tiktok_cookies/tt322_cookies.json
+    ✓ Signup complete! @zenfield18
+[80/262] tt323... (login_check=False) ✗ Logged out - signing up...
+    → Signup: driftverse611@automateyourbizz.xyz / driftverse19
+    → Sending code...
+    → Code: 362332
+    → Saved 35 cookies to tiktok_cookies/tt323_cookies.json
+    ✓ Signup complete! @driftverse19
+[81/262] tt324... (login_check=False) ✗ Logged out - signing up...
+    → Signup: crystalwave421@automateyourbizz.xyz / crystalwave23
+    → Sending code...
+    → Code: 082400
+    → Saved 34 cookies to tiktok_cookies/tt324_cookies.json
+    ✓ Signup complete! @crystalwave23
+[82/262] tt325... (login_check=False) ✗ Logged out - signing up...
+    → Signup: cosmicphoenix796@automateyourbizz.xyz / cosmicphoenix28
+    → Sending code...
+    → Code: 538923
+    → Saved 36 cookies to tiktok_cookies/tt325_cookies.json
+    ✓ Signup complete! @cosmicphoenix28
+[83/262] tt326... (login_check=False) ✗ Logged out - signing up...
+    → Signup: vividecho848@automateyourbizz.xyz / vividecho42
+    → Sending code...
+    → Code: 716993
+    → Saved 33 cookies to tiktok_cookies/tt326_cookies.json
+    ✓ Signup complete! @vividecho42
+[84/262] tt327... (login_check=False) ✗ Logged out - signing up...
+    → Signup: lunarglow357@automateyourbizz.xyz / lunarglow36
+    → Sending code...
+    → Code: 053860
+    → Saved 33 cookies to tiktok_cookies/tt327_cookies.json
+    ✓ Signup complete! @lunarglow36
+[85/262] tt328... (login_check=False) ✗ Logged out - signing up...
+    → Signup: echomoon965@automateyourbizz.xyz / echomoon60
+    → Sending code...
+    → Code: 438279
+    → Saved 35 cookies to tiktok_cookies/tt328_cookies.json
+    ✓ Signup complete! @echomoon60
+[86/262] tt329... (login_check=False) ✗ Logged out - signing up...
+    → Signup: solarspark299@automateyourbizz.xyz / solarspark61
+    ✗ Signup error: Locator.click: Timeout 30000ms exceeded.
+Call log:
+  - waiting for locator("[rol
+    ✗ Signup failed
+[87/262] tt330... (login_check=False) ✗ Logged out - signing up...
+    → Signup: zenstream539@automateyourbizz.xyz / zenstream32
+    → Sending code...
+    → Code: 090553
+    → Saved 35 cookies to tiktok_cookies/tt330_cookies.json
+    ✓ Signup complete! @zenstream32
+[88/262] tt331... (login_check=False) ✗ Logged out - signing up...
+    → Signup: fluxphoenix416@automateyourbizz.xyz / fluxphoenix34
+    → Sending code...
+    → Code: 498187
+    → Saved 33 cookies to tiktok_cookies/tt331_cookies.json
+    ✓ Signup complete! @fluxphoenix34
+[89/262] tt332... (login_check=False) ✗ Logged out - signing up...
+    → Signup: cosmicphoenix600@automateyourbizz.xyz / cosmicphoenix69
+    → Sending code...
+    → Code: 850387
+    → Saved 35 cookies to tiktok_cookies/tt332_cookies.json
+    ✓ Signup complete! @cosmicphoenix69
+[90/262] tt333... (login_check=False) ✗ Logged out - signing up...
+    → Signup: prismspark962@automateyourbizz.xyz / prismspark20
+    → Sending code...
+    → Code: 918312
+    → Saved 36 cookies to tiktok_cookies/tt333_cookies.json
+    ✓ Signup complete! @prismspark20
+[91/262] tt334... (login_check=False) ✗ Logged out - signing up...
+    → Signup: vividfield576@automateyourbizz.xyz / vividfield99
+    → Sending code...
+    → Code: 252424
+    → Saved 35 cookies to tiktok_cookies/tt334_cookies.json
+    ✓ Signup complete! @vividfield99
+[92/262] tt335... (login_check=False) ✗ Logged out - signing up...
+    → Signup: echoflame861@automateyourbizz.xyz / echoflame43
+    → Sending code...
+    → Code: 613151
+    → Saved 33 cookies to tiktok_cookies/tt335_cookies.json
+    ✓ Signup complete! @echoflame43
+[93/262] tt336... (login_check=False) ✗ Logged out - signing up...
+    → Signup: echotrack782@automateyourbizz.xyz / echotrack97
+    → Sending code...
+    → Code: 556486
+    → Saved 33 cookies to tiktok_cookies/tt336_cookies.json
+    ✓ Signup complete! @echotrack97
+[94/262] tt337... (login_check=False) ✗ Logged out - signing up...
+    → Signup: atomicspark275@automateyourbizz.xyz / atomicspark77
+    → Sending code...
+    → Code: 383446
+    → Saved 35 cookies to tiktok_cookies/tt337_cookies.json
+    ✓ Signup complete! @atomicspark77
+[95/262] tt338... (login_check=False) ✗ Logged out - signing up...
+    → Signup: atomicglow764@automateyourbizz.xyz / atomicglow56
+    → Sending code...
+    → Code: 280084
+    → Saved 36 cookies to tiktok_cookies/tt338_cookies.json
+    ✓ Signup complete! @atomicglow56
+[96/262] tt339... (login_check=False) ✗ Logged out - signing up...
+    → Signup: fluxstream343@automateyourbizz.xyz / fluxstream14
+    → Sending code...
+    → Code: 042323
+    → Saved 35 cookies to tiktok_cookies/tt339_cookies.json
+    ✓ Signup complete! @fluxstream14
+[97/262] tt340... ✗ Error: [Errno 28] No space left on device: 'debug_tt340_c
+[98/262] tt341... ✗ Error: BrowserType.connect_over_cdp: ENOSPC: no space lef
+[99/262] tt342... ✗ Failed to open
+[100/262] tt343... ✗ Failed to open
+[101/262] tt344... ✗ Failed to open
+[102/262] tt345... ✗ Failed to open
+[103/262] tt346... ✗ Failed to open
+[104/262] tt347... ✗ Failed to open
+[105/262] tt348... ✗ Failed to open
+[106/262] tt349... ✗ Failed to open
+[107/262] tt350... ✗ Failed to open
+[108/262] tt351... ✗ Failed to open
+[109/262] tt352... Fetching browsers...
+Processing 166 browsers (starting from tt340)
+
+============================================================
+[1/166] tt340... (login_check=False) ✗ Logged out - signing up...
+    → Signup: solarecho527@automateyourbizz.xyz / solarecho86
+    → Sending code...
+    → Code: 646341
+    → Saved 35 cookies to tiktok_cookies/tt340_cookies.json
+    ✓ Signup complete! @solarecho86
+[2/166] tt341... (login_check=False) ✗ Logged out - signing up...
+    → Signup: pixelcore830@automateyourbizz.xyz / pixelcore91
+    → Sending code...
+    → Code: 740944
+    → Saved 33 cookies to tiktok_cookies/tt341_cookies.json
+    ✓ Signup complete! @pixelcore91
+[3/166] tt342... (login_check=False) ✗ Logged out - signing up...
+    → Signup: novaecho876@automateyourbizz.xyz / novaecho24
+    → Sending code...
+    → Code: 610118
+    → Saved 35 cookies to tiktok_cookies/tt342_cookies.json
+    ✓ Signup complete! @novaecho24
+[4/166] tt343... (login_check=False) ✗ Logged out - signing up...
+    → Signup: neonflame337@automateyourbizz.xyz / neonflame78
+    → Sending code...
+    → Code: 287036
+    → Saved 34 cookies to tiktok_cookies/tt343_cookies.json
+    ✓ Signup complete! @neonflame78
+[5/166] tt344... (login_check=False) ✗ Logged out - signing up...
+    → Signup: novaverse668@automateyourbizz.xyz / novaverse79
+    → Sending code...
+    → Code: 955752
+    → Saved 15 cookies to tiktok_cookies/tt344_cookies.json
+    ✓ Signup complete! @novaverse79
+[6/166] tt345... ✗ Error: Page.goto: net::ERR_PROXY_AUTH_REQUESTED at https:
+[7/166] tt346... (login_check=False) ✗ Logged out - signing up...
+    → Signup: crystalfield806@automateyourbizz.xyz / crystalfield85
+    → Sending code...
+    → Code: 975413
+    → Saved 36 cookies to tiktok_cookies/tt346_cookies.json
+    ✓ Signup complete! @crystalfield85
+[8/166] tt347... (login_check=False) ✗ Logged out - signing up...
+    → Signup: swiftcore199@automateyourbizz.xyz / swiftcore61
+    → Sending code...
+    → Code: 509121
+    → Saved 35 cookies to tiktok_cookies/tt347_cookies.json
+    ✓ Signup complete! @swiftcore61
+[9/166] tt348... (login_check=False) ✗ Logged out - signing up...
+    → Signup: lunarflame340@automateyourbizz.xyz / lunarflame32
+    → Sending code...
+    → Code: 878052
+    → Saved 35 cookies to tiktok_cookies/tt348_cookies.json
+    ✓ Signup complete! @lunarflame32
+[10/166] tt349... (login_check=False) ✗ Logged out - signing up...
+    → Signup: zenphoenix897@automateyourbizz.xyz / zenphoenix61
+    → Sending code...
+    → Code: 813155
+    → Saved 36 cookies to tiktok_cookies/tt349_cookies.json
+    ✓ Signup complete! @zenphoenix61
+[11/166] tt350... ✗ Error: Page.goto: net::ERR_PROXY_AUTH_REQUESTED at https:
+[12/166] tt351... (login_check=False) ✗ Logged out - signing up...
+    → Signup: cosmicfield955@automateyourbizz.xyz / cosmicfield55
+    ✗ Signup error: Locator.click: Timeout 30000ms exceeded.
+Call log:
+  - waiting for locator("[rol
+    ✗ Signup failed
+[13/166] tt352... (login_check=False) ✗ Logged out - signing up...
+    → Signup: crystalglow457@automateyourbizz.xyz / crystalglow34
+    → Sending code...
+    → Code: 428253
+    → Saved 35 cookies to tiktok_cookies/tt352_cookies.json
+    ✓ Signup complete! @crystalglow34
+[14/166] tt353... (login_check=False) ✗ Logged out - signing up...
+    → Signup: zenspark930@automateyourbizz.xyz / zenspark27
+    → Sending code...
+    → Code: 963008
+    → Saved 35 cookies to tiktok_cookies/tt353_cookies.json
+    ✓ Signup complete! @zenspark27
+[15/166] tt354... (login_check=False) ✗ Logged out - signing up...
+    → Signup: brightstream405@automateyourbizz.xyz / brightstream64
+    → Sending code...
+    → Code: 800678
+    → Saved 36 cookies to tiktok_cookies/tt354_cookies.json
+    ✓ Signup complete! @brightstream64
+[16/166] tt355... (login_check=False) ✗ Logged out - signing up...
+    → Signup: vividglow757@automateyourbizz.xyz / vividglow42
+    → Sending code...
+    → Code: 206059
+    → Saved 35 cookies to tiktok_cookies/tt355_cookies.json
+    ✓ Signup complete! @vividglow42
+[17/166] tt356... (login_check=False) ✗ Logged out - signing up...
+    → Signup: solarstar389@automateyourbizz.xyz / solarstar82
+    → Sending code...
+    → Code: 161487
+    → Saved 33 cookies to tiktok_cookies/tt356_cookies.json
+    ✓ Signup complete! @solarstar82
+[18/166] tt357... (login_check=False) ✗ Logged out - signing up...
+    → Signup: driftfield919@automateyourbizz.xyz / driftfield37
+    → Sending code...
+    → Code: 462864
+    → Saved 33 cookies to tiktok_cookies/tt357_cookies.json
+    ✓ Signup complete! @driftfield37
+[19/166] tt358... (login_check=False) ✗ Logged out - signing up...
+    → Signup: atomicpulse819@automateyourbizz.xyz / atomicpulse56
+    → Sending code...
+    → Code: 633084
+    → Saved 36 cookies to tiktok_cookies/tt358_cookies.json
+    ✓ Signup complete! @atomicpulse56
+[20/166] tt359... (login_check=False) ✗ Logged out - signing up...
+    → Signup: solarmoon639@automateyourbizz.xyz / solarmoon29
+    → Sending code...
+    → Code: 054457
+    → Saved 33 cookies to tiktok_cookies/tt359_cookies.json
+    ✓ Signup complete! @solarmoon29
+[21/166] tt360... (login_check=False) ✗ Logged out - signing up...
+    → Signup: solarcore797@automateyourbizz.xyz / solarcore31
+    ✗ Signup error: Locator.click: Timeout 30000ms exceeded.
+Call log:
+  - waiting for locator("[rol
+    ✗ Signup failed
+[22/166] tt361... (login_check=False) ✗ Logged out - signing up...
+    → Signup: atomiccore822@automateyourbizz.xyz / atomiccore76
+    → Sending code...
+    → Code: 075675
+    → Saved 35 cookies to tiktok_cookies/tt361_cookies.json
+    ✓ Signup complete! @atomiccore76
+[23/166] tt362... ✗ Error: Page.goto: net::ERR_PROXY_AUTH_REQUESTED at https:
+[24/166] tt363... (login_check=False) ✗ Logged out - signing up...
+    → Signup: brightpath805@automateyourbizz.xyz / brightpath94
+    → Sending code...
+    → Code: 073796
+    → Saved 33 cookies to tiktok_cookies/tt363_cookies.json
+    ✓ Signup complete! @brightpath94
+[25/166] tt364... (login_check=False) ✗ Logged out - signing up...
+    → Signup: zenwave549@automateyourbizz.xyz / zenwave55
+    → Sending code...
+    → Code: 080940
+    → Saved 35 cookies to tiktok_cookies/tt364_cookies.json
+    ✓ Signup complete! @zenwave55
+[26/166] tt365... (login_check=False) ✗ Logged out - signing up...
+    → Signup: swiftecho597@automateyourbizz.xyz / swiftecho50
+    → Sending code...
+    → Code: 189169
+    → Saved 35 cookies to tiktok_cookies/tt365_cookies.json
+    ✓ Signup complete! @swiftecho50
+[27/166] tt366... (login_check=False) ✗ Logged out - signing up...
+    → Signup: cosmictrack281@automateyourbizz.xyz / cosmictrack86
+    → Sending code...
+    ✗ No code
+    ✗ Signup failed
+[28/166] tt367... (login_check=False) ✗ Logged out - signing up...
+    → Signup: lunarflame879@automateyourbizz.xyz / lunarflame45
+    → Sending code...
+    → Code: 542275
+    → Saved 35 cookies to tiktok_cookies/tt367_cookies.json
+    ✓ Signup complete! @lunarflame45
+[29/166] tt368... (login_check=False) ✗ Logged out - signing up...
+    → Signup: lunarstar283@automateyourbizz.xyz / lunarstar38
+    → Sending code...
+    → Code: 917406
+    → Saved 36 cookies to tiktok_cookies/tt368_cookies.json
+    ✓ Signup complete! @lunarstar38
+[30/166] tt369... (login_check=False) ✗ Logged out - signing up...
+    → Signup: zentrack624@automateyourbizz.xyz / zentrack52
+    → Sending code...
+    → Code: 226113
+    → Saved 35 cookies to tiktok_cookies/tt369_cookies.json
+    ✓ Signup complete! @zentrack52
+[31/166] tt370... (login_check=False) ✗ Logged out - signing up...
+    → Signup: crystalstream625@automateyourbizz.xyz / crystalstream12
+    → Sending code...
+    → Code: 388223
+    → Saved 35 cookies to tiktok_cookies/tt370_cookies.json
+    ✓ Signup complete! @crystalstream12
+[32/166] tt371... (login_check=False) ✗ Logged out - signing up...
+    → Signup: swiftmoon394@automateyourbizz.xyz / swiftmoon54
+    → Sending code...
+    → Code: 476651
+    → Saved 35 cookies to tiktok_cookies/tt371_cookies.json
+    ✓ Signup complete! @swiftmoon54
+[33/166] tt372... (login_check=False) ✗ Logged out - signing up...
+    → Signup: driftpath288@automateyourbizz.xyz / driftpath87
+    ✗ Signup error: Locator.click: Timeout 30000ms exceeded.
+Call log:
+  - waiting for locator("[rol
+    ✗ Signup failed
+[34/166] tt373... (login_check=False) ✗ Logged out - signing up...
+    → Signup: neonmoon204@automateyourbizz.xyz / neonmoon55
+    → Sending code...
+    ✗ No code
+    ✗ Signup failed
+[35/166] tt374... (login_check=False) ✗ Logged out - signing up...
+    → Signup: atomicscope919@automateyourbizz.xyz / atomicscope90
+    → Sending code...
+    → Code: 396732
+    → Saved 36 cookies to tiktok_cookies/tt374_cookies.json
+    ✓ Signup complete! @atomicscope90
+[36/166] tt375... (login_check=False) ✗ Logged out - signing up...
+    → Signup: atomicscope193@automateyourbizz.xyz / atomicscope50
+    → Sending code...
+    → Code: 486211
+    → Saved 36 cookies to tiktok_cookies/tt375_cookies.json
+    ✓ Signup complete! @atomicscope50
+[37/166] tt376... (login_check=False) ✗ Logged out - signing up...
+    → Signup: atomicstar652@automateyourbizz.xyz / atomicstar31
+    ✗ Signup error: Locator.click: Timeout 30000ms exceeded.
+Call log:
+  - waiting for locator("[rol
+    ✗ Signup failed
+[38/166] tt377... (login_check=False) ✗ Logged out - signing up...
+    → Signup: crystalverse910@automateyourbizz.xyz / crystalverse18
+    → Sending code...
+    → Code: 048034
+    → Saved 36 cookies to tiktok_cookies/tt377_cookies.json
+    ✓ Signup complete! @crystalverse18
+[39/166] tt378... (login_check=False) ✗ Logged out - signing up...
+    → Signup: prismfield560@automateyourbizz.xyz / prismfield46
+    → Sending code...
+    → Code: 224802
+    → Saved 35 cookies to tiktok_cookies/tt378_cookies.json
+    ✓ Signup complete! @prismfield46
+[40/166] tt379... (login_check=False) ✗ Logged out - signing up...
+    → Signup: swiftstar753@automateyourbizz.xyz / swiftstar82
+    → Sending code...
+    → Code: 673458
+    → Saved 35 cookies to tiktok_cookies/tt379_cookies.json
+    ✓ Signup complete! @swiftstar82
+[41/166] tt380... ✗ Error: Page.goto: net::ERR_PROXY_AUTH_REQUESTED at https:
+[42/166] tt381... (login_check=False) ✗ Logged out - signing up...
+    → Signup: lunarstar894@automateyourbizz.xyz / lunarstar92
+    → Sending code...
+    → Code: 402409
+    → Saved 15 cookies to tiktok_cookies/tt381_cookies.json
+    ✓ Signup complete! @lunarstar92
+[43/166] tt382... (login_check=False) ✗ Logged out - signing up...
+    → Signup: swiftpulse135@automateyourbizz.xyz / swiftpulse15
+    → Sending code...
+    → Code: 558376
+    → Saved 33 cookies to tiktok_cookies/tt382_cookies.json
+    ✓ Signup complete! @swiftpulse15
+[44/166] tt383... (login_check=False) ✗ Logged out - signing up...
+    → Signup: zenwave776@automateyourbizz.xyz / zenwave92
+    → Sending code...
+    → Code: 498702
+    → Saved 16 cookies to tiktok_cookies/tt383_cookies.json
+    ✓ Signup complete! @zenwave92
+[45/166] tt384... (login_check=False) ✗ Logged out - signing up...
+    → Signup: neonverse331@automateyourbizz.xyz / neonverse19
+    → Sending code...
+    → Code: 079224
+    → Saved 35 cookies to tiktok_cookies/tt384_cookies.json
+    ✓ Signup complete! @neonverse19
+[46/166] tt385... (login_check=False) ✗ Logged out - signing up...
+    → Signup: vividwave581@automateyourbizz.xyz / vividwave62
+    → Sending code...
+    → Code: 552741
+    → Saved 35 cookies to tiktok_cookies/tt385_cookies.json
+    ✓ Signup complete! @vividwave62
+[47/166] tt386... (login_check=False) ✗ Logged out - signing up...
+    → Signup: brightcore575@automateyourbizz.xyz / brightcore56
+    → Sending code...
+    → Code: 535042
+    → Saved 36 cookies to tiktok_cookies/tt386_cookies.json
+    ✓ Signup complete! @brightcore56
+[48/166] tt387... (login_check=False) ✗ Logged out - signing up...
+    → Signup: zenphoenix946@automateyourbizz.xyz / zenphoenix74
+    → Sending code...
+    → Code: 250921
+    → Saved 34 cookies to tiktok_cookies/tt387_cookies.json
+    ✓ Signup complete! @zenphoenix74
+[49/166] tt388... (login_check=False) ✗ Logged out - signing up...
+    → Signup: prismspark259@automateyourbizz.xyz / prismspark13
+    → Sending code...
+    → Code: 839539
+    → Saved 35 cookies to tiktok_cookies/tt388_cookies.json
+    ✓ Signup complete! @prismspark13
+[50/166] tt389... (login_check=False) ✗ Logged out - signing up...
+    → Signup: brightspark953@automateyourbizz.xyz / brightspark89
+    → Sending code...
+    → Code: 177398
+    → Saved 35 cookies to tiktok_cookies/tt389_cookies.json
+    ✓ Signup complete! @brightspark89
+[51/166] tt390... (login_check=False) ✗ Logged out - signing up...
+    → Signup: brighttrack985@automateyourbizz.xyz / brighttrack50
+    → Sending code...
+    → Code: 233512
+    → Saved 15 cookies to tiktok_cookies/tt390_cookies.json
+    ✓ Signup complete! @brighttrack50
+[52/166] tt391... (login_check=False) ✗ Logged out - signing up...
+    → Signup: brightcore893@automateyourbizz.xyz / brightcore75
+    → Sending code...
+    → Code: 232449
+    → Saved 35 cookies to tiktok_cookies/tt391_cookies.json
+    ✓ Signup complete! @brightcore75
+[53/166] tt392... (login_check=False) ✗ Logged out - signing up...
+    → Signup: solarpulse865@automateyourbizz.xyz / solarpulse59
+    → Sending code...
+    → Code: 493844
+    → Saved 36 cookies to tiktok_cookies/tt392_cookies.json
+    ✓ Signup complete! @solarpulse59
+[54/166] tt393... (login_check=False) ✗ Logged out - signing up...
+    → Signup: brightspark878@automateyourbizz.xyz / brightspark44
+    → Sending code...
+    → Code: 844411
+    → Saved 34 cookies to tiktok_cookies/tt393_cookies.json
+    ✓ Signup complete! @brightspark44
+[55/166] tt394... (login_check=False) ✗ Logged out - signing up...
+    → Signup: crystaltrack389@automateyourbizz.xyz / crystaltrack54
+    → Sending code...
+    → Code: 617255
+    → Saved 35 cookies to tiktok_cookies/tt394_cookies.json
+    ✓ Signup complete! @crystaltrack54
+[56/166] tt395... (login_check=False) ✗ Logged out - signing up...
+    → Signup: lunarverse414@automateyourbizz.xyz / lunarverse52
+    → Sending code...
+    → Code: 688332
+    → Saved 36 cookies to tiktok_cookies/tt395_cookies.json
+    ✓ Signup complete! @lunarverse52
+[57/166] tt396... (login_check=False) ✗ Logged out - signing up...
+    → Signup: neonstream615@automateyourbizz.xyz / neonstream33
+    ✗ Signup error: Locator.click: Timeout 30000ms exceeded.
+Call log:
+  - waiting for locator("[rol
+    ✗ Signup failed
+[58/166] tt397... (login_check=False) ✗ Logged out - signing up...
+    → Signup: cosmicflame601@automateyourbizz.xyz / cosmicflame61
+    → Sending code...
+    → Code: 980029
+    → Saved 35 cookies to tiktok_cookies/tt397_cookies.json
+    ✓ Signup complete! @cosmicflame61
+[59/166] tt398... (login_check=False) ✗ Logged out - signing up...
+    → Signup: neonpulse237@automateyourbizz.xyz / neonpulse56
+    → Sending code...
+    → Code: 502745
+    → Saved 34 cookies to tiktok_cookies/tt398_cookies.json
+    ✓ Signup complete! @neonpulse56
+[60/166] tt399... (login_check=False) ✗ Logged out - signing up...
+    → Signup: pixelfield746@automateyourbizz.xyz / pixelfield44
+    → Sending code...
+    → Code: 145363
+    → Saved 34 cookies to tiktok_cookies/tt399_cookies.json
+    ✓ Signup complete! @pixelfield44
+[61/166] tt400... (login_check=False) ✗ Logged out - signing up...
+    → Signup: fluxecho586@automateyourbizz.xyz / fluxecho99
+    → Sending code...
+    → Code: 017183
+    → Saved 35 cookies to tiktok_cookies/tt400_cookies.json
+    ✓ Signup complete! @fluxecho99
+[62/166] tt401... (login_check=False) ✗ Logged out - signing up...
+    → Signup: swiftspark808@automateyourbizz.xyz / swiftspark90
+    → Sending code...
+    → Code: 215776
+    → Saved 36 cookies to tiktok_cookies/tt401_cookies.json
+    ✓ Signup complete! @swiftspark90
+[63/166] tt402... (login_check=False) ✗ Logged out - signing up...
+    → Signup: crystalpath875@automateyourbizz.xyz / crystalpath78
+    → Sending code...
+    → Code: 541655
+    → Saved 33 cookies to tiktok_cookies/tt402_cookies.json
+    ✓ Signup complete! @crystalpath78
+[64/166] tt403... (login_check=False) ✗ Logged out - signing up...
+    → Signup: solarflame322@automateyourbizz.xyz / solarflame33
+    → Sending code...
+    → Code: 176401
+    → Saved 36 cookies to tiktok_cookies/tt403_cookies.json
+    ✓ Signup complete! @solarflame33
+[65/166] tt404... (login_check=False) ✗ Logged out - signing up...
+    → Signup: driftecho472@automateyourbizz.xyz / driftecho88
+    → Sending code...
+    → Code: 536598
+    → Saved 36 cookies to tiktok_cookies/tt404_cookies.json
+    ✓ Signup complete! @driftecho88
+[66/166] tt405... (login_check=False) ✗ Logged out - signing up...
+    → Signup: neonphoenix161@automateyourbizz.xyz / neonphoenix56
+    → Sending code...
+    → Code: 522836
+    → Saved 36 cookies to tiktok_cookies/tt405_cookies.json
+    ✓ Signup complete! @neonphoenix56
+[67/166] tt406... (login_check=False) ✗ Logged out - signing up...
+    → Signup: vividspark220@automateyourbizz.xyz / vividspark60
+    → Sending code...
+    → Code: 058941
+    → Saved 34 cookies to tiktok_cookies/tt406_cookies.json
+    ✓ Signup complete! @vividspark60
+[68/166] tt407... (login_check=False) ✗ Logged out - signing up...
+    → Signup: novastream734@automateyourbizz.xyz / novastream41
+    → Sending code...
+    → Code: 374918
+    → Saved 35 cookies to tiktok_cookies/tt407_cookies.json
+    ✓ Signup complete! @novastream41
+[69/166] tt408... (login_check=False) ✗ Logged out - signing up...
+    → Signup: swiftspark543@automateyourbizz.xyz / swiftspark39
+    → Sending code...
+    → Code: 497977
+    → Saved 34 cookies to tiktok_cookies/tt408_cookies.json
+    ✓ Signup complete! @swiftspark39
+[70/166] tt409... (login_check=False) ✗ Logged out - signing up...
+    → Signup: cosmicglow357@automateyourbizz.xyz / cosmicglow58
+    → Sending code...
+    → Code: 005354
+    → Saved 36 cookies to tiktok_cookies/tt409_cookies.json
+    ✓ Signup complete! @cosmicglow58
+[71/166] tt410... (login_check=False) ✗ Logged out - signing up...
+    → Signup: neoncore204@automateyourbizz.xyz / neoncore68
+    ✗ Signup error: Locator.click: Timeout 30000ms exceeded.
+Call log:
+  - waiting for locator("[rol
+    ✗ Signup failed
+[72/166] tt411... (login_check=False) ✗ Logged out - signing up...
+    → Signup: crystalflame190@automateyourbizz.xyz / crystalflame88
+    → Sending code...
+    → Code: 720069
+    → Saved 35 cookies to tiktok_cookies/tt411_cookies.json
+    ✓ Signup complete! @crystalflame88
+[73/166] tt412... (login_check=False) ✗ Logged out - signing up...
+    → Signup: fluxscope879@automateyourbizz.xyz / fluxscope85
+    ✗ Signup error: Locator.click: Timeout 30000ms exceeded.
+Call log:
+  - waiting for locator("[rol
+    ✗ Signup failed
+[74/166] tt413... (login_check=False) ✗ Logged out - signing up...
+    → Signup: fluxflame357@automateyourbizz.xyz / fluxflame84
+    → Sending code...
+    → Code: 768043
+    → Saved 36 cookies to tiktok_cookies/tt413_cookies.json
+    ✓ Signup complete! @fluxflame84
+[75/166] tt414... (login_check=False) ✗ Logged out - signing up...
+    → Signup: vividscope920@automateyourbizz.xyz / vividscope71
+    → Sending code...
+    → Code: 960197
+    → Saved 35 cookies to tiktok_cookies/tt414_cookies.json
+    ✓ Signup complete! @vividscope71
+[76/166] tt415... (login_check=False) ✗ Logged out - signing up...
+    → Signup: neonwave399@automateyourbizz.xyz / neonwave99
+    → Sending code...
+    → Code: 560089
+    → Saved 36 cookies to tiktok_cookies/tt415_cookies.json
+    ✓ Signup complete! @neonwave99
+[77/166] tt416... (login_check=False) ✗ Logged out - signing up...
+    → Signup: brightglow321@automateyourbizz.xyz / brightglow81
+    → Sending code...
+    → Code: 151632
+    → Saved 46 cookies to tiktok_cookies/tt416_cookies.json
+    ✓ Signup complete! @brightglow81
+[78/166] tt417... (login_check=False) ✗ Logged out - signing up...
+    → Signup: atomiccore884@automateyourbizz.xyz / atomiccore42
+    → Sending code...
+    → Code: 215982
+    → Saved 34 cookies to tiktok_cookies/tt417_cookies.json
+    ✓ Signup complete! @atomiccore42
+[79/166] tt418... (login_check=False) ✗ Logged out - signing up...
+    → Signup: prismspark110@automateyourbizz.xyz / prismspark20
+    → Sending code...
+    → Code: 654245
+    → Saved 35 cookies to tiktok_cookies/tt418_cookies.json
+    ✓ Signup complete! @prismspark20
+[80/166] tt419... (login_check=False) ✗ Logged out - signing up...
+    → Signup: crystalverse356@automateyourbizz.xyz / crystalverse57
+    → Sending code...
+    → Code: 193211
+    → Saved 36 cookies to tiktok_cookies/tt419_cookies.json
+    ✓ Signup complete! @crystalverse57
+[81/166] tt420... (login_check=False) ✗ Logged out - signing up...
+    → Signup: neontrack880@automateyourbizz.xyz / neontrack57
+    → Sending code...
+    → Code: 496661
+    → Saved 34 cookies to tiktok_cookies/tt420_cookies.json
+    ✓ Signup complete! @neontrack57
+[82/166] tt421... (login_check=False) ✗ Logged out - signing up...
+    → Signup: vividpulse661@automateyourbizz.xyz / vividpulse63
+    → Sending code...
+    → Code: 045999
+    → Saved 35 cookies to tiktok_cookies/tt421_cookies.json
+    ✓ Signup complete! @vividpulse63
+[83/166] tt422... (login_check=False) ✗ Logged out - signing up...
+    → Signup: pixelflame330@automateyourbizz.xyz / pixelflame88
+    → Sending code...
+    → Code: 233274
+    → Saved 36 cookies to tiktok_cookies/tt422_cookies.json
+    ✓ Signup complete! @pixelflame88
+[84/166] tt423... (login_check=False) ✗ Logged out - signing up...
+    → Signup: prismphoenix697@automateyourbizz.xyz / prismphoenix90
+    → Sending code...
+    → Code: 729078
+    → Saved 34 cookies to tiktok_cookies/tt423_cookies.json
+    ✓ Signup complete! @prismphoenix90
+[85/166] tt424... (login_check=False) ✗ Logged out - signing up...
+    → Signup: prismglow435@automateyourbizz.xyz / prismglow73
+    → Sending code...
+    → Code: 365315
+    → Saved 34 cookies to tiktok_cookies/tt424_cookies.json
+    ✓ Signup complete! @prismglow73
+[86/166] tt425... (login_check=False) ✗ Logged out - signing up...
+    → Signup: zenfield889@automateyourbizz.xyz / zenfield78
+    → Sending code...
+    → Code: 590333
+    → Saved 35 cookies to tiktok_cookies/tt425_cookies.json
+    ✓ Signup complete! @zenfield78
+[87/166] tt426... (login_check=False) ✗ Logged out - signing up...
+    → Signup: atomicstream736@automateyourbizz.xyz / atomicstream47
+    ✗ Signup error: Locator.click: Timeout 30000ms exceeded.
+Call log:
+  - waiting for locator("[rol
+    ✗ Signup failed
+[88/166] tt427... (login_check=False) ✗ Logged out - signing up...
+    → Signup: lunarcore543@automateyourbizz.xyz / lunarcore49
+    → Sending code...
+    → Code: 011158
+    → Saved 35 cookies to tiktok_cookies/tt427_cookies.json
+    ✓ Signup complete! @lunarcore49
+[89/166] tt428... (login_check=False) ✗ Logged out - signing up...
+    → Signup: novatrack199@automateyourbizz.xyz / novatrack76
+    → Sending code...
+    → Code: 827834
+    → Saved 35 cookies to tiktok_cookies/tt428_cookies.json
+    ✓ Signup complete! @novatrack76
+[90/166] tt429... (login_check=False) ✗ Logged out - signing up...
+    → Signup: fluxmoon583@automateyourbizz.xyz / fluxmoon10
+    → Sending code...
+    → Code: 763682
+    → Saved 34 cookies to tiktok_cookies/tt429_cookies.json
+    ✓ Signup complete! @fluxmoon10
+[91/166] tt430... (login_check=False) ✗ Logged out - signing up...
+    → Signup: neonpulse757@automateyourbizz.xyz / neonpulse62
+    → Sending code...
+    → Code: 889209
+    → Saved 34 cookies to tiktok_cookies/tt430_cookies.json
+    ✓ Signup complete! @neonpulse62
+[92/166] tt431... (login_check=False) ✗ Logged out - signing up...
+    → Signup: cosmicverse266@automateyourbizz.xyz / cosmicverse98
+    → Sending code...
+    → Code: 436902
+    → Saved 33 cookies to tiktok_cookies/tt431_cookies.json
+    ✓ Signup complete! @cosmicverse98
+[93/166] tt432... (login_check=False) ✗ Logged out - signing up...
+    → Signup: pixelfield900@automateyourbizz.xyz / pixelfield55
+    → Sending code...
+    → Code: 242616
+    → Saved 34 cookies to tiktok_cookies/tt432_cookies.json
+    ✓ Signup complete! @pixelfield55
+[94/166] tt433... (login_check=False) ✗ Logged out - signing up...
+    → Signup: echospark715@automateyourbizz.xyz / echospark25
+    → Sending code...
+    → Code: 607538
+    → Saved 34 cookies to tiktok_cookies/tt433_cookies.json
+    ✓ Signup complete! @echospark25
+[95/166] tt434... (login_check=False) ✗ Logged out - signing up...
+    → Signup: fluxflame675@automateyourbizz.xyz / fluxflame32
+    → Sending code...
+    → Code: 020180
+    → Saved 32 cookies to tiktok_cookies/tt434_cookies.json
+    ✓ Signup complete! @fluxflame32
+[96/166] tt435... (login_check=False) ✗ Logged out - signing up...
+    → Signup: driftmoon550@automateyourbizz.xyz / driftmoon62
+    → Sending code...
+    → Code: 370215
+    → Saved 34 cookies to tiktok_cookies/tt435_cookies.json
+    ✓ Signup complete! @driftmoon62
+[97/166] tt436... (login_check=False) ✗ Logged out - signing up...
+    → Signup: prismglow408@automateyourbizz.xyz / prismglow76
+    → Sending code...
+    → Code: 761361
+    → Saved 34 cookies to tiktok_cookies/tt436_cookies.json
+    ✓ Signup complete! @prismglow76
+[98/166] tt437... (login_check=False) ✗ Logged out - signing up...
+    → Signup: atomicverse913@automateyourbizz.xyz / atomicverse50
+    ✗ Signup error: Locator.click: Timeout 30000ms exceeded.
+Call log:
+  - waiting for locator("[rol
+    ✗ Signup failed
+[99/166] tt438... (login_check=False) ✗ Logged out - signing up...
+    → Signup: brightstar391@automateyourbizz.xyz / brightstar36
+    → Sending code...
+    → Code: 848908
+    → Saved 34 cookies to tiktok_cookies/tt438_cookies.json
+    ✓ Signup complete! @brightstar36
+[100/166] tt439... (login_check=False) ✗ Logged out - signing up...
+    → Signup: vividtrack741@automateyourbizz.xyz / vividtrack74
+    ✗ Signup error: Locator.click: Timeout 30000ms exceeded.
+Call log:
+  - waiting for locator("[rol
+    ✗ Signup failed
+[101/166] tt440... (login_check=False) ✗ Logged out - signing up...
+    → Signup: crystalpath896@automateyourbizz.xyz / crystalpath80
+    → Sending code...
+    → Code: 490496
+    → Saved 33 cookies to tiktok_cookies/tt440_cookies.json
+    ✓ Signup complete! @crystalpath80
+[102/166] tt441... (login_check=False) ✗ Logged out - signing up...
+    → Signup: atomicspark877@automateyourbizz.xyz / atomicspark75
+    → Sending code...
+    → Code: 741755
+    → Saved 33 cookies to tiktok_cookies/tt441_cookies.json
+    ✓ Signup complete! @atomicspark75
+[103/166] tt442... (login_check=False) ✗ Logged out - signing up...
+    → Signup: neonecho586@automateyourbizz.xyz / neonecho91
+    → Sending code...
+    → Code: 126898
+    → Saved 33 cookies to tiktok_cookies/tt442_cookies.json
+    ✓ Signup complete! @neonecho91
+[104/166] tt443... (login_check=False) ✗ Logged out - signing up...
+    → Signup: swiftstar489@automateyourbizz.xyz / swiftstar23
+    → Sending code...
+    → Code: 444429
+    → Saved 35 cookies to tiktok_cookies/tt443_cookies.json
+    ✓ Signup complete! @swiftstar23
+[105/166] tt444... (login_check=False) ✗ Logged out - signing up...
+    → Signup: vividfield451@automateyourbizz.xyz / vividfield88
+    → Sending code...
+    → Code: 969982
+    → Saved 35 cookies to tiktok_cookies/tt444_cookies.json
+    ✓ Signup complete! @vividfield88
+[106/166] tt445... (login_check=False) ✗ Logged out - signing up...
+    → Signup: cosmictrack278@automateyourbizz.xyz / cosmictrack30
+    ✗ Signup error: Locator.click: Timeout 30000ms exceeded.
+Call log:
+  - waiting for locator("[rol
+    ✗ Signup failed
+[107/166] tt446... (login_check=False) ✗ Logged out - signing up...
+    → Signup: atomicwave325@automateyourbizz.xyz / atomicwave63
+    → Sending code...
+    → Code: 020334
+    → Saved 35 cookies to tiktok_cookies/tt446_cookies.json
+    ✓ Signup complete! @atomicwave63
+[108/166] tt447... (login_check=False) ✗ Logged out - signing up...
+    → Signup: brightflame790@automateyourbizz.xyz / brightflame53
+    → Sending code...
+    ✗ No code
+    ✗ Signup failed
+[109/166] tt448... (login_check=False) ✗ Logged out - signing up...
+    → Signup: fluxflame864@automateyourbizz.xyz / fluxflame70
+    → Sending code...
+    ✗ No code
+    ✗ Signup failed
+[110/166] tt449... (login_check=False) ✗ Logged out - signing up...
+    → Signup: neonecho714@automateyourbizz.xyz / neonecho50
+    ✗ Signup error: Locator.click: Timeout 30000ms exceeded.
+Call log:
+  - waiting for locator("[rol
+    ✗ Signup failed
+[111/166] tt450... (login_check=False) ✗ Logged out - signing up...
+    → Signup: prismtrack267@automateyourbizz.xyz / prismtrack36
+    → Sending code...
+    → Code: 450863
+    → Saved 35 cookies to tiktok_cookies/tt450_cookies.json
+    ✓ Signup complete! @prismtrack36
+[112/166] tt451... (login_check=False) ✗ Logged out - signing up...
+    → Signup: zenstream287@automateyourbizz.xyz / zenstream43
+    → Sending code...
+    → Code: 116404
+    → Saved 34 cookies to tiktok_cookies/tt451_cookies.json
+    ✓ Signup complete! @zenstream43
+[113/166] tt452... (login_check=False) ✗ Logged out - signing up...
+    → Signup: driftfield678@automateyourbizz.xyz / driftfield35
+    ✗ Signup error: Locator.click: Timeout 30000ms exceeded.
+Call log:
+  - waiting for locator("[rol
+    ✗ Signup failed
+[114/166] tt453... (login_check=False) ✗ Logged out - signing up...
+    → Signup: pixelfield619@automateyourbizz.xyz / pixelfield74
+    → Sending code...
+    → Code: 922785
+    → Saved 35 cookies to tiktok_cookies/tt453_cookies.json
+    ✓ Signup complete! @pixelfield74
+[115/166] tt454... (login_check=False) ✗ Logged out - signing up...
+    → Signup: fluxphoenix513@automateyourbizz.xyz / fluxphoenix62
+    ✗ Signup error: Locator.click: Timeout 30000ms exceeded.
+Call log:
+  - waiting for locator("[rol
+    ✗ Signup failed
+[116/166] tt455... (login_check=False) ✗ Logged out - signing up...
+    → Signup: driftphoenix511@automateyourbizz.xyz / driftphoenix54
+    ✗ Signup error: Locator.click: Timeout 30000ms exceeded.
+Call log:
+  - waiting for locator("[rol
+    ✗ Signup failed
+[117/166] tt456... (login_check=False) ✗ Logged out - signing up...
+    → Signup: novaglow789@automateyourbizz.xyz / novaglow86
+    ✗ Signup error: Locator.click: Timeout 30000ms exceeded.
+Call log:
+  - waiting for locator("[rol
+    ✗ Signup failed
+[118/166] tt457... (login_check=False) ✗ Logged out - signing up...
+    → Signup: pixelecho946@automateyourbizz.xyz / pixelecho74
+    ✗ Signup error: Locator.click: Timeout 30000ms exceeded.
+Call log:
+  - waiting for locator("[rol
+    ✗ Signup failed
+[119/166] tt458... ✗ Error: [Errno 28] No space left on device: 'debug_tt458_c
+[120/166] tt459... ✗ Failed to open
+[121/166] tt460... ✗ Failed to open
+[122/166] tt461... ✗ Failed to open
+[123/166] tt462... ✗ Failed to open
+[124/166] tt463... ✗ Failed to open
+[125/166] tt464... ✗ Failed to open
+[126/166] tt465... ✗ Failed to open
+[127/166] tt466... ✗ Failed to open
+[128/166] tt467... ✗ Failed to open
+[129/166] tt468... ✗ Failed to open
+[130/166] tt469... ✗ Failed to open
+[131/166] tt470... ✗ Failed to open
+[132/166] tt471... ✗ Failed to open
+[133/166] tt472... ✗ Failed to open
+[134/166] tt473... ✗ Failed to open
+[135/166] tt474... ✗ Failed to open
+[136/166] tt475... ✗ Failed to open
+[137/166] tt476... ✗ Failed to open
+[138/166] tt477... ✗ Failed to open
+[139/166] tt478... ✗ Failed to open
+[140/166] tt479... ✗ Failed to open
+[141/166] tt480... ✗ Failed to open
+[142/166] tt481... ✗ Failed to open
+[143/166] tt482... ✗ Failed to open
+[144/166] tt483... ✗ Failed to open
+[145/166] tt484... Fetching browsers...
+Processing 22 browsers (starting from tt484)
+
+============================================================
+[1/22] tt484... (login_check=False) ✗ Logged out - signing up...
+    → Signup: lunarfield657@automateyourbizz.xyz / lunarfield69
+    → Sending code...
+    → Code: 575135
+    → Saved 33 cookies to tiktok_cookies/tt484_cookies.json
+    ✓ Signup complete! @lunarfield69
+[2/22] tt485... (login_check=False) ✗ Logged out - signing up...
+    → Signup: driftpulse494@automateyourbizz.xyz / driftpulse45
+    → Sending code...
+    → Code: 765596
+    → Saved 34 cookies to tiktok_cookies/tt485_cookies.json
+    ✓ Signup complete! @driftpulse45
+[3/22] tt486... (login_check=False) ✗ Logged out - signing up...
+    → Signup: atomicmoon771@automateyourbizz.xyz / atomicmoon95
+    ✗ Signup error: Locator.click: Timeout 30000ms exceeded.
+Call log:
+  - waiting for locator("[rol
+    ✗ Signup failed
+[4/22] tt487... (login_check=False) ✗ Logged out - signing up...
+    → Signup: lunarpath595@automateyourbizz.xyz / lunarpath46
+    → Sending code...
+    → Code: 319296
+    → Saved 34 cookies to tiktok_cookies/tt487_cookies.json
+    ✓ Signup complete! @lunarpath46
+[5/22] tt488... (login_check=False) ✗ Logged out - signing up...
+    → Signup: atomicecho587@automateyourbizz.xyz / atomicecho96
+    → Sending code...
+    → Code: 862258
+    → Saved 34 cookies to tiktok_cookies/tt488_cookies.json
+    ✓ Signup complete! @atomicecho96
+[6/22] tt489... ✗ Error: Page.screenshot: Target page, context or browser h
+[7/22] tt490... ✗ Failed to open
+[8/22] tt491... ✗ Failed to open
+[9/22] tt492... ✗ Failed to open
+[10/22] tt493... ✗ Failed to open
+[11/22] tt494... ✗ Failed to open
+[12/22] tt495... ✗ Failed to open
+[13/22] tt496... ✗ Failed to open
+[14/22] tt497... ✗ Failed to open
+[15/22] tt498... Traceback (most recent call last):
+  File "/opt/homebrew/lib/python3.14/site-packages/urllib3/connectionpool.py", line 787, in urlopen
+    response = self._make_request(
+        conn,
+    ...<10 lines>...
+        **response_kw,
+    )
+  File "/opt/homebrew/lib/python3.14/site-packages/urllib3/connectionpool.py", line 534, in _make_request
+    response = conn.getresponse()
+  File "/opt/homebrew/lib/python3.14/site-packages/urllib3/connection.py", line 571, in getresponse
+    httplib_response = super().getresponse()
+  File "/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/lib/python3.14/http/client.py", line 1450, in getresponse
+    response.begin()
+    ~~~~~~~~~~~~~~^^
+  File "/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/lib/python3.14/http/client.py", line 336, in begin
+    version, status, reason = self._read_status()
+                              ~~~~~~~~~~~~~~~~~^^
+  File "/opt/homebrew/Cellar/python@3.14/3.14.3_1/Frameworks/Python.framework/Versions/3.14/lib/python3.14/http/client.py", line 305, in _read_status
+    raise RemoteDisconnected("Remote end closed connection without"
+                             " response")
+http.client.RemoteDisconnected: Remote end closed connection without response
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):

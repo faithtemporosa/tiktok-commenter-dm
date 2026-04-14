@@ -1,0 +1,61 @@
+=== INPUT elements ===
+
+=== CONTENTEDITABLE elements ===
+Editable 0: tag=DIV, class="notranslate public-DraftEditor-content", pos=(903,667), size=(134x22)
+
+=== data-e2e elements containing 'comment' ===
+E2E 1: comment-icon, tag=SPAN, class="css-qt3hcj-7937d88b--SpanIconWrapper efpxn6t1"
+E2E 2: comment-count, tag=STRONG, class="css-p0qi98-7937d88b--StrongText efpxn6t2"
+E2E 3: comment-icon, tag=SPAN, class="css-qt3hcj-7937d88b--SpanIconWrapper efpxn6t1"
+E2E 4: comment-count, tag=STRONG, class="css-p0qi98-7937d88b--StrongText efpxn6t2"
+E2E 5: comment-username-1, tag=DIV, class="css-1e1lvk0-7937d88b--DivUsernameContentWrapper epprvxn4"
+E2E 6: comment-level-1, tag=SPAN, class=""
+E2E 7: comment-reply-1, tag=P, class="TUXText TUXText--tiktok-sans TUXText--weight-medium css-u0d6"
+E2E 8: comment-username-1, tag=DIV, class="css-1e1lvk0-7937d88b--DivUsernameContentWrapper epprvxn4"
+E2E 9: comment-level-1, tag=SPAN, class=""
+E2E 10: comment-reply-1, tag=P, class="TUXText TUXText--tiktok-sans TUXText--weight-medium css-u0d6"
+E2E 11: comment-username-1, tag=DIV, class="css-1e1lvk0-7937d88b--DivUsernameContentWrapper epprvxn4"
+E2E 12: comment-level-1, tag=SPAN, class=""
+E2E 13: comment-reply-1, tag=P, class="TUXText TUXText--tiktok-sans TUXText--weight-medium css-u0d6"
+E2E 14: comment-username-1, tag=DIV, class="css-1e1lvk0-7937d88b--DivUsernameContentWrapper epprvxn4"
+E2E 15: comment-level-1, tag=SPAN, class=""
+E2E 16: comment-thumbnail, tag=IMG, class=""
+E2E 17: comment-reply-1, tag=P, class="TUXText TUXText--tiktok-sans TUXText--weight-medium css-u0d6"
+E2E 18: comment-username-1, tag=DIV, class="css-1e1lvk0-7937d88b--DivUsernameContentWrapper epprvxn4"
+E2E 19: comment-level-1, tag=SPAN, class=""
+E2E 20: comment-reply-1, tag=P, class="TUXText TUXText--tiktok-sans TUXText--weight-medium css-u0d6"
+E2E 21: comment-username-1, tag=DIV, class="css-1e1lvk0-7937d88b--DivUsernameContentWrapper epprvxn4"
+E2E 22: comment-level-1, tag=SPAN, class=""
+E2E 23: comment-reply-1, tag=P, class="TUXText TUXText--tiktok-sans TUXText--weight-medium css-u0d6"
+E2E 24: comment-username-1, tag=DIV, class="css-1e1lvk0-7937d88b--DivUsernameContentWrapper epprvxn4"
+E2E 25: comment-level-1, tag=SPAN, class=""
+E2E 26: comment-reply-1, tag=P, class="TUXText TUXText--tiktok-sans TUXText--weight-medium css-u0d6"
+E2E 27: comment-username-1, tag=DIV, class="css-1e1lvk0-7937d88b--DivUsernameContentWrapper epprvxn4"
+E2E 28: comment-level-1, tag=SPAN, class=""
+E2E 29: comment-reply-1, tag=P, class="TUXText TUXText--tiktok-sans TUXText--weight-medium css-u0d6"
+E2E 30: comment-username-1, tag=DIV, class="css-1e1lvk0-7937d88b--DivUsernameContentWrapper epprvxn4"
+E2E 31: comment-level-1, tag=SPAN, class=""
+E2E 32: comment-reply-1, tag=P, class="TUXText TUXText--tiktok-sans TUXText--weight-medium css-u0d6"
+E2E 33: comment-input, tag=DIV, class="comment-panel-input css-xfaik7-7937d88b--DivTextInputContain"
+E2E 34: comment-text, tag=DIV, class="css-14ojxxt-7937d88b--DivInputAreaContainer e1jg1wm02"
+E2E 35: comment-at-icon, tag=BUTTON, class="TUXButton TUXButton--default TUXButton--medium TUXButton--se"
+E2E 36: comment-emoji-icon, tag=BUTTON, class="TUXButton TUXButton--default TUXButton--medium TUXButton--se"
+E2E 37: comment-post, tag=BUTTON, class="css-82gbeu-7937d88b--ArrowPostButton e1jg1wm04"
+
+=== Elements with 'comment' placeholder ===
+
+=== Classes containing CommentInput or DivInput ===
+ClassMatch 1: tag=DIV, class="css-rwn0u2-7937d88b--DivCommentInputWrapper e3xyt8k3"
+ClassMatch 2: tag=DIV, class="css-14ojxxt-7937d88b--DivInputAreaContainer e1jg1wm02"
+
+=== Draft/Editor elements ===
+Editor 0: tag=DIV, class="DraftEditor-root"
+Editor 1: tag=DIV, class="public-DraftEditorPlaceholder-root"
+Editor 2: tag=DIV, class="public-DraftEditorPlaceholder-inner"
+Editor 3: tag=DIV, class="DraftEditor-editorContainer"
+Editor 4: tag=DIV, class="notranslate public-DraftEditor-content"
+Editor 5: tag=DIV, class="public-DraftStyleDefault-block public-DraftStyleDefault-ltr"
+
+=== Elements containing 'Add comment' text ===
+Text: "Add comment...", parent tag=DIV, class="public-DraftEditorPlaceholder-inner"
+Text: "{"__DEFAULT_SCOPE__":{"webapp.app-context":{"langu", parent tag=SCRIPT, class=""

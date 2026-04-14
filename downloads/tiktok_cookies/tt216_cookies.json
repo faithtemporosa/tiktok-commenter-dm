@@ -1,0 +1,152 @@
+[
+  {
+    "name": "BROWSER_ID",
+    "value": "k1aachmn",
+    "domain": ".adspower.net",
+    "path": "/",
+    "expires": 1806631814.344,
+    "httpOnly": false,
+    "secure": false,
+    "sameSite": "Lax"
+  },
+  {
+    "name": "CLIENT_HOST",
+    "value": "127.0.0.1:20725",
+    "domain": ".adspower.net",
+    "path": "/",
+    "expires": 1806631814.344,
+    "httpOnly": false,
+    "secure": false,
+    "sameSite": "Lax"
+  },
+  {
+    "name": "tt_csrf_token",
+    "value": "JPLiNwuW-ojLVh0MKRZMgBfekvDONQRvLd-E",
+    "domain": ".tiktok.com",
+    "path": "/",
+    "expires": -1,
+    "httpOnly": true,
+    "secure": true,
+    "sameSite": "Lax"
+  },
+  {
+    "name": "tt_chain_token",
+    "value": "jWj7RP3AouVYOQ5RAP/cHQ==",
+    "domain": ".tiktok.com",
+    "path": "/",
+    "expires": 1790647817.796057,
+    "httpOnly": true,
+    "secure": true,
+    "sameSite": "Lax"
+  },
+  {
+    "name": "tiktok_webapp_theme_source",
+    "value": "auto",
+    "domain": ".www.tiktok.com",
+    "path": "/",
+    "expires": 1801015853,
+    "httpOnly": false,
+    "secure": true,
+    "sameSite": "Lax"
+  },
+  {
+    "name": "odin_tt",
+    "value": "db31c3d9cea37d5deb0f7f62bdccafdb370931ed9cf7e7ba3c37555df789c2cc5ba769417c5521b4b2f1977c1cb542c6ae02754d6906749e4a8faec0a92a4ba71da44549c07daec60fb25b195483815b",
+    "domain": ".tiktok.com",
+    "path": "/",
+    "expires": 1805822921.929029,
+    "httpOnly": true,
+    "secure": false,
+    "sameSite": "Lax"
+  },
+  {
+    "name": "s_v_web_id",
+    "value": "verify_mn3gmhm2_6Mz9CoSb_nIEh_4aCA_AndS_iEJHWkYzQLFp",
+    "domain": ".tiktok.com",
+    "path": "/",
+    "expires": -1,
+    "httpOnly": false,
+    "secure": true,
+    "sameSite": "None"
+  },
+  {
+    "name": "tiktok_webapp_theme",
+    "value": "light",
+    "domain": ".www.tiktok.com",
+    "path": "/",
+    "expires": 1801015853,
+    "httpOnly": false,
+    "secure": true,
+    "sameSite": "Lax"
+  },
+  {
+    "name": "delay_guest_mode_vid",
+    "value": "3",
+    "domain": ".www.tiktok.com",
+    "path": "/",
+    "expires": 1800802290,
+    "httpOnly": false,
+    "secure": true,
+    "sameSite": "Lax"
+  },
+  {
+    "name": "acw_tc",
+    "value": "0a0a01e617750958177087433e09d60b462d5f1f8274e17d832ebe3d2a3c18",
+    "domain": "browserext.adspower.net",
+    "path": "/",
+    "expires": 1775097617.870699,
+    "httpOnly": true,
+    "secure": false,
+    "sameSite": "Lax"
+  },
+  {
+    "name": "perf_feed_cache",
+    "value": "{%22expireTimestamp%22:1775268000000%2C%22itemIds%22:[%227610507236594535698%22%2C%227591338911033576735%22%2C%227617218885661560078%22]}",
+    "domain": ".www.tiktok.com",
+    "path": "/",
+    "expires": 1775700624,
+    "httpOnly": false,
+    "secure": true,
+    "sameSite": "Lax"
+  },
+  {
+    "name": "ttwid",
+    "value": "1%7CEQVncGpvEdRMpvt7hesfueQZCvaT_kR9vIQ7UnslI2k%7C1775095853%7C08101a394475bd7a1bc01eba9542f65ef92fcd29da88c14244ccde0e419a5497",
+    "domain": ".tiktok.com",
+    "path": "/",
+    "expires": 1806631853.427391,
+    "httpOnly": true,
+    "secure": true,
+    "sameSite": "None"
+  },
+  {
+    "name": "msToken",
+    "value": "bFFYZeJ7ACTZP5q4ZePeAZehCXgpwMOC-80PFKT070A5WyV8dDX6McV10LC2Nu7SNla43EnjPL6ONf4DqmXk5sDFn-G7IovJWAwMkS9vz_TBSRJBr79v5l1SUsT_w_ZfBLR_B7t0pNHmfTuZ33i_ehw=",
+    "domain": ".tiktokw.us",
+    "path": "/",
+    "expires": 1775959857.725872,
+    "httpOnly": false,
+    "secure": true,
+    "sameSite": "None"
+  },
+  {
+    "name": "msToken",
+    "value": "bFFYZeJ7ACTZP5q4ZePeAZehCXgpwMOC-80PFKT070A5WyV8dDX6McV10LC2Nu7SNla43EnjPL6ONf4DqmXk5sDFn-G7IovJWAwMkS9vz_TBSRJBr79v5l1SUsT_w_ZfBLR_B7t0pNHmfTuZ33i_ehw=",
+    "domain": "www.tiktok.com",
+    "path": "/",
+    "expires": 1782871857,
+    "httpOnly": false,
+    "secure": false,
+    "sameSite": "Lax"
+  },
+  {
+    "name": "msToken",
+    "value": "Yw1efJKbBM1Yi1BhWvm072GJvVMSm_KxAxT4E4QXS5gW-CAibH9XJ3SYZr-aviaNBSagKDK8yxd5ju8EW7GVDeTRTxCRiN5dyfQUAQSYxFH5nsCk1ugIkabwZ4nsnW2r5dJGgl4xU6ODW8XNHmCV_io=",
+    "domain": ".tiktok.com",
+    "path": "/",
+    "expires": 1775959884.273846,
+    "httpOnly": false,
+    "secure": true,
+    "sameSite": "None"
+  }
+]

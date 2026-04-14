@@ -1,0 +1,352 @@
+[
+  {
+    "name": "BROWSER_ID",
+    "value": "k1aaenau",
+    "domain": ".adspower.net",
+    "path": "/",
+    "expires": 1807100179.259,
+    "httpOnly": false,
+    "secure": false,
+    "sameSite": "Lax"
+  },
+  {
+    "name": "CLIENT_HOST",
+    "value": "127.0.0.1:20725",
+    "domain": ".adspower.net",
+    "path": "/",
+    "expires": 1807100179.259,
+    "httpOnly": false,
+    "secure": false,
+    "sameSite": "Lax"
+  },
+  {
+    "name": "tt_csrf_token",
+    "value": "QnMHPEVt-xA1TN7joy7zi7-cQyYm2wzwsNX0",
+    "domain": ".tiktok.com",
+    "path": "/",
+    "expires": -1,
+    "httpOnly": true,
+    "secure": true,
+    "sameSite": "Lax"
+  },
+  {
+    "name": "tt_chain_token",
+    "value": "xvwGyF2MIEE7xurSGgNisA==",
+    "domain": ".tiktok.com",
+    "path": "/",
+    "expires": 1791116183.819121,
+    "httpOnly": true,
+    "secure": true,
+    "sameSite": "Lax"
+  },
+  {
+    "name": "tiktok_webapp_theme_source",
+    "value": "auto",
+    "domain": ".www.tiktok.com",
+    "path": "/",
+    "expires": 1801484184,
+    "httpOnly": false,
+    "secure": true,
+    "sameSite": "Lax"
+  },
+  {
+    "name": "delay_guest_mode_vid",
+    "value": "5",
+    "domain": ".www.tiktok.com",
+    "path": "/",
+    "expires": 1801070440,
+    "httpOnly": false,
+    "secure": true,
+    "sameSite": "Lax"
+  },
+  {
+    "name": "s_v_web_id",
+    "value": "verify_mnhqrrz2_8YNCk6ys_XS76_4yNg_9rep_TL35AonuAjS9",
+    "domain": ".tiktok.com",
+    "path": "/",
+    "expires": -1,
+    "httpOnly": false,
+    "secure": true,
+    "sameSite": "None"
+  },
+  {
+    "name": "multi_sids",
+    "value": "7624213030964118559%3Aad3c927aec121e1c09be2d52b0292b42",
+    "domain": ".tiktok.com",
+    "path": "/",
+    "expires": 1780334504.978271,
+    "httpOnly": true,
+    "secure": true,
+    "sameSite": "Lax"
+  },
+  {
+    "name": "cmpl_token",
+    "value": "AgQQAPNSF-RO0rnwS_zSt50m8688aAfQ_53ZYKDpRQ",
+    "domain": ".tiktok.com",
+    "path": "/",
+    "expires": 1780334504.978469,
+    "httpOnly": true,
+    "secure": true,
+    "sameSite": "Lax"
+  },
+  {
+    "name": "sid_guard",
+    "value": "ad3c927aec121e1c09be2d52b0292b42%7C1775150504%7C15552000%7CTue%2C+29-Sep-2026+17%3A21%3A44+GMT",
+    "domain": ".tiktok.com",
+    "path": "/",
+    "expires": 1806254504.978528,
+    "httpOnly": true,
+    "secure": true,
+    "sameSite": "Lax"
+  },
+  {
+    "name": "uid_tt",
+    "value": "5c34bba1cdeaa7a8e5549d13c2e94e3a9aa8be2821c7d394d51e54fac4763f86",
+    "domain": ".tiktok.com",
+    "path": "/",
+    "expires": 1790702504.978591,
+    "httpOnly": true,
+    "secure": true,
+    "sameSite": "Lax"
+  },
+  {
+    "name": "uid_tt_ss",
+    "value": "5c34bba1cdeaa7a8e5549d13c2e94e3a9aa8be2821c7d394d51e54fac4763f86",
+    "domain": ".tiktok.com",
+    "path": "/",
+    "expires": 1790702504.978653,
+    "httpOnly": true,
+    "secure": true,
+    "sameSite": "None"
+  },
+  {
+    "name": "sid_tt",
+    "value": "ad3c927aec121e1c09be2d52b0292b42",
+    "domain": ".tiktok.com",
+    "path": "/",
+    "expires": 1790702504.978715,
+    "httpOnly": true,
+    "secure": true,
+    "sameSite": "Lax"
+  },
+  {
+    "name": "sessionid",
+    "value": "ad3c927aec121e1c09be2d52b0292b42",
+    "domain": ".tiktok.com",
+    "path": "/",
+    "expires": 1790702504.978773,
+    "httpOnly": true,
+    "secure": true,
+    "sameSite": "Lax"
+  },
+  {
+    "name": "sessionid_ss",
+    "value": "ad3c927aec121e1c09be2d52b0292b42",
+    "domain": ".tiktok.com",
+    "path": "/",
+    "expires": 1790702504.97888,
+    "httpOnly": true,
+    "secure": true,
+    "sameSite": "None"
+  },
+  {
+    "name": "tt_session_tlb_tag",
+    "value": "sttt%7C2%7CrTySeuwSHhwJvi1SsCkrQv_________WE_A7BDtnlajjbMoD_NZdZEExLSiRP-bmMrM3KjeSIwI%3D",
+    "domain": ".tiktok.com",
+    "path": "/",
+    "expires": 1790702504.978947,
+    "httpOnly": true,
+    "secure": true,
+    "sameSite": "None"
+  },
+  {
+    "name": "sid_ucp_v1",
+    "value": "1.0.1-KDEzZmNmMWFjZWM3ODFmNWE2ZDRhYTIxNWYwZmI3NzgwYmZiMGY1ZDYKIgifiJXUtaup52kQqMu6zgYYswsgDDDeyrrOBjgBQOsHSAQQBBoHdXNlYXN0NSIgYWQzYzkyN2FlYzEyMWUxYzA5YmUyZDUyYjAyOTJiNDIyTgoguSIdVhHlW6L5vThdIH6nhboxp6VrzJIpBoP257_IM0oSINNwSQCc47pw2Zh47PM8K9iLNxKJq6kssM_Ot8IyxxYFGAUiBnRpa3Rvaw",
+    "domain": ".tiktok.com",
+    "path": "/",
+    "expires": 1790702504.979117,
+    "httpOnly": true,
+    "secure": true,
+    "sameSite": "Lax"
+  },
+  {
+    "name": "ssid_ucp_v1",
+    "value": "1.0.1-KDEzZmNmMWFjZWM3ODFmNWE2ZDRhYTIxNWYwZmI3NzgwYmZiMGY1ZDYKIgifiJXUtaup52kQqMu6zgYYswsgDDDeyrrOBjgBQOsHSAQQBBoHdXNlYXN0NSIgYWQzYzkyN2FlYzEyMWUxYzA5YmUyZDUyYjAyOTJiNDIyTgoguSIdVhHlW6L5vThdIH6nhboxp6VrzJIpBoP257_IM0oSINNwSQCc47pw2Zh47PM8K9iLNxKJq6kssM_Ot8IyxxYFGAUiBnRpa3Rvaw",
+    "domain": ".tiktok.com",
+    "path": "/",
+    "expires": 1790702504.979257,
+    "httpOnly": true,
+    "secure": true,
+    "sameSite": "None"
+  },
+  {
+    "name": "store-idc",
+    "value": "useast5",
+    "domain": ".tiktok.com",
+    "path": "/",
+    "expires": 1790702504.773316,
+    "httpOnly": true,
+    "secure": false,
+    "sameSite": "Lax"
+  },
+  {
+    "name": "store-country-code",
+    "value": "us",
+    "domain": ".tiktok.com",
+    "path": "/",
+    "expires": 1790702504.773748,
+    "httpOnly": true,
+    "secure": false,
+    "sameSite": "Lax"
+  },
+  {
+    "name": "store-country-code-src",
+    "value": "uid",
+    "domain": ".tiktok.com",
+    "path": "/",
+    "expires": 1790702504.773919,
+    "httpOnly": true,
+    "secure": false,
+    "sameSite": "Lax"
+  },
+  {
+    "name": "tt-target-idc",
+    "value": "useast5",
+    "domain": ".tiktok.com",
+    "path": "/",
+    "expires": 1790702504.773977,
+    "httpOnly": true,
+    "secure": false,
+    "sameSite": "Lax"
+  },
+  {
+    "name": "tt-target-idc-sign",
+    "value": "p-h5xiVrfaVAWnGsE1wt9Vc2RZszvqNCiDRKZ0IHGrn5IYRboYNV7NcXw_TkV4MaCKoT8kGDtXBn1NUzf-emFOK-sZNVBxmU4iD74oLHI7EnV3pmrYXKO8f_MAAncRXpAXRJneaue26zaUGBAKfPdsE6G3xCOn6aU_rxuju3kG8NEIxjnK3XrTqFXaNVagtS3ZXynzQ_gvZaNF5w-ZFWS3uzHshHiv_TCWTemSzi6KQtTyV2d7hv5-FN5d2Szv8EtIyYYO6wYR62fumBNmhSb0a7h0Wwip9MtuuH0HUAA9LrSL0M8GiYD9OF9eQmECkErvgfM0CIOhi-uCwhIz5CmD6_pxWAnBxqMKn5DXX-sifnNb09MQrfdjfPWhgll0ve2mc3iSgQJFKnfLaRVJfCTL_A-O2grsstO3E6D45jNugFCX746-_Cj3j5AEK1q5KRobSTD9nbu2bAHsJi6R2Ub6cS62yFwdAcBTRXKOlnzGy4YDP1n54PC6fYPNb23Ldt",
+    "domain": ".tiktok.com",
+    "path": "/",
+    "expires": 1807100190.707774,
+    "httpOnly": true,
+    "secure": false,
+    "sameSite": "Lax"
+  },
+  {
+    "name": "last_login_method",
+    "value": "email",
+    "domain": "www.tiktok.com",
+    "path": "/",
+    "expires": 1782926504,
+    "httpOnly": false,
+    "secure": false,
+    "sameSite": "Lax"
+  },
+  {
+    "name": "passport_fe_beating_status",
+    "value": "true",
+    "domain": ".www.tiktok.com",
+    "path": "/",
+    "expires": -1,
+    "httpOnly": false,
+    "secure": false,
+    "sameSite": "Lax"
+  },
+  {
+    "name": "tt_ticket_guard_has_set_public_key",
+    "value": "1",
+    "domain": "www.tiktok.com",
+    "path": "/",
+    "expires": 1775641874.909658,
+    "httpOnly": false,
+    "secure": false,
+    "sameSite": "Lax"
+  },
+  {
+    "name": "odin_tt",
+    "value": "398a3a110d816554a6765771028114392f26c00f573ec3132887f2e6fa2a5b813acc1eced8f2dbfafa0bc8a4a4f5a34d00c97324cf2f101cc450e9748c51dd9cca611bfcdfaef97afdb9486a931257e7",
+    "domain": ".tiktok.com",
+    "path": "/",
+    "expires": 1807091476.240126,
+    "httpOnly": true,
+    "secure": false,
+    "sameSite": "Lax"
+  },
+  {
+    "name": "tiktok_webapp_theme",
+    "value": "light",
+    "domain": ".www.tiktok.com",
+    "path": "/",
+    "expires": 1801484184,
+    "httpOnly": false,
+    "secure": true,
+    "sameSite": "Lax"
+  },
+  {
+    "name": "acw_tc",
+    "value": "0a0a01ea17755641831993653e6f5bf553bd86431f105988cf0503338a78cd",
+    "domain": "browserext.adspower.net",
+    "path": "/",
+    "expires": 1775565983.701404,
+    "httpOnly": true,
+    "secure": false,
+    "sameSite": "Lax"
+  },
+  {
+    "name": "ttwid",
+    "value": "1%7CfoxK7tHfcWGRQqnwzv4Eco0su74wwSChw9ybm4nUOBE%7C1775564188%7Cda2f3b5815f7685dcb08ba1d3b963bdb6f37d687a6c9759904417dc9cb9bc907",
+    "domain": ".tiktok.com",
+    "path": "/",
+    "expires": 1807100188.505532,
+    "httpOnly": true,
+    "secure": true,
+    "sameSite": "None"
+  },
+  {
+    "name": "perf_feed_cache",
+    "value": "{%22expireTimestamp%22:1775736000000%2C%22itemIds%22:[%227611233695353048351%22%2C%227604805349459102998%22%2C%227616365095047761166%22]}",
+    "domain": ".www.tiktok.com",
+    "path": "/",
+    "expires": 1776168990,
+    "httpOnly": false,
+    "secure": true,
+    "sameSite": "Lax"
+  },
+  {
+    "name": "msToken",
+    "value": "-AOas-3waA6pkmL2GcQow6waphsxC1jvwQv9_wcdei_l1hG6vdNyVpFoiItzy7jQW3aetsu7Vr7I8KwLVtAlOE1xr9q8mVNkcX1SvcJj_si3RrxmP8CpX6BIRaVJMKcAfr_a8PvEAiGfK-VObypqa20=",
+    "domain": ".tiktok.com",
+    "path": "/",
+    "expires": 1776428190.910719,
+    "httpOnly": false,
+    "secure": true,
+    "sameSite": "None"
+  },
+  {
+    "name": "msToken",
+    "value": "NqWvSr2C_9Rq9v52CjbZDKgBn2GGwN4c74bgu2JiHDy4m20QYNkUdWmaip0NTJy_tP2WaFro-F1q_gfLmDXr7V6x-6aNwtw2P5hRKAmiXqA7eSlvcRZHBe_ONIVoBm4D4JWXvN_STb3PJ4-r1Gpd5pU=",
+    "domain": ".tiktokw.us",
+    "path": "/",
+    "expires": 1776428190.105253,
+    "httpOnly": false,
+    "secure": true,
+    "sameSite": "None"
+  },
+  {
+    "name": "msToken",
+    "value": "NqWvSr2C_9Rq9v52CjbZDKgBn2GGwN4c74bgu2JiHDy4m20QYNkUdWmaip0NTJy_tP2WaFro-F1q_gfLmDXr7V6x-6aNwtw2P5hRKAmiXqA7eSlvcRZHBe_ONIVoBm4D4JWXvN_STb3PJ4-r1Gpd5pU=",
+    "domain": "www.tiktok.com",
+    "path": "/",
+    "expires": 1783340191,
+    "httpOnly": false,
+    "secure": false,
+    "sameSite": "Lax"
+  },
+  {
+    "name": "store-country-sign",
+    "value": "MEIEDGfShaVxsWsmYhqmRQQgl-kr1kp7xHdsAM58sfXxZCHkD7_rsnYUwUuxf_7tsAAEEFY3-2mUyAISz49qj3QyhXE",
+    "domain": ".tiktok.com",
+    "path": "/",
+    "expires": 1790702504.773577,
+    "httpOnly": true,
+    "secure": false,
+    "sameSite": "Lax"
+  }
+]

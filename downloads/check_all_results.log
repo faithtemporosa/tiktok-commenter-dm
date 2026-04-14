@@ -1,0 +1,21 @@
+Fetching all browsers...
+Found 505 profiles
+
+============================================================
+Checking all browsers one by one...
+============================================================
+
+[1/505] Checking tt1... ✗ Logged out
+[2/505] Checking tt2... ✗ Logged out
+[3/505] Checking tt3... ✗ Logged out
+[4/505] Checking tt4... ✗ Logged out
+[5/505] Checking tt5... ✗ Logged out
+[6/505] Checking tt6... ✗ Logged out
+[7/505] Checking tt7... ✗ Error: Page.goto: Target page, context or browser has bee
+[8/505] Checking tt8... ✗ Logged out
+[9/505] Checking tt9... ✗ Logged out
+[10/505] Checking tt10... ✗ Logged out
+[11/505] Checking tt11... ✗ Logged out
+[12/505] Checking tt12... ✗ Logged out
+[13/505] Checking tt13... ✓ Logged in as @hilee11
+[14/505] Checking tt14... 
