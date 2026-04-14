@@ -112,7 +112,7 @@ TARGET_ACCOUNTS = [
 # Settings
 COMMENTS_PER_ACCOUNT = 2  # Comment on 2 videos per account
 VIEW_ALL_VIDEOS = True     # View all videos before commenting
-PARALLEL_BROWSERS = 2      # Number of browsers to run in parallel
+PARALLEL_BROWSERS = 3      # Number of browsers to run in parallel
 
 # Comments by niche - customize as needed
 NICHE_COMMENTS = {
@@ -663,6 +663,10 @@ def main():
     if not browsers:
         print('No browsers found in AdsPower!')
         return
+
+    # Filter browsers by serial number (500-806)
+    browsers = [b for b in browsers if 500 <= b.get('serial_number', 0) <= 806]
+    print(f'Filtered to browsers with serial numbers 500-806')
 
     # Sort by name for consistent ordering
     browsers.sort(key=lambda x: int(re.search(r'\d+', x.get('name', '0')).group()) if re.search(r'\d+', x.get('name', '0')) else 0)
