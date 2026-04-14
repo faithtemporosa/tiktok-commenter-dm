@@ -24,8 +24,18 @@ GMAIL_TOKEN_PATH = 'gmail_token.pickle'
 TARGET_STATS_PATH = 'target_accounts_stats.json'
 COMMENTED_VIDEOS_PATH = 'target_commented_videos.json'
 
+def normalize_video_url(video_url):
+    """Extract just the video ID from a TikTok URL to ensure consistent tracking.
+    e.g. https://www.tiktok.com/@user/video/123456?q=1 -> 123456
+    """
+    if '/video/' in video_url:
+        # Extract video ID (the number after /video/)
+        video_id = video_url.split('/video/')[1].split('?')[0].split('/')[0]
+        return video_id
+    return video_url
+
 def load_commented_videos():
-    """Load set of already commented video URLs"""
+    """Load set of already commented video IDs"""
     try:
         with open(COMMENTED_VIDEOS_PATH, 'r') as f:
             return set(json.load(f))
@@ -33,9 +43,10 @@ def load_commented_videos():
         return set()
 
 def save_commented_video(video_url):
-    """Save a video URL as commented"""
+    """Save a video ID as commented"""
+    video_id = normalize_video_url(video_url)
     commented = load_commented_videos()
-    commented.add(video_url)
+    commented.add(video_id)
     # Keep only last 10000 videos to prevent file from growing too large
     if len(commented) > 10000:
         commented = set(list(commented)[-10000:])
@@ -393,8 +404,8 @@ def view_and_comment_on_profile(page, account, browser_name):
         niche = get_niche(account)
         comments_pool = NICHE_COMMENTS.get(niche, NICHE_COMMENTS['default'])
 
-        # Find videos we haven't commented on yet
-        uncommented_indices = [i for i, v in enumerate(videos) if v not in already_commented]
+        # Find videos we haven't commented on yet (normalize URLs to video IDs for comparison)
+        uncommented_indices = [i for i, v in enumerate(videos) if normalize_video_url(v) not in already_commented]
 
         if uncommented_indices:
             # Select which videos to comment on (2 random ones from uncommented)
