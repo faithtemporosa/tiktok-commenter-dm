@@ -4409,7 +4409,7 @@ DASHBOARD_HTML = """
                     document.getElementById('target-accounts-list').innerHTML=accounts.map(a=>'<span style="background:#4c1d95;padding:4px 10px;border-radius:4px;font-size:12px;">@'+a.username+' ('+a.comments+' comments)</span>').join('');
                 }
                 if(logs.logs.length){
-                    document.getElementById('target-logs').innerHTML=logs.logs.map(l=>'<div style="color:#a1a1aa">'+l+'</div>').join('');
+                    document.getElementById('target-logs').innerHTML=logs.logs.map(l=>'<div style="color:#a1a1aa"><span style="color:#71717a">'+l.timestamp+'</span> '+l.message+'</div>').join('');
                 }
             }catch(e){console.error('Target update error:',e);}
         }
