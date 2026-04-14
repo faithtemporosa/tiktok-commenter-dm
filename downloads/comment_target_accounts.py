@@ -499,27 +499,64 @@ def auto_signup(page, browser_name):
 
         # Submit
         page.locator('button[type="submit"], button:has-text("Next"), button:has-text("Suivant")').click(timeout=10000)
-        time.sleep(5)
+        print(f'    [{browser_name}] Verification code submitted, waiting for username page...', flush=True)
+
+        # Wait longer for page to navigate after code submission
+        time.sleep(8)
+
+        # Take screenshot after code submission to see current state
+        page.screenshot(path=f'downloads/after_code_submit_{browser_name}.png')
 
         # Set username - TikTok prompts for username after email verification
         try:
             # Generate username from email (e.g., forestcore740@... -> forestcore740)
             username_base = email.split('@')[0]
+            print(f'    [{browser_name}] Looking for username input field...', flush=True)
 
-            # Look for username input field
-            username_input = page.locator('input[name="uniqueId"], input[placeholder*="username"], input[placeholder*="Username"]').first
-            if username_input.is_visible(timeout=5000):
-                username_input.fill(username_base)
-                time.sleep(1)
-                print(f'    [{browser_name}] Username set to: {username_base}', flush=True)
+            # Wait for username input field to appear - try multiple times
+            username_filled = False
+            for attempt in range(3):
+                try:
+                    # Look for username input field with longer timeout
+                    username_input = page.locator('input[name="uniqueId"], input[placeholder*="username"], input[placeholder*="Username"], input[placeholder*="nom"], input[data-e2e="username-input"]').first
 
-                # Click next/submit button to continue
-                page.locator('button[type="submit"], button:has-text("Next"), button:has-text("Suivant"), button:has-text("Sign up")').first.click(timeout=10000)
-                time.sleep(3)
-            else:
-                print(f'    [{browser_name}] No username input found, may be auto-assigned', flush=True)
+                    # Wait for it to be visible and editable
+                    username_input.wait_for(state='visible', timeout=10000)
+                    time.sleep(2)
+
+                    # Clear and fill the username
+                    username_input.click()
+                    time.sleep(0.5)
+                    username_input.fill('')
+                    time.sleep(0.5)
+                    username_input.fill(username_base)
+                    time.sleep(1)
+
+                    print(f'    [{browser_name}] ✓ Username set to: {username_base}', flush=True)
+                    username_filled = True
+
+                    # Take screenshot after filling username
+                    page.screenshot(path=f'downloads/after_username_{browser_name}.png')
+
+                    # Click next/submit button to continue
+                    page.locator('button[type="submit"], button:has-text("Next"), button:has-text("Suivant"), button:has-text("Sign up"), button:has-text("S\'inscrire")').first.click(timeout=10000)
+                    time.sleep(3)
+                    break
+                except Exception as retry_err:
+                    if attempt < 2:
+                        print(f'    [{browser_name}] Username attempt {attempt + 1} failed, retrying...', flush=True)
+                        time.sleep(3)
+                    else:
+                        raise retry_err
+
+            if not username_filled:
+                print(f'    [{browser_name}] No username input found after 3 attempts, may be auto-assigned', flush=True)
+
         except Exception as username_err:
-            print(f'    [{browser_name}] Username setup: {str(username_err)[:50]}', flush=True)
+            print(f'    [{browser_name}] Username setup error: {str(username_err)[:100]}', flush=True)
+            # Take screenshot on error
+            page.screenshot(path=f'downloads/username_error_{browser_name}.png')
+            print(f'    [{browser_name}] Screenshot saved to username_error_{browser_name}.png', flush=True)
 
         # Check if signup succeeded
         page.goto('https://www.tiktok.com/profile', timeout=15000)
