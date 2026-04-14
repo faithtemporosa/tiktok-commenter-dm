@@ -665,8 +665,8 @@ def main():
         return
 
     # Filter browsers by serial number (500-806)
-    browsers = [b for b in browsers if 500 <= b.get('serial_number', 0) <= 806]
-    print(f'Filtered to browsers with serial numbers 500-806')
+    browsers = [b for b in browsers if 500 <= int(b.get('serial_number', 0)) <= 806]
+    print(f'Filtered to browsers with serial numbers 500-806: {len(browsers)} browsers')
 
     # Sort by name for consistent ordering
     browsers.sort(key=lambda x: int(re.search(r'\d+', x.get('name', '0')).group()) if re.search(r'\d+', x.get('name', '0')) else 0)
