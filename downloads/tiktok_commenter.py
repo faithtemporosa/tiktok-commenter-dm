@@ -14,6 +14,12 @@ RUN:
 Open http://localhost:9090
 """
 
+import sys
+if hasattr(sys.stdout, 'reconfigure'):
+    sys.stdout.reconfigure(encoding='utf-8')
+if hasattr(sys.stderr, 'reconfigure'):
+    sys.stderr.reconfigure(encoding='utf-8')
+
 import requests
 import time
 import json
@@ -92,7 +98,7 @@ def load_not_logged_in():
     """Load list of browsers that are not logged in"""
     global not_logged_in_browsers
     try:
-        with open(NOT_LOGGED_IN_FILE, 'r') as f:
+        with open(NOT_LOGGED_IN_FILE, 'r', encoding='utf-8') as f:
             data = json.load(f)
             not_logged_in_browsers = data.get("browsers", [])
     except:
@@ -101,7 +107,7 @@ def load_not_logged_in():
 def save_not_logged_in():
     """Save list of browsers that are not logged in"""
     try:
-        with open(NOT_LOGGED_IN_FILE, 'w') as f:
+        with open(NOT_LOGGED_IN_FILE, 'w', encoding='utf-8') as f:
             json.dump({
                 "browsers": not_logged_in_browsers,
                 "last_updated": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
@@ -274,7 +280,7 @@ def load_replies_data():
     """Load reply tracking data"""
     global reply_status
     try:
-        with open(REPLIES_FILE, 'r') as f:
+        with open(REPLIES_FILE, 'r', encoding='utf-8') as f:
             data = json.load(f)
             reply_status["pending_replies"] = data.get("pending_replies", [])
             reply_status["draft_replies"] = data.get("draft_replies", [])
@@ -289,7 +295,7 @@ def load_replies_data():
 def save_replies_data():
     """Save reply tracking data"""
     try:
-        with open(REPLIES_FILE, 'w') as f:
+        with open(REPLIES_FILE, 'w', encoding='utf-8') as f:
             json.dump({
                 "pending_replies": reply_status["pending_replies"],
                 "draft_replies": reply_status["draft_replies"],
@@ -735,7 +741,7 @@ def load_profile_mapping():
     """Load profile to TikTok username mapping from file"""
     global profile_usernames
     try:
-        with open(PROFILE_MAPPING_FILE, "r") as f:
+        with open(PROFILE_MAPPING_FILE, 'r', encoding='utf-8') as f:
             profile_usernames = json.load(f)
     except:
         profile_usernames = {}
@@ -743,7 +749,7 @@ def load_profile_mapping():
 def save_profile_mapping():
     """Save profile to TikTok username mapping to file"""
     try:
-        with open(PROFILE_MAPPING_FILE, "w") as f:
+        with open(PROFILE_MAPPING_FILE, 'w', encoding='utf-8') as f:
             json.dump(profile_usernames, f, indent=2)
     except:
         pass
@@ -814,7 +820,7 @@ def load_report_history():
     """Load past reports from file on startup"""
     global automation_status
     try:
-        with open(REPORT_FILE, 'r') as f:
+        with open(REPORT_FILE, 'r', encoding='utf-8') as f:
             data = json.load(f)
             automation_status["report"] = data.get("report", [])
             automation_status["comments_posted"] = len(automation_status["report"])
@@ -831,7 +837,7 @@ def load_report_history():
 def save_report_history():
     """Save ALL reports to file for persistence"""
     try:
-        with open(REPORT_FILE, 'w') as f:
+        with open(REPORT_FILE, 'w', encoding='utf-8') as f:
             json.dump({
                 "report": automation_status["report"],
                 "last_updated": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
@@ -925,7 +931,10 @@ def log(message):
     timestamp = datetime.now().strftime("%H:%M:%S")
     log_entry = f"[{timestamp}] {message}"
     automation_status["logs"].append(log_entry)
-    print(log_entry)
+    try:
+        print(log_entry)
+    except UnicodeEncodeError:
+        print(log_entry.encode('ascii', errors='replace').decode('ascii'))
     if len(automation_status["logs"]) > 200:
         automation_status["logs"] = automation_status["logs"][-200:]
     
@@ -1055,7 +1064,7 @@ def load_dm_data():
     
     # Load targets
     try:
-        with open(DM_TARGETS_FILE, 'r') as f:
+        with open(DM_TARGETS_FILE, 'r', encoding='utf-8') as f:
             data = json.load(f)
             dm_targets.update(data)
             print(f"✓ Loaded {len(dm_targets.get('specific_users', []))} DM targets")
@@ -1067,7 +1076,7 @@ def load_dm_data():
     
     # Load DM tracker (daily counts per profile)
     try:
-        with open(DM_TRACKER_FILE, 'r') as f:
+        with open(DM_TRACKER_FILE, 'r', encoding='utf-8') as f:
             dm_tracker = json.load(f)
             print(f"✓ Loaded DM tracker ({len(dm_tracker)} profiles)")
     except FileNotFoundError:
@@ -1077,7 +1086,7 @@ def load_dm_data():
     
     # Load history
     try:
-        with open(DM_REPORT_FILE, 'r') as f:
+        with open(DM_REPORT_FILE, 'r', encoding='utf-8') as f:
             data = json.load(f)
             dm_status["report"] = data.get("report", [])
             dm_status["sent_to"] = set(data.get("sent_to", []))
@@ -1094,7 +1103,7 @@ def load_dm_data():
 def save_dm_data():
     """Save DM targets, tracker and history"""
     try:
-        with open(DM_TARGETS_FILE, 'w') as f:
+        with open(DM_TARGETS_FILE, 'w', encoding='utf-8') as f:
             # Convert set to list for JSON serialization
             targets_to_save = dm_targets.copy()
             if 'scraped_brands' in targets_to_save and isinstance(targets_to_save['scraped_brands'], set):
@@ -1104,13 +1113,13 @@ def save_dm_data():
         print(f"Error saving DM targets: {e}")
     
     try:
-        with open(DM_TRACKER_FILE, 'w') as f:
+        with open(DM_TRACKER_FILE, 'w', encoding='utf-8') as f:
             json.dump(dm_tracker, f, indent=2)
     except Exception as e:
         print(f"Error saving DM tracker: {e}")
     
     try:
-        with open(DM_REPORT_FILE, 'w') as f:
+        with open(DM_REPORT_FILE, 'w', encoding='utf-8') as f:
             json.dump({
                 "report": dm_status["report"],
                 "sent_to": list(dm_status["sent_to"]),
@@ -1811,8 +1820,8 @@ def process_dm_profile(profile_id, profile_name):
         return 0
 
     browser_data = open_browser(profile_id)
-    if not browser_data:
-        dm_log(f"  ✗ Failed to open browser")
+    if not browser_data or browser_data == "SKIP":
+        dm_log(f"  ✗ Failed to open browser - skipping")
         return 0
 
     try:
@@ -2015,7 +2024,7 @@ def load_post_data():
     """Load repost tracker and history"""
     global repost_tracker
     try:
-        with open(REPOST_TRACKER_FILE, 'r') as f:
+        with open(REPOST_TRACKER_FILE, 'r', encoding='utf-8') as f:
             repost_tracker = json.load(f)
             print(f"  Loaded repost tracker ({len(repost_tracker)} profiles)")
     except FileNotFoundError:
@@ -2023,7 +2032,7 @@ def load_post_data():
     except:
         pass
     try:
-        with open(POST_HISTORY_FILE, 'r') as f:
+        with open(POST_HISTORY_FILE, 'r', encoding='utf-8') as f:
             data = json.load(f)
             post_status["history"] = data.get("history", [])
             post_status["posts_made"] = len(post_status["history"])
@@ -2035,12 +2044,12 @@ def load_post_data():
 def save_post_data():
     """Save repost tracker and history"""
     try:
-        with open(REPOST_TRACKER_FILE, 'w') as f:
+        with open(REPOST_TRACKER_FILE, 'w', encoding='utf-8') as f:
             json.dump(repost_tracker, f, indent=2)
     except:
         pass
     try:
-        with open(POST_HISTORY_FILE, 'w') as f:
+        with open(POST_HISTORY_FILE, 'w', encoding='utf-8') as f:
             json.dump({"history": post_status["history"], "last_updated": datetime.now().strftime("%Y-%m-%d %H:%M:%S")}, f, indent=2)
     except:
         pass
@@ -2594,8 +2603,8 @@ def run_repost_for_profile(profile_id, profile_name, use_source_accounts=False):
         return 0
 
     browser_data = open_browser(profile_id)
-    if not browser_data:
-        post_log(f"  Failed to open browser")
+    if not browser_data or browser_data == "SKIP":
+        post_log(f"  Failed to open browser - skipping")
         return 0
 
     try:
@@ -2736,11 +2745,19 @@ def fetch_google_sheet_comments(sheet_name):
 
 def open_browser(profile_id):
     try:
-        response = requests.get(f"{ADSPOWER_API}/api/v1/browser/start?user_id={profile_id}", timeout=60)
+        response = requests.get(f"{ADSPOWER_API}/api/v1/browser/start?user_id={profile_id}", timeout=120)
         data = response.json()
         if data.get("code") == 0:
             return data.get("data", {})
-        log(f"  ✗ Error: {data.get('msg')}")
+        msg = data.get('msg', '')
+        # Skip profiles where browser is not ready/installing
+        if any(x in msg for x in ['being installed', 'not ready', 'installing', 'Too many request']):
+            log(f"  ⚠ Skipping {profile_id}: {msg}")
+            return "SKIP"
+        log(f"  ✗ Error: {msg}")
+    except requests.exceptions.Timeout:
+        log(f"  ✗ Timeout opening browser {profile_id} - skipping")
+        return "SKIP"
     except Exception as e:
         log(f"  ✗ Error opening browser: {e}")
     return None
@@ -3702,6 +3719,9 @@ def run_single_profile(profile_id, sheet_name):
     if not browser_data:
         log(f"  [{profile_name}] ✗ Failed to open browser")
         return False
+    if browser_data == "SKIP":
+        log(f"  [{profile_name}] ⚠ Browser not ready, skipping")
+        return False
 
     try:
         ws_endpoint = browser_data.get("ws", {}).get("puppeteer")
@@ -4238,8 +4258,9 @@ DASHBOARD_HTML = """
         let currentFilter='all';
         const SHEETS=['Bump Connect','Kollabsy','Bump Syndicate'];
         setInterval(upd,1000);
+        window.addEventListener('load', function(){ sync(); upd(); });
         function showTab(t){document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));event.target.classList.add('active');document.getElementById('tab-main').style.display=t=='main'?'block':'none';document.getElementById('tab-dm').style.display=t=='dm'?'block':'none';document.getElementById('tab-replies').style.display=t=='replies'?'block':'none';document.getElementById('tab-post').style.display=t=='post'?'block':'none';document.getElementById('tab-profiles').style.display=t=='profiles'?'block':'none';document.getElementById('tab-report').style.display=t=='report'?'block':'none';if(t=='dm')updDm();if(t=='replies')refreshReplies();if(t=='post')updPost();if(t=='profiles')refreshProfileMapping();if(t=='report')fetchCloudStats();}
-        async function sync(){const r=await fetch('/api/sync-profiles',{method:'POST'});profiles=(await r.json()).profiles||[];render();}
+        async function sync(){const r=await fetch('/api/sync-profiles',{method:'POST'});profiles=(await r.json()).profiles||[];render();updateProfileCounts();}
         async function loadC(){const r=await fetch('/api/load-comments',{method:'POST'});const d=await r.json();alert('Loaded:\\n'+Object.entries(d.counts).map(([k,v])=>k+': '+v).join('\\n'));}
         function render(){const e=document.getElementById('pl');if(!profiles.length){e.innerHTML='<div style="text-align:center;color:#71717a;padding:40px">Click Sync to load 25 profiles</div>';return;}e.innerHTML=profiles.map(p=>'<div class="profile '+(selected.has(p.user_id)?'selected':'')+'" onclick="tog(\\''+p.user_id+'\\')"><input type="checkbox" '+(selected.has(p.user_id)?'checked':'')+' onclick="event.stopPropagation();tog(\\''+p.user_id+'\\')"><div style="flex:1"><div style="font-weight:500">'+(p.name||p.user_id)+'</div><div style="font-size:11px;color:#71717a">'+p.user_id+'</div></div></div>').join('');document.getElementById('pc').textContent=selected.size+'/'+profiles.length+' selected';}
         function tog(id){selected.has(id)?selected.delete(id):selected.add(id);render();}
@@ -4767,28 +4788,18 @@ DASHBOARD_HTML = """
             alert('Username detection runs automatically when you start any automation (DM, Repost, Comments). The usernames will be saved and appear here.');
         }
 
-        // Load profile mapping on startup and update profile count
-        async function updateProfileCounts() {
-            try {
-                const r = await fetch('/api/profile-mapping');
-                const mapping = await r.json();
-                const numProfiles = Object.keys(mapping).length;
-                const videosPerProfile = 10;
-                const dailyTarget = numProfiles * videosPerProfile;
-
-                document.getElementById('profileCount').textContent = numProfiles.toLocaleString();
-                document.getElementById('numProfiles').textContent = numProfiles;
-                document.getElementById('numVideos').textContent = videosPerProfile;
-                document.getElementById('videosPerProfile').textContent = videosPerProfile;
-                document.getElementById('totalTarget').textContent = dailyTarget.toLocaleString();
-                document.getElementById('dailyTarget').textContent = dailyTarget.toLocaleString();
-            } catch(e) {
-                console.error('Error updating profile counts:', e);
-            }
+        // Update daily target counts using loaded profiles
+        function updateProfileCounts() {
+            const numProfiles = profiles.length;
+            const videosPerProfile = parseInt(document.getElementById('vpp')?.value) || 10;
+            const dailyTarget = numProfiles * videosPerProfile;
+            document.getElementById('profileCount').textContent = numProfiles.toLocaleString();
+            document.getElementById('numProfiles').textContent = numProfiles;
+            document.getElementById('numVideos').textContent = videosPerProfile;
+            document.getElementById('videosPerProfile').textContent = videosPerProfile;
+            document.getElementById('totalTarget').textContent = dailyTarget.toLocaleString();
+            document.getElementById('dailyTarget').textContent = dailyTarget.toLocaleString();
         }
-
-        // Update counts on page load
-        updateProfileCounts();
     </script>
 </body>
 </html>
@@ -5336,17 +5347,23 @@ def api_delete_profile_mapping(profile):
     return jsonify({"ok": False, "message": f"No mapping found for {profile}"})
 
 if __name__ == "__main__":
+    import argparse
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--port', type=int, default=9000, help='Port to run on (default: 9000)')
+    args = parser.parse_args()
+    PORT = args.port
     print("=" * 50)
-    print("  TikTok Commenter - http://localhost:9000")
+    print(f"  TikTok Commenter - http://localhost:{PORT}")
     print("=" * 50)
     load_report_history()  # Load past runs
     load_dm_data()  # Load DM data
     load_post_data()  # Load post queue and history
     load_replies_data()  # Load reply tracking data
+    fetch_adspower_profiles()  # Auto-load AdsPower profiles on startup
     # Start background scheduler thread
     sched_thread = threading.Thread(target=scheduler_loop, daemon=True)
     sched_thread.start()
     print("  Scheduler running (checks scheduled posts every 30s)")
     # Auto-open browser after short delay
-    threading.Timer(1.5, lambda: webbrowser.open("http://localhost:9000")).start()
-    app.run(host="0.0.0.0", port=9000, debug=False)
+    threading.Timer(1.5, lambda: webbrowser.open(f"http://localhost:{PORT}")).start()
+    app.run(host="0.0.0.0", port=PORT, debug=False)
