@@ -4395,9 +4395,9 @@ DASHBOARD_HTML = """
                 const logs=await logsR.json();
                 targetStatus={running:logs.running||false,logs:logs.logs||[],stats:stats};
                 const accounts=stats.accounts||[];
-                const totalViews=accounts.reduce((s,a)=>s+(a.total_views||0),0);
-                const totalComments=accounts.reduce((s,a)=>s+(a.total_comments||0),0);
-                const browsersUsed=new Set(accounts.flatMap(a=>a.browsers_engaged||[])).size;
+                const totalViews=accounts.reduce((s,a)=>s+(a.views||0),0);
+                const totalComments=accounts.reduce((s,a)=>s+(a.comments||0),0);
+                const browsersUsed=accounts.reduce((s,a)=>Math.max(s,a.browsers||0),0);
                 document.getElementById('target-views').textContent=totalViews;
                 document.getElementById('target-comments').textContent=totalComments;
                 document.getElementById('target-browsers').textContent=browsersUsed;
@@ -4406,7 +4406,7 @@ DASHBOARD_HTML = """
                 document.getElementById('target-startb').style.display=logs.running?'none':'inline';
                 document.getElementById('target-stopb').style.display=logs.running?'inline':'none';
                 if(accounts.length){
-                    document.getElementById('target-accounts-list').innerHTML=accounts.map(a=>'<span style="background:#4c1d95;padding:4px 10px;border-radius:4px;font-size:12px;">@'+a.account+' ('+a.total_comments+' comments)</span>').join('');
+                    document.getElementById('target-accounts-list').innerHTML=accounts.map(a=>'<span style="background:#4c1d95;padding:4px 10px;border-radius:4px;font-size:12px;">@'+a.username+' ('+a.comments+' comments)</span>').join('');
                 }
                 if(logs.logs.length){
                     document.getElementById('target-logs').innerHTML=logs.logs.map(l=>'<div style="color:#a1a1aa">'+l+'</div>').join('');
