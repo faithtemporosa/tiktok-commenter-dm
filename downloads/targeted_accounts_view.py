@@ -256,8 +256,8 @@ def auto_signup(page, browser_name):
         print(f'    [{browser_name}] Email: {email}', flush=True)
         print(f'    [{browser_name}] Password: {password}', flush=True)
 
-        # Go to TikTok login page
-        page.goto('https://www.tiktok.com/login/phone-or-email/email', timeout=30000)
+        # Go to TikTok SIGNUP page (not login)
+        page.goto('https://www.tiktok.com/signup/phone-or-email/email', timeout=30000)
         time.sleep(3)
 
         # Fill email and password
@@ -547,9 +547,10 @@ def process_browser(browser, browser_idx, total_browsers):
                 signup_success, username = auto_signup(page, browser_name)
 
                 if not signup_success:
-                    print(f'  ✗ Auto-signup failed for {browser_name}', flush=True)
+                    print(f'  ✗ Auto-signup failed for {browser_name} - leaving browser open for manual signup', flush=True)
                     browser_conn.close()
-                    close_browser(user_id)
+                    # DON'T close the browser - leave it open for manual signup
+                    # close_browser(user_id)
                     return {'success': False, 'videos': 0}
 
                 print(f'  ✓ Auto-signup successful! @{username}', flush=True)

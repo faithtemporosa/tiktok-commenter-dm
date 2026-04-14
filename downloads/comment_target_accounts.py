@@ -860,9 +860,10 @@ def process_browser(browser, browser_idx, total_browsers):
                 signup_success, new_username = auto_signup(page, browser_name)
 
                 if not signup_success:
-                    print(f'  ✗ Signup failed for {browser_name}, skipping...', flush=True)
+                    print(f'  ✗ Signup failed for {browser_name} - leaving browser open for manual signup', flush=True)
                     browser_conn.close()
-                    close_browser(user_id)
+                    # DON'T close the browser - leave it open for manual signup
+                    # close_browser(user_id)
                     return {'success': False, 'videos': 0, 'comments': 0}
 
                 username = new_username
