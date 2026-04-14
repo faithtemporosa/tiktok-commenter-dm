@@ -3888,6 +3888,7 @@ DASHBOARD_HTML = """
         
         <div class="tabs">
             <div class="tab active" onclick="showTab('main')">🎮 Control</div>
+            <div class="tab" onclick="showTab('targets')">🎯 Targets</div>
             <div class="tab" onclick="showTab('dm')">💬 DM</div>
             <div class="tab" onclick="showTab('replies')">📨 Replies</div>
             <div class="tab" onclick="showTab('post')">📤 Post</div>
@@ -3934,7 +3935,40 @@ DASHBOARD_HTML = """
                 <div class="logs" id="logs">Ready - Select all 25 profiles and click Start...</div>
             </div>
         </div>
-        
+
+        <!-- TARGETS TAB - Target Account Commenter -->
+        <div id="tab-targets" style="display:none">
+            <div class="card" style="margin-bottom:20px;">
+                <div class="card-title">
+                    <span>🎯 Target Account Commenter</span>
+                    <span id="target-status" style="color:#71717a;font-size:12px;padding:4px 8px;background:#27272a;border-radius:4px;">⏸ Stopped</span>
+                </div>
+                <div style="display:flex;gap:12px;margin-bottom:16px;">
+                    <button class="btn btn-success" id="target-startb" onclick="startTargets()">▶ Start</button>
+                    <button class="btn btn-danger" id="target-stopb" onclick="stopTargets()" style="display:none">⏹ Stop</button>
+                </div>
+                <div style="font-size:12px;color:#a1a1aa;margin-bottom:12px;">
+                    Comments on specific target accounts with all browsers. Each browser views all videos and comments on 2.
+                </div>
+                <div class="stats">
+                    <div class="stat"><div class="stat-value" id="target-views">0</div><div class="stat-label">Videos Viewed</div></div>
+                    <div class="stat"><div class="stat-value" id="target-comments">0</div><div class="stat-label">Comments Made</div></div>
+                    <div class="stat"><div class="stat-value" id="target-browsers">0</div><div class="stat-label">Browsers Used</div></div>
+                    <div class="stat"><div class="stat-value" id="target-accounts">0</div><div class="stat-label">Target Accounts</div></div>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-title"><span>Target Accounts</span></div>
+                <div id="target-accounts-list" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px;">
+                    <span style="background:#4c1d95;padding:4px 10px;border-radius:4px;font-size:12px;">Loading...</span>
+                </div>
+            </div>
+            <div class="card" style="margin-top:20px;">
+                <div class="card-title"><span>Live Log</span><button class="btn btn-secondary" style="padding:4px 8px" onclick="clrTargetLog()">Clear</button></div>
+                <div class="logs" id="target-logs">Ready - Click Start to begin target commenting...</div>
+            </div>
+        </div>
+
         <!-- DM TAB - Brand Outreach -->
         <div id="tab-dm" style="display:none">
             <div class="grid">
@@ -4259,7 +4293,7 @@ DASHBOARD_HTML = """
         const SHEETS=['Bump Connect','Kollabsy','Bump Syndicate'];
         setInterval(upd,1000);
         window.addEventListener('load', function(){ sync(); upd(); });
-        function showTab(t){document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));event.target.classList.add('active');document.getElementById('tab-main').style.display=t=='main'?'block':'none';document.getElementById('tab-dm').style.display=t=='dm'?'block':'none';document.getElementById('tab-replies').style.display=t=='replies'?'block':'none';document.getElementById('tab-post').style.display=t=='post'?'block':'none';document.getElementById('tab-profiles').style.display=t=='profiles'?'block':'none';document.getElementById('tab-report').style.display=t=='report'?'block':'none';if(t=='dm')updDm();if(t=='replies')refreshReplies();if(t=='post')updPost();if(t=='profiles')refreshProfileMapping();if(t=='report')fetchCloudStats();}
+        function showTab(t){document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));event.target.classList.add('active');document.getElementById('tab-main').style.display=t=='main'?'block':'none';document.getElementById('tab-targets').style.display=t=='targets'?'block':'none';document.getElementById('tab-dm').style.display=t=='dm'?'block':'none';document.getElementById('tab-replies').style.display=t=='replies'?'block':'none';document.getElementById('tab-post').style.display=t=='post'?'block':'none';document.getElementById('tab-profiles').style.display=t=='profiles'?'block':'none';document.getElementById('tab-report').style.display=t=='report'?'block':'none';if(t=='targets')updTargets();if(t=='dm')updDm();if(t=='replies')refreshReplies();if(t=='post')updPost();if(t=='profiles')refreshProfileMapping();if(t=='report')fetchCloudStats();}
         async function sync(){const r=await fetch('/api/sync-profiles',{method:'POST'});profiles=(await r.json()).profiles||[];render();updateProfileCounts();}
         async function loadC(){const r=await fetch('/api/load-comments',{method:'POST'});const d=await r.json();alert('Loaded:\\n'+Object.entries(d.counts).map(([k,v])=>k+': '+v).join('\\n'));}
         function render(){const e=document.getElementById('pl');if(!profiles.length){e.innerHTML='<div style="text-align:center;color:#71717a;padding:40px">Click Sync to load 25 profiles</div>';return;}e.innerHTML=profiles.map(p=>'<div class="profile '+(selected.has(p.user_id)?'selected':'')+'" onclick="tog(\\''+p.user_id+'\\')"><input type="checkbox" '+(selected.has(p.user_id)?'checked':'')+' onclick="event.stopPropagation();tog(\\''+p.user_id+'\\')"><div style="flex:1"><div style="font-weight:500">'+(p.name||p.user_id)+'</div><div style="font-size:11px;color:#71717a">'+p.user_id+'</div></div></div>').join('');document.getElementById('pc').textContent=selected.size+'/'+profiles.length+' selected';}
@@ -4351,6 +4385,50 @@ DASHBOARD_HTML = """
         
         async function upd(){try{const r=await fetch('/api/status');const d=await r.json();document.getElementById('prog').style.width=(d.total?(d.progress/d.total*100):0)+'%';document.getElementById('sp').textContent=d.completed.length;document.getElementById('sc-today').textContent=d.comments_today||0;document.getElementById('sc').textContent=d.comments_posted||0;document.getElementById('st').textContent=d.running?'Running: '+d.current_profile+' ('+d.progress+'/'+d.total+')':'Ready';if(!d.running){document.getElementById('startb').style.display='inline';document.getElementById('stopb').style.display='none';}if(d.logs.length)document.getElementById('logs').innerHTML=d.logs.map(l=>'<div style="color:'+(l.includes('✗')?'#f87171':l.includes('✓')?'#4ade80':'#a1a1aa')+'">'+l+'</div>').join('');if(d.report&&d.report.length!==report.length){report=d.report;applyFilter();}}catch(e){}}
         function clrLog(){fetch('/api/clear-logs',{method:'POST'});document.getElementById('logs').innerHTML='Cleared';}
+
+        // Target Account Functions
+        let targetStatus={running:false,logs:[],stats:{}};
+        async function updTargets(){
+            try{
+                const [statsR,logsR]=await Promise.all([fetch('/api/target-accounts/summary'),fetch('/api/target-accounts/logs')]);
+                const stats=await statsR.json();
+                const logs=await logsR.json();
+                targetStatus={running:logs.running||false,logs:logs.logs||[],stats:stats};
+                const accounts=stats.accounts||[];
+                const totalViews=accounts.reduce((s,a)=>s+(a.total_views||0),0);
+                const totalComments=accounts.reduce((s,a)=>s+(a.total_comments||0),0);
+                const browsersUsed=new Set(accounts.flatMap(a=>a.browsers_engaged||[])).size;
+                document.getElementById('target-views').textContent=totalViews;
+                document.getElementById('target-comments').textContent=totalComments;
+                document.getElementById('target-browsers').textContent=browsersUsed;
+                document.getElementById('target-accounts').textContent=accounts.length;
+                document.getElementById('target-status').innerHTML=logs.running?'<span style="color:#4ade80">▶ Running</span>':'<span style="color:#71717a">⏸ Stopped</span>';
+                document.getElementById('target-startb').style.display=logs.running?'none':'inline';
+                document.getElementById('target-stopb').style.display=logs.running?'inline':'none';
+                if(accounts.length){
+                    document.getElementById('target-accounts-list').innerHTML=accounts.map(a=>'<span style="background:#4c1d95;padding:4px 10px;border-radius:4px;font-size:12px;">@'+a.account+' ('+a.total_comments+' comments)</span>').join('');
+                }
+                if(logs.logs.length){
+                    document.getElementById('target-logs').innerHTML=logs.logs.map(l=>'<div style="color:#a1a1aa">'+l+'</div>').join('');
+                }
+            }catch(e){console.error('Target update error:',e);}
+        }
+        async function startTargets(){
+            try{
+                const r=await fetch('/api/target-accounts/start',{method:'POST'});
+                const d=await r.json();
+                if(d.ok){updTargets();setTimeout(updTargets,2000);}else{alert('Failed to start: '+d.message);}
+            }catch(e){alert('Error: '+e.message);}
+        }
+        async function stopTargets(){
+            try{
+                await fetch('/api/target-accounts/stop',{method:'POST'});
+                setTimeout(updTargets,1000);
+            }catch(e){alert('Error: '+e.message);}
+        }
+        function clrTargetLog(){document.getElementById('target-logs').innerHTML='Cleared';}
+        setInterval(()=>{if(document.getElementById('tab-targets').style.display!='none')updTargets();},3000);
+
         async function clrReport(){if(!confirm('⚠️ Delete ALL comment history forever?\\n\\nThis will remove '+report.length+' comments and cannot be undone.'))return;await fetch('/api/clear-report',{method:'POST'});report=[];filteredReport=[];renderReport();}
         function expCSV(){if(!report.length)return alert('No data');const csv='Date,Time,Profile,Comment,Video URL,Sheet\\n'+report.map(r=>{const[d,t]=r.timestamp.split(' ');return d+','+t+','+r.profile+',"'+r.comment.replace(/"/g,'""')+'",'+r.video_url+','+r.sheet;}).join('\\n');const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv]));a.download='tiktok_comments_history_'+new Date().toISOString().split('T')[0]+'.csv';a.click();}
         async function syncCloud(){if(!report.length)return alert('No reports to sync');try{const r=await fetch('/api/sync-to-cloud',{method:'POST'});const d=await r.json();alert('☁️ Synced '+d.synced+' reports to cloud dashboard!');}catch(e){alert('Sync failed: '+e.message);}}
@@ -5345,6 +5423,136 @@ def api_delete_profile_mapping(profile):
         save_profile_mapping()
         return jsonify({"ok": True, "message": f"Mapping for {profile} deleted"})
     return jsonify({"ok": False, "message": f"No mapping found for {profile}"})
+
+@app.route('/api/target-accounts', methods=['GET'])
+def api_get_target_accounts():
+    """Get target accounts stats from the separate commenter script"""
+    try:
+        with open('target_accounts_stats.json', 'r') as f:
+            stats = json.load(f)
+        return jsonify(stats)
+    except FileNotFoundError:
+        return jsonify({})
+    except Exception as e:
+        return jsonify({"error": str(e)})
+
+@app.route('/api/target-accounts/summary', methods=['GET'])
+def api_get_target_accounts_summary():
+    """Get summary of target accounts stats"""
+    try:
+        with open('target_accounts_stats.json', 'r') as f:
+            stats = json.load(f)
+
+        summary = {
+            'accounts': [],
+            'totals': {
+                'views': 0,
+                'comments': 0,
+                'browsers': 0
+            }
+        }
+
+        all_browsers = set()
+        for account, data in stats.items():
+            summary['accounts'].append({
+                'username': account,
+                'views': data.get('total_views', 0),
+                'comments': data.get('total_comments', 0),
+                'browsers': len(data.get('browsers_engaged', [])),
+                'last_updated': data.get('last_updated')
+            })
+            summary['totals']['views'] += data.get('total_views', 0)
+            summary['totals']['comments'] += data.get('total_comments', 0)
+            all_browsers.update(data.get('browsers_engaged', []))
+
+        summary['totals']['browsers'] = len(all_browsers)
+        summary['accounts'].sort(key=lambda x: x['views'], reverse=True)
+
+        return jsonify(summary)
+    except FileNotFoundError:
+        return jsonify({'accounts': [], 'totals': {'views': 0, 'comments': 0, 'browsers': 0}})
+    except Exception as e:
+        return jsonify({"error": str(e)})
+
+@app.route('/api/target-accounts/logs', methods=['GET'])
+def api_get_target_logs():
+    """Get live logs from the target commenter script"""
+    try:
+        log_file = 'comment_target_run.log'
+        lines = int(request.args.get('lines', 100))
+
+        with open(log_file, 'r') as f:
+            all_lines = f.readlines()
+            recent_lines = all_lines[-lines:] if len(all_lines) > lines else all_lines
+
+        # Parse lines into structured format
+        logs = []
+        for line in recent_lines:
+            line = line.strip()
+            if line:
+                logs.append({
+                    'message': line,
+                    'timestamp': time.strftime('%H:%M:%S')
+                })
+
+        # Check if script is running
+        import subprocess
+        result = subprocess.run(['pgrep', '-f', 'comment_target_accounts.py'], capture_output=True, text=True)
+        is_running = result.returncode == 0
+
+        return jsonify({
+            'logs': logs,
+            'running': is_running,
+            'total_lines': len(all_lines)
+        })
+    except FileNotFoundError:
+        return jsonify({'logs': [], 'running': False, 'total_lines': 0})
+    except Exception as e:
+        return jsonify({'logs': [], 'running': False, 'error': str(e)})
+
+@app.route('/api/target-accounts/start', methods=['POST'])
+def api_start_target_commenter():
+    """Start the target commenter script"""
+    import subprocess
+    try:
+        # Check if already running
+        result = subprocess.run(['pgrep', '-f', 'comment_target_accounts.py'], capture_output=True, text=True)
+        if result.returncode == 0:
+            return jsonify({'ok': False, 'message': 'Target commenter is already running'})
+
+        # Start the script
+        subprocess.Popen(
+            ['python3', '-u', 'comment_target_accounts.py'],
+            stdout=open('comment_target_run.log', 'w'),
+            stderr=subprocess.STDOUT,
+            start_new_session=True
+        )
+        return jsonify({'ok': True, 'message': 'Target commenter started'})
+    except Exception as e:
+        return jsonify({'ok': False, 'message': str(e)})
+
+@app.route('/api/target-accounts/stop', methods=['POST'])
+def api_stop_target_commenter():
+    """Stop the target commenter script"""
+    import subprocess
+    try:
+        result = subprocess.run(['pkill', '-f', 'comment_target_accounts.py'], capture_output=True, text=True)
+        if result.returncode == 0:
+            return jsonify({'ok': True, 'message': 'Target commenter stopped'})
+        else:
+            return jsonify({'ok': False, 'message': 'Target commenter was not running'})
+    except Exception as e:
+        return jsonify({'ok': False, 'message': str(e)})
+
+@app.route('/api/target-accounts/clear-stats', methods=['POST'])
+def api_clear_target_stats():
+    """Clear target accounts stats"""
+    try:
+        with open('target_accounts_stats.json', 'w') as f:
+            json.dump({}, f)
+        return jsonify({'ok': True, 'message': 'Stats cleared'})
+    except Exception as e:
+        return jsonify({'ok': False, 'message': str(e)})
 
 if __name__ == "__main__":
     import argparse
