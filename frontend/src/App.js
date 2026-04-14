@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 
 const REFRESH_INTERVAL = 10000;
+const BOT_API_URL = process.env.REACT_APP_BOT_URL || process.env.REACT_APP_BACKEND_URL || 'http://localhost:9000';
 
 // Helper to format UTC timestamp to local time
 const formatLocalTime = (utcTimestamp) => {
@@ -52,7 +53,7 @@ function Dashboard({ onNavigate }) {
   // Fetch profile mappings from local bot
   const fetchProfileMappings = useCallback(async () => {
     try {
-      const res = await fetch('http://localhost:9000/api/profile-mapping');
+      const res = await fetch(`${BOT_API_URL}/api/profile-mapping`);
       if (res.ok) {
         const data = await res.json();
         setProfileMappings(data);
@@ -65,7 +66,7 @@ function Dashboard({ onNavigate }) {
   // Fetch target accounts stats from local bot
   const fetchTargetStats = useCallback(async () => {
     try {
-      const res = await fetch('http://localhost:9000/api/target-accounts/summary');
+      const res = await fetch(`${BOT_API_URL}/api/target-accounts/summary`);
       if (res.ok) {
         const data = await res.json();
         setTargetStats(data);
@@ -78,7 +79,7 @@ function Dashboard({ onNavigate }) {
   // Fetch target accounts logs from local bot
   const fetchTargetLogs = useCallback(async () => {
     try {
-      const res = await fetch('http://localhost:9000/api/target-accounts/logs?lines=100');
+      const res = await fetch(`${BOT_API_URL}/api/target-accounts/logs?lines=100`);
       if (res.ok) {
         const data = await res.json();
         setTargetLogs(data.logs || []);
@@ -375,7 +376,7 @@ function Dashboard({ onNavigate }) {
                       <td className="px-4 py-3"><span className={`px-2 py-0.5 rounded text-xs ${brandColor(r.sheet)}`}>{r.sheet}</span></td>
                       <td className="px-4 py-3"><span className={`px-2 py-0.5 rounded text-xs ${r.search_query === 'FYP' ? 'text-amber-400 bg-amber-500/20' : 'text-blue-400 bg-blue-500/20'}`}>{r.search_query || 'FYP'}</span></td>
                       <td className="px-4 py-3"><a href={r.video_url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-violet-400 hover:text-violet-300 text-xs"><ExternalLink className="w-3 h-3" />View</a></td>
-                      <td className="px-4 py-3">{r.screenshot ? <a href={r.screenshot.startsWith('http') ? r.screenshot : `http://localhost:9000/screenshots/${r.screenshot}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-emerald-400 hover:text-emerald-300 text-xs">📸 Screenshot</a> : r.video_url ? <a href={r.video_url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-amber-400 hover:text-amber-300 text-xs">🔗 Video</a> : <span className="text-zinc-600 text-xs">-</span>}</td>
+                      <td className="px-4 py-3">{r.screenshot ? <a href={r.screenshot.startsWith('http') ? r.screenshot : `${BOT_API_URL}/screenshots/${r.screenshot}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-emerald-400 hover:text-emerald-300 text-xs">📸 Screenshot</a> : r.video_url ? <a href={r.video_url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-amber-400 hover:text-amber-300 text-xs">🔗 Video</a> : <span className="text-zinc-600 text-xs">-</span>}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -403,7 +404,7 @@ function Dashboard({ onNavigate }) {
                   <button
                     onClick={async () => {
                       try {
-                        const res = await fetch('http://localhost:9000/api/target-accounts/start', { method: 'POST' });
+                        const res = await fetch(`${BOT_API_URL}/api/target-accounts/start`, { method: 'POST' });
                         const data = await res.json();
                         if (data.ok) { fetchTargetLogs(); }
                       } catch (err) { console.error(err); }
@@ -416,7 +417,7 @@ function Dashboard({ onNavigate }) {
                   <button
                     onClick={async () => {
                       try {
-                        await fetch('http://localhost:9000/api/target-accounts/stop', { method: 'POST' });
+                        await fetch(`${BOT_API_URL}/api/target-accounts/stop`, { method: 'POST' });
                         fetchTargetLogs();
                       } catch (err) { console.error(err); }
                     }}
@@ -542,7 +543,7 @@ function Dashboard({ onNavigate }) {
               <table className="w-full text-sm" data-testid="dm-table">
                 <thead className="bg-zinc-800/50"><tr><th className="text-left px-4 py-3 font-medium text-zinc-400">Time</th><th className="text-left px-4 py-3 font-medium text-zinc-400">Profile</th><th className="text-left px-4 py-3 font-medium text-zinc-400">Recipient</th><th className="text-left px-4 py-3 font-medium text-zinc-400">Message</th><th className="text-left px-4 py-3 font-medium text-zinc-400">Status</th><th className="text-left px-4 py-3 font-medium text-zinc-400">Proof</th></tr></thead>
                 <tbody>{dmReports.length===0?<tr><td colSpan="6" className="text-center py-12 text-zinc-500"><Send className="w-6 h-6 mx-auto mb-2 opacity-50" />No DMs sent yet</td></tr>
-                  :dmReports.map((dm,i)=><tr key={dm.id||i} className="border-t border-zinc-800 hover:bg-zinc-800/30" data-testid={`dm-row-${i}`}><td className="px-4 py-3 text-zinc-400 text-xs">{fmt(dm.timestamp)}</td><td className="px-4 py-3"><span className="px-2 py-0.5 rounded bg-zinc-800 text-zinc-300 text-xs">{dm.profile}</span></td><td className="px-4 py-3"><a href={dm.profile_url || `https://www.tiktok.com/@${dm.username}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-cyan-400 hover:text-cyan-300 text-xs"><ExternalLink className="w-3 h-3" />@{dm.username}</a></td><td className="px-4 py-3 text-zinc-300 text-xs max-w-md">{trunc(dm.message,60)}</td><td className="px-4 py-3"><span className={`px-2 py-0.5 rounded text-xs ${dm.status==='sent'?'text-emerald-400 bg-emerald-500/20':'text-red-400 bg-red-500/20'}`}>{dm.status}</span></td><td className="px-4 py-3">{dm.screenshot ? <a href={dm.screenshot.startsWith('http') ? dm.screenshot : `http://localhost:9000/screenshots/${dm.screenshot}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-emerald-400 hover:text-emerald-300 text-xs">📸 Screenshot</a> : <span className="text-zinc-600 text-xs">-</span>}</td></tr>)}</tbody>
+                  :dmReports.map((dm,i)=><tr key={dm.id||i} className="border-t border-zinc-800 hover:bg-zinc-800/30" data-testid={`dm-row-${i}`}><td className="px-4 py-3 text-zinc-400 text-xs">{fmt(dm.timestamp)}</td><td className="px-4 py-3"><span className="px-2 py-0.5 rounded bg-zinc-800 text-zinc-300 text-xs">{dm.profile}</span></td><td className="px-4 py-3"><a href={dm.profile_url || `https://www.tiktok.com/@${dm.username}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-cyan-400 hover:text-cyan-300 text-xs"><ExternalLink className="w-3 h-3" />@{dm.username}</a></td><td className="px-4 py-3 text-zinc-300 text-xs max-w-md">{trunc(dm.message,60)}</td><td className="px-4 py-3"><span className={`px-2 py-0.5 rounded text-xs ${dm.status==='sent'?'text-emerald-400 bg-emerald-500/20':'text-red-400 bg-red-500/20'}`}>{dm.status}</span></td><td className="px-4 py-3">{dm.screenshot ? <a href={dm.screenshot.startsWith('http') ? dm.screenshot : `${BOT_API_URL}/screenshots/${dm.screenshot}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-emerald-400 hover:text-emerald-300 text-xs">📸 Screenshot</a> : <span className="text-zinc-600 text-xs">-</span>}</td></tr>)}</tbody>
               </table>
             </div>
           </div>
@@ -562,7 +563,7 @@ function Dashboard({ onNavigate }) {
               <table className="w-full text-sm" data-testid="post-table">
                 <thead className="bg-zinc-800/50"><tr><th className="text-left px-4 py-3 font-medium text-zinc-400">Time</th><th className="text-left px-4 py-3 font-medium text-zinc-400">Profile</th><th className="text-left px-4 py-3 font-medium text-zinc-400">Repost</th><th className="text-left px-4 py-3 font-medium text-zinc-400">Caption</th><th className="text-left px-4 py-3 font-medium text-zinc-400">Status</th><th className="text-left px-4 py-3 font-medium text-zinc-400">Proof</th></tr></thead>
                 <tbody>{postReports.length===0?<tr><td colSpan="6" className="text-center py-12 text-zinc-500"><Video className="w-6 h-6 mx-auto mb-2 opacity-50" />No posts yet</td></tr>
-                  :postReports.map((p,i)=>{const mappedUsername = p.tiktok_username || profileMappings[p.profile]; const repostLink = p.repost_url || (mappedUsername && `https://www.tiktok.com/@${mappedUsername}?tab=reposts`); return <tr key={p.id||i} className="border-t border-zinc-800 hover:bg-zinc-800/30" data-testid={`post-row-${i}`}><td className="px-4 py-3 text-zinc-400 text-xs">{fmt(p.timestamp)}</td><td className="px-4 py-3"><span className="px-2 py-0.5 rounded bg-zinc-800 text-zinc-300 text-xs">{p.profile}</span></td><td className="px-4 py-3">{repostLink?<a href={repostLink} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-rose-400 hover:text-rose-300 text-xs"><ExternalLink className="w-3 h-3" />@{mappedUsername || 'View'}</a>:<span className="text-zinc-500 text-xs">Set in Settings</span>}</td><td className="px-4 py-3 text-zinc-300 text-xs max-w-md">{trunc(p.caption,60)}</td><td className="px-4 py-3"><span className="px-2 py-0.5 rounded text-xs text-emerald-400 bg-emerald-500/20">{p.status}</span></td><td className="px-4 py-3">{p.screenshot ? <a href={p.screenshot.startsWith('http') ? p.screenshot : `http://localhost:9000/screenshots/${p.screenshot}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-emerald-400 hover:text-emerald-300 text-xs">📸 Screenshot</a> : <span className="text-zinc-600 text-xs">-</span>}</td></tr>})}</tbody>
+                  :postReports.map((p,i)=>{const mappedUsername = p.tiktok_username || profileMappings[p.profile]; const repostLink = p.repost_url || (mappedUsername && `https://www.tiktok.com/@${mappedUsername}?tab=reposts`); return <tr key={p.id||i} className="border-t border-zinc-800 hover:bg-zinc-800/30" data-testid={`post-row-${i}`}><td className="px-4 py-3 text-zinc-400 text-xs">{fmt(p.timestamp)}</td><td className="px-4 py-3"><span className="px-2 py-0.5 rounded bg-zinc-800 text-zinc-300 text-xs">{p.profile}</span></td><td className="px-4 py-3">{repostLink?<a href={repostLink} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-rose-400 hover:text-rose-300 text-xs"><ExternalLink className="w-3 h-3" />@{mappedUsername || 'View'}</a>:<span className="text-zinc-500 text-xs">Set in Settings</span>}</td><td className="px-4 py-3 text-zinc-300 text-xs max-w-md">{trunc(p.caption,60)}</td><td className="px-4 py-3"><span className="px-2 py-0.5 rounded text-xs text-emerald-400 bg-emerald-500/20">{p.status}</span></td><td className="px-4 py-3">{p.screenshot ? <a href={p.screenshot.startsWith('http') ? p.screenshot : `${BOT_API_URL}/screenshots/${p.screenshot}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-emerald-400 hover:text-emerald-300 text-xs">📸 Screenshot</a> : <span className="text-zinc-600 text-xs">-</span>}</td></tr>})}</tbody>
               </table>
             </div>
           </div>
