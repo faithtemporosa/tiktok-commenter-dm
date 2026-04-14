@@ -3786,3 +3786,15 @@ Error fetching from Supabase: [Errno 35] Resource temporarily unavailableError f
 127.0.0.1 - - [15/Apr/2026 06:08:09] "GET /api/target-accounts/logs HTTP/1.1" 200 -
 192.168.1.4 - - [15/Apr/2026 06:08:11] "GET /api/status HTTP/1.1" 200 -
 127.0.0.1 - - [15/Apr/2026 06:08:11] "GET /api/status HTTP/1.1" 200 -
+127.0.0.1 - - [15/Apr/2026 06:09:09] "GET /api/target-accounts/summary HTTP/1.1" 200 -
+127.0.0.1 - - [15/Apr/2026 06:09:09] "GET /api/target-accounts/logs HTTP/1.1" 200 -
+127.0.0.1 - - [15/Apr/2026 06:09:10] "GET /api/status HTTP/1.1" 200 -
+192.168.1.4 - - [15/Apr/2026 06:09:10] "GET /api/status HTTP/1.1" 200 -
+127.0.0.1 - - [15/Apr/2026 06:10:09] "GET /api/target-accounts/summary HTTP/1.1" 200 -
+127.0.0.1 - - [15/Apr/2026 06:10:09] "GET /api/target-accounts/logs HTTP/1.1" 200 -
+192.168.1.4 - - [15/Apr/2026 06:10:10] "GET /api/status HTTP/1.1" 200 -
+127.0.0.1 - - [15/Apr/2026 06:10:11] "GET /api/status HTTP/1.1" 200 -
+127.0.0.1 - - [15/Apr/2026 06:11:10] "GET /api/target-accounts/summary HTTP/1.1" 200 -
+127.0.0.1 - - [15/Apr/2026 06:11:10] "GET /api/target-accounts/logs HTTP/1.1" 200 -
+127.0.0.1 - - [15/Apr/2026 06:11:11] "GET /api/status HTTP/1.1" 200 -
+192.168.1.4 - - [15/Apr/2026 06:11:11] "GET /api/status HTTP/1.1" 200 -
