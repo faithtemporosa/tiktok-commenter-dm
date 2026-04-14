@@ -43,8 +43,11 @@ function Dashboard({ onNavigate }) {
   const [accounts, setAccounts] = useState([]);
   const [accountsTotal, setAccountsTotal] = useState(0);
   const [targetStats, setTargetStats] = useState({ accounts: [], totals: { views: 0, comments: 0, browsers: 0 } });
+  const [targetLogs, setTargetLogs] = useState([]);
+  const [targetRunning, setTargetRunning] = useState(false);
   const fileInputRef = useRef(null);
   const logsContainerRef = useRef(null);
+  const targetLogsRef = useRef(null);
 
   // Fetch profile mappings from local bot
   const fetchProfileMappings = useCallback(async () => {
@@ -66,6 +69,24 @@ function Dashboard({ onNavigate }) {
       if (res.ok) {
         const data = await res.json();
         setTargetStats(data);
+      }
+    } catch (err) {
+      // Bot not running, ignore
+    }
+  }, []);
+
+  // Fetch target accounts logs from local bot
+  const fetchTargetLogs = useCallback(async () => {
+    try {
+      const res = await fetch('http://localhost:9000/api/target-accounts/logs?lines=100');
+      if (res.ok) {
+        const data = await res.json();
+        setTargetLogs(data.logs || []);
+        setTargetRunning(data.running || false);
+        // Auto-scroll to bottom
+        if (targetLogsRef.current) {
+          targetLogsRef.current.scrollTop = targetLogsRef.current.scrollHeight;
+        }
       }
     } catch (err) {
       // Bot not running, ignore
@@ -152,9 +173,9 @@ function Dashboard({ onNavigate }) {
 
   const fetchAll = useCallback(async () => {
     setLoading(true);
-    await Promise.all([fetchStats(), fetchReports(), fetchLogs(), fetchDmReports(), fetchPostReports(), fetchProfileMappings(), fetchAccounts(), fetchTargetStats()]);
+    await Promise.all([fetchStats(), fetchReports(), fetchLogs(), fetchDmReports(), fetchPostReports(), fetchProfileMappings(), fetchAccounts(), fetchTargetStats(), fetchTargetLogs()]);
     setLoading(false);
-  }, [fetchStats, fetchReports, fetchLogs, fetchDmReports, fetchPostReports, fetchProfileMappings, fetchAccounts, fetchTargetStats]);
+  }, [fetchStats, fetchReports, fetchLogs, fetchDmReports, fetchPostReports, fetchProfileMappings, fetchAccounts, fetchTargetStats, fetchTargetLogs]);
 
   const handleFileImport = async (event) => {
     const file = event.target.files[0]; if (!file) return;
@@ -431,6 +452,37 @@ function Dashboard({ onNavigate }) {
                   ))}
                 </tbody>
               </table>
+            </div>
+
+            {/* Live Logs Section */}
+            <div className="bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden mt-6">
+              <div className="bg-zinc-800/50 px-4 py-3 flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <Terminal className="w-4 h-4 text-amber-400" />
+                  <h3 className="text-sm font-semibold">Target Commenter Logs</h3>
+                  {targetRunning ? (
+                    <span className="flex items-center gap-1 px-2 py-1 rounded bg-emerald-500/20 text-emerald-400 text-xs"><Play className="w-3 h-3" />Running</span>
+                  ) : (
+                    <span className="flex items-center gap-1 px-2 py-1 rounded bg-zinc-700 text-zinc-400 text-xs"><Pause className="w-3 h-3" />Idle</span>
+                  )}
+                </div>
+              </div>
+              <div ref={targetLogsRef} className="h-64 overflow-y-auto p-4 font-mono text-xs" data-testid="target-logs-container">
+                {targetLogs.length === 0 ? (
+                  <div className="text-center text-zinc-500 py-8">
+                    <Terminal className="w-6 h-6 mx-auto mb-2 opacity-50" />
+                    No logs yet. Start the target commenter script.
+                  </div>
+                ) : targetLogs.map((log, i) => (
+                  <div key={i} className={`py-0.5 ${
+                    log.message.includes('✗') || log.message.includes('Error') || log.message.includes('Failed') ? 'text-red-400' :
+                    log.message.includes('✓') || log.message.includes('Commented') ? 'text-emerald-400' :
+                    log.message.includes('⚠') ? 'text-amber-400' :
+                    log.message.includes('Processing') || log.message.includes('Visiting') ? 'text-blue-400' :
+                    'text-zinc-400'
+                  }`}>{log.message}</div>
+                ))}
+              </div>
             </div>
           </div>
         )}
