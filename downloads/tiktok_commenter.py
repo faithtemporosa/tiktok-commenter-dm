@@ -57,6 +57,8 @@ except ImportError:
 try:
     from playwright.sync_api import sync_playwright
     HAS_PLAYWRIGHT = True
+    # STEALTH MODE - Hide automation detection
+    from stealth_browsing import inject_stealth, natural_pause, watch_video_naturally
 except ImportError:
     HAS_PLAYWRIGHT = False
     print("ERROR: Install playwright: pip install playwright && playwright install chromium")
@@ -529,7 +531,8 @@ def run_check_replies(ws_endpoint, profile_name):
             browser = p.chromium.connect_over_cdp(ws_endpoint)
             context = browser.contexts[0] if browser.contexts else browser.new_context()
             page = context.pages[0] if context.pages else context.new_page()
-            
+            inject_stealth(page)  # Hide CDP detection
+
             new_replies = check_dm_replies_for_profile(page, profile_name)
             
             browser.close()
@@ -550,7 +553,8 @@ def run_send_approved_replies(ws_endpoint, profile_name):
             browser = p.chromium.connect_over_cdp(ws_endpoint)
             context = browser.contexts[0] if browser.contexts else browser.new_context()
             page = context.pages[0] if context.pages else context.new_page()
-            
+            inject_stealth(page)  # Hide CDP detection
+
             # Filter approved replies for this profile
             profile_replies = [r for r in reply_status["approved_replies"] if r.get("profile") == profile_name]
             
@@ -1641,7 +1645,8 @@ def run_dm_automation_for_profile(ws_endpoint, profile_name):
             browser = p.chromium.connect_over_cdp(ws_endpoint)
             context = browser.contexts[0] if browser.contexts else browser.new_context()
             page = context.pages[0] if context.pages else context.new_page()
-            
+            inject_stealth(page)  # Hide CDP detection
+
             # === GUARDRAIL: Check if logged into TikTok ===
             dm_log(f"  → Checking TikTok login...")
             try:
@@ -2621,6 +2626,8 @@ def run_repost_for_profile(profile_id, profile_name, use_source_accounts=False):
                     browser = p.chromium.connect_over_cdp(ws_endpoint)
                     context = browser.contexts[0] if browser.contexts else browser.new_context()
                     page = context.pages[0] if context.pages else context.new_page()
+                    inject_stealth(page)  # Hide CDP detection
+
                     if use_source_accounts:
                         reposts = repost_from_source_accounts(page, profile_name)
                     else:
@@ -3463,7 +3470,8 @@ def run_tiktok_commenter(ws_endpoint, profile_name, sheet_name):
             browser = p.chromium.connect_over_cdp(ws_endpoint)
             context = browser.contexts[0]
             page = context.pages[0] if context.pages else context.new_page()
-            
+            inject_stealth(page)  # Hide CDP detection
+
             log(f"  ✓ Connected")
 
             # Auto-detect TikTok username and check login status

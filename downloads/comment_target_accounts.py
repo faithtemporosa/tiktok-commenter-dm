@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """
 Comment on specific target accounts - Separate from main commenter
-Comment on latest 2 videos per account, like latest 2 videos per account
-Skip viewing to save time - only interact with latest 2 videos
+Comment on latest 1 video per account (likes disabled - TikTok blocks them)
+Each browser can only comment on each target account ONCE per day
 Auto-signup for logged out browsers
 
 Usage: python3 comment_target_accounts.py
@@ -19,6 +19,17 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from playwright.sync_api import sync_playwright
 from googleapiclient.discovery import build
 
+# STEALTH MODE - Hide automation detection
+from stealth_browsing import (
+    inject_stealth,
+    natural_scroll,
+    natural_mouse_movement,
+    watch_video_naturally,
+    natural_pause,
+    click_naturally,
+    type_naturally
+)
+
 # Comment functions are now inline - no need to import from main commenter
 
 ADSPOWER_API = 'http://local.adspower.net:50325'
@@ -28,6 +39,7 @@ TARGET_STATS_PATH = 'target_accounts_stats.json'
 COMMENTED_VIDEOS_PATH = 'target_commented_videos.json'
 ACCOUNT_CREATION_DATES_PATH = 'account_creation_dates.json'
 DAILY_ACTIVITY_PATH = 'daily_activity_tracker.json'
+DAILY_TARGET_COMMENTS_PATH = 'daily_target_comments.json'  # Track comments per target per day
 
 # New account limits
 NEW_ACCOUNT_DAYS = 30  # Consider account "new" for first 30 days
@@ -183,6 +195,55 @@ def can_comment_today(browser_name):
     today_activity = get_today_activity(browser_name)
     return today_activity['comments'] < NEW_ACCOUNT_DAILY_COMMENTS
 
+def load_daily_target_comments():
+    """Load daily per-target-account comment tracking"""
+    try:
+        with open(DAILY_TARGET_COMMENTS_PATH, 'r') as f:
+            return json.load(f)
+    except:
+        return {}
+
+def has_commented_on_target_today(browser_name, target_account):
+    """Check if browser has already commented on this target account today"""
+    from datetime import datetime
+    today = datetime.now().strftime('%Y-%m-%d')
+    data = load_daily_target_comments()
+
+    # Structure: {browser_name: {date: [target_accounts_commented]}}
+    if browser_name not in data:
+        return False
+    if today not in data[browser_name]:
+        return False
+
+    return target_account in data[browser_name][today]
+
+def record_target_comment(browser_name, target_account):
+    """Record that browser commented on target account today"""
+    from datetime import datetime
+    today = datetime.now().strftime('%Y-%m-%d')
+    data = load_daily_target_comments()
+
+    if browser_name not in data:
+        data[browser_name] = {}
+    if today not in data[browser_name]:
+        data[browser_name][today] = []
+
+    if target_account not in data[browser_name][today]:
+        data[browser_name][today].append(target_account)
+
+    # Clean up old dates (keep only last 7 days)
+    from datetime import datetime, timedelta
+    cutoff = (datetime.now() - timedelta(days=7)).strftime('%Y-%m-%d')
+    for browser in list(data.keys()):
+        for date in list(data[browser].keys()):
+            if date < cutoff:
+                del data[browser][date]
+        if not data[browser]:
+            del data[browser]
+
+    with open(DAILY_TARGET_COMMENTS_PATH, 'w') as f:
+        json.dump(data, f, indent=2)
+
 def load_target_stats():
     """Load existing target account stats from JSON"""
     try:
@@ -238,9 +299,9 @@ TARGET_ACCOUNTS = [
 ]
 
 # Settings
-COMMENTS_PER_ACCOUNT = 2  # Comment on 2 videos per account
-LIKES_PER_ACCOUNT = 2      # Like 2 videos per account
-VIEW_ALL_VIDEOS = False    # Skip viewing - just comment and like
+COMMENTS_PER_ACCOUNT = 1  # Comment on 1 video per account (latest only)
+LIKES_PER_ACCOUNT = 0      # Disabled - TikTok blocks automated likes
+VIEW_ALL_VIDEOS = False    # Skip viewing - just comment
 PARALLEL_BROWSERS = 3      # Number of browsers to run in parallel
 
 # Comments by niche - customize as needed
@@ -309,8 +370,18 @@ def open_browser(user_id):
     return None
 
 def close_browser(user_id):
-    """Close AdsPower browser"""
-    requests.get(f'{ADSPOWER_API}/api/v1/browser/stop?user_id={user_id}')
+    """Close AdsPower browser with retries"""
+    for attempt in range(3):
+        try:
+            resp = requests.get(f'{ADSPOWER_API}/api/v1/browser/stop?user_id={user_id}', timeout=10)
+            data = resp.json()
+            if data.get('code') == 0:
+                time.sleep(1)  # Wait for browser to fully close
+                return True
+        except:
+            pass
+        time.sleep(1)
+    return False
 
 # ============ AUTO-SIGNUP FUNCTIONS ============
 
@@ -323,10 +394,21 @@ NOUNS = ['phoenix', 'dragon', 'falcon', 'eagle', 'wolf', 'tiger', 'star', 'moon'
          'stream', 'verse', 'core', 'field', 'track', 'scope', 'grid', 'focus']
 
 def generate_email():
+    """Generate email with rotating domains"""
+    # Add your email domains here (all should forward to your Gmail)
+    DOMAINS = [
+        'automateyourbizz.xyz',  # Original domain
+        # Add more domains below:
+        # 'yourdomain1.com',
+        # 'yourdomain2.com',
+        # 'yourdomain3.com',
+    ]
+
     adj = random.choice(ADJECTIVES)
     noun = random.choice(NOUNS)
     num = random.randint(100, 999)
-    return f"{adj}{noun}{num}@automateyourbizz.xyz"
+    domain = random.choice(DOMAINS)  # Randomly select a domain
+    return f"{adj}{noun}{num}@{domain}"
 
 def generate_password():
     # Always use the same password for all signups
@@ -522,86 +604,77 @@ def auto_signup(page, browser_name):
         print(f'    [{browser_name}] Verification code submitted, waiting for username page...', flush=True)
 
         # Wait longer for page to navigate after code submission
-        time.sleep(8)
-
-        # Take screenshot after code submission to see current state
-        page.screenshot(path=f'downloads/after_code_submit_{browser_name}.png')
+        print(f'    [{browser_name}] Waiting for page to load...', flush=True)
+        time.sleep(10)
 
         # Set username - TikTok prompts for username after email verification
+        # Generate username from email (e.g., forestcore740@... -> forestcore740)
+        username_base = email.split('@')[0]
+        username_set = False
+
         try:
-            # Generate username from email (e.g., forestcore740@... -> forestcore740)
-            username_base = email.split('@')[0]
             print(f'    [{browser_name}] Looking for username input field...', flush=True)
 
-            # Wait for username input field to appear - try multiple times
-            username_filled = False
-            for attempt in range(3):
+            # Try to find username input with multiple selectors
+            username_input = page.locator('input[name="uniqueId"], input[placeholder*="username"], input[placeholder*="Username"], input[data-e2e="username-input"]').first
+
+            if username_input.is_visible(timeout=5000):
+                username_input.click()
+                time.sleep(1)
+                username_input.fill(username_base)
+                time.sleep(1)
+                print(f'    [{browser_name}] ✓ Username set to: {username_base}', flush=True)
+                username_set = True
+
+                # Click next/submit button
                 try:
-                    # Look for username input field with longer timeout
-                    username_input = page.locator('input[name="uniqueId"], input[placeholder*="username"], input[placeholder*="Username"], input[placeholder*="nom"], input[data-e2e="username-input"]').first
-
-                    # Wait for it to be visible and editable
-                    username_input.wait_for(state='visible', timeout=10000)
-                    time.sleep(2)
-
-                    # Clear and fill the username
-                    username_input.click()
-                    time.sleep(0.5)
-                    username_input.fill('')
-                    time.sleep(0.5)
-                    username_input.fill(username_base)
-                    time.sleep(1)
-
-                    print(f'    [{browser_name}] ✓ Username set to: {username_base}', flush=True)
-                    username_filled = True
-
-                    # Take screenshot after filling username
-                    page.screenshot(path=f'downloads/after_username_{browser_name}.png')
-
-                    # Click next/submit button to continue
-                    page.locator('button[type="submit"], button:has-text("Next"), button:has-text("Suivant"), button:has-text("Sign up"), button:has-text("S\'inscrire")').first.click(timeout=10000)
+                    page.locator('button[type="submit"], button:has-text("Next"), button:has-text("Sign up")').first.click(timeout=5000)
                     time.sleep(3)
-                    break
-                except Exception as retry_err:
-                    if attempt < 2:
-                        print(f'    [{browser_name}] Username attempt {attempt + 1} failed, retrying...', flush=True)
-                        time.sleep(3)
-                    else:
-                        raise retry_err
+                except:
+                    # Maybe no next button, already on profile
+                    pass
+            else:
+                print(f'    [{browser_name}] No username input visible - TikTok may auto-assign', flush=True)
 
-            if not username_filled:
-                print(f'    [{browser_name}] No username input found after 3 attempts, may be auto-assigned', flush=True)
+        except Exception as e:
+            print(f'    [{browser_name}] Username setup skipped - checking if auto-assigned', flush=True)
 
-        except Exception as username_err:
-            print(f'    [{browser_name}] Username setup error: {str(username_err)[:100]}', flush=True)
-            # Take screenshot on error
-            page.screenshot(path=f'downloads/username_error_{browser_name}.png')
-            print(f'    [{browser_name}] Screenshot saved to username_error_{browser_name}.png', flush=True)
+        # Wait for signup to complete
+        time.sleep(5)
 
-        # Check if signup succeeded
-        page.goto('https://www.tiktok.com/profile', timeout=15000)
-        time.sleep(2)
+        # Check if signup succeeded by verifying we're logged in
+        try:
+            page.goto('https://www.tiktok.com/foryou', timeout=20000)
+            time.sleep(3)
 
-        if '/@' in page.url:
-            username = page.url.split('/@')[1].split('?')[0].split('/')[0]
-            print(f'    [{browser_name}] ✓ Signup success! @{username}', flush=True)
+            # Check if we're on the For You page (means logged in)
+            is_logged_in, username = check_login_status(page)
 
-            # Save to profile mapping
-            try:
-                with open(PROFILE_MAPPING_PATH, 'r') as f:
-                    mapping = json.load(f)
-            except:
-                mapping = {}
-            mapping[browser_name] = username
-            with open(PROFILE_MAPPING_PATH, 'w') as f:
-                json.dump(mapping, f, indent=2)
+            if is_logged_in:
+                final_username = username if username else username_base
+                print(f'    [{browser_name}] ✓ Signup success! @{final_username}', flush=True)
 
-            # Save account creation date for new account limits
-            save_account_creation_date(browser_name)
+                # Save to profile mapping
+                try:
+                    with open(PROFILE_MAPPING_PATH, 'r') as f:
+                        mapping = json.load(f)
+                except:
+                    mapping = {}
+                mapping[browser_name] = final_username
+                with open(PROFILE_MAPPING_PATH, 'w') as f:
+                    json.dump(mapping, f, indent=2)
 
-            return True, username
+                # Save account creation date for new account limits
+                save_account_creation_date(browser_name)
 
-        return False, None
+                return True, final_username
+            else:
+                print(f'    [{browser_name}] ✗ Signup failed - not logged in after process', flush=True)
+                return False, None
+
+        except Exception as verify_err:
+            print(f'    [{browser_name}] ✗ Signup verification error: {str(verify_err)[:100]}', flush=True)
+            return False, None
 
     except Exception as e:
         print(f'    [{browser_name}] Signup error: {str(e)[:50]}', flush=True)
@@ -610,8 +683,13 @@ def auto_signup(page, browser_name):
 # ============ END AUTO-SIGNUP FUNCTIONS ============
 
 def view_and_comment_on_profile(page, account, browser_name):
-    """Visit a profile, view ALL videos, and comment on 2 videos"""
+    """Visit a profile and comment on latest 1 video (once per day per target)"""
     print(f'    Visiting @{account}...', flush=True)
+
+    # CHECK: Has this browser already commented on this target account today?
+    if has_commented_on_target_today(browser_name, account):
+        print(f'    ⏭  Already commented on @{account} today - skipping', flush=True)
+        return 0, 0
 
     videos_viewed = 0
     comments_made = 0
@@ -646,10 +724,9 @@ def view_and_comment_on_profile(page, account, browser_name):
         else:
             print(f'    ⚠ Daily follow limit reached for new account', flush=True)
 
-        # Scroll to load more videos
+        # Scroll to load more videos (NATURAL)
         for _ in range(3):
-            page.evaluate('window.scrollBy(0, 1000)')
-            time.sleep(1)
+            natural_scroll(page, 'down', distance=random.randint(800, 1200))
 
         # Get ALL video links from profile
         videos = page.evaluate('''() => {
@@ -672,60 +749,47 @@ def view_and_comment_on_profile(page, account, browser_name):
         niche = get_niche(account)
         comments_pool = NICHE_COMMENTS.get(niche, NICHE_COMMENTS['default'])
 
-        # Select latest 2 videos to comment on and like (first 2 in the list)
+        # Select latest 1 video to comment on (first video in the list)
         # TikTok videos are typically ordered with newest first
-        num_videos_to_process = min(2, len(videos))
-
-        if num_videos_to_process == 0:
+        if len(videos) == 0:
             print(f'    No videos to process on @{account}', flush=True)
             return 0, 0
 
-        # Find which of the first 2 videos we haven't commented on yet
-        uncommented_latest = [i for i in range(num_videos_to_process) if normalize_video_url(videos[i]) not in already_commented]
+        # Check if the latest video has already been commented on
+        latest_video_id = normalize_video_url(videos[0])
+        if latest_video_id in already_commented:
+            print(f'    Latest video already commented on - skipping', flush=True)
+            return 0, 0
 
         # Check if we can comment today (for new accounts)
         if not can_comment_today(browser_name):
-            comment_indices = set()
             print(f'    Daily comment limit reached, will skip comments', flush=True)
-        elif uncommented_latest:
-            # Comment on latest uncommented videos (up to 2)
-            comment_indices = set(uncommented_latest[:COMMENTS_PER_ACCOUNT])
-            print(f'    Will comment on {len(comment_indices)} latest videos', flush=True)
-        else:
-            # All latest videos already commented on
-            comment_indices = set()
-            print(f'    Latest 2 videos already commented on, will skip comments', flush=True)
+            return 0, 0
 
-        # Like the latest 2 videos (same videos we're commenting on)
-        like_indices = set(range(num_videos_to_process))
+        # Process ONLY the latest video (index 0)
+        print(f'    Will comment on latest video', flush=True)
 
-        print(f'    Processing {num_videos_to_process} latest videos (commenting on {len(comment_indices)}, liking {len(like_indices)})', flush=True)
-
-        # Process only the latest 2 videos
-        for idx in range(num_videos_to_process):
+        # Process only the latest 1 video
+        for idx in [0]:
             video_url = videos[idx]
             try:
                 page.goto(video_url, timeout=30000)
-                time.sleep(random.randint(3, 8))  # Watch for a bit
+
+                # ===== NATURAL VIDEO WATCHING with stealth =====
+                watch_video_naturally(page, video_duration_seconds=random.randint(10, 25))
                 videos_viewed += 1
 
-                # Like the video if selected
-                if idx in like_indices:
-                    if like_video(page):
-                        print(f'    ✓ Liked video {idx+1}', flush=True)
-                    time.sleep(random.randint(2, 4))
-
-                # Comment only on selected videos (and if allowed for new accounts)
-                if idx in comment_indices and can_comment_today(browser_name):
+                # Comment on the video (we already checked can_comment_today above)
+                if True:
                     comment = random.choice(comments_pool)
                     commented = False
 
-                    # Wait for page to fully load
-                    time.sleep(3)
+                    # Natural pause before commenting
+                    natural_pause(1, 2)
 
-                    # Close any popups first
+                    # Close any popups naturally
                     page.keyboard.press('Escape')
-                    time.sleep(0.5)
+                    natural_pause(0.3, 0.7)
 
                     # STEP 1: Click comment icon to expand comment section
                     clicked = page.evaluate('''() => {
@@ -738,7 +802,7 @@ def view_and_comment_on_profile(page, account, browser_name):
                     }''')
 
                     if clicked:
-                        time.sleep(2)  # Wait for comment section to expand
+                        natural_pause(1.5, 2.5)  # Wait for comment section to expand
 
                         # STEP 2: Click on the comment input area to focus it
                         input_found = page.evaluate('''() => {
@@ -778,11 +842,13 @@ def view_and_comment_on_profile(page, account, browser_name):
                         }''')
 
                         if input_found.get('success'):
-                            time.sleep(0.5)
+                            natural_pause(0.3, 0.8)
 
-                            # Type the comment
-                            page.keyboard.type(comment, delay=random.randint(25, 50))
-                            time.sleep(1)
+                            # ===== NATURAL TYPING with random delays =====
+                            for char in comment:
+                                page.keyboard.type(char)
+                                time.sleep(random.uniform(0.05, 0.15))  # Human typing speed
+                            natural_pause(0.8, 1.5)
 
                             # STEP 3: Click post button
                             posted = page.evaluate('''() => {
@@ -807,6 +873,9 @@ def view_and_comment_on_profile(page, account, browser_name):
 
                             # Record comment for daily limit tracking
                             record_comment(browser_name)
+
+                            # Record that we commented on this target account today
+                            record_target_comment(browser_name, account)
                         else:
                             print(f'    ✗ Could not find comment input on video {idx+1}', flush=True)
                     else:
@@ -818,7 +887,8 @@ def view_and_comment_on_profile(page, account, browser_name):
                 print(f'    Video {idx+1} error: {str(e)[:40]}', flush=True)
 
         follow_status = f', followed @{account}' if followed else ''
-        print(f'    Viewed {videos_viewed} videos, made {comments_made} comments{follow_status}', flush=True)
+        result_msg = f'    Viewed {videos_viewed} video, made {comments_made} comment{follow_status}' if videos_viewed == 1 else f'    Viewed {videos_viewed} videos, made {comments_made} comments{follow_status}'
+        print(result_msg, flush=True)
         return videos_viewed, comments_made
 
     except Exception as e:
@@ -891,6 +961,9 @@ def process_browser(browser, browser_idx, total_browsers):
             context = browser_conn.contexts[0]
             page = context.pages[0] if context.pages else context.new_page()
 
+            # ===== INJECT STEALTH MODE - Hide CDP/automation detection =====
+            inject_stealth(page)
+
             # CHECK LOGIN STATUS FIRST
             print(f'  Checking login status...', flush=True)
             is_logged_in, username = check_login_status(page)
@@ -922,9 +995,9 @@ def process_browser(browser, browser_idx, total_browsers):
                 # Update stats for this target account
                 update_account_stats(account, videos, comments, browser_name)
 
-                # Wait between accounts
+                # Natural pause between accounts
                 if acc_idx < len(TARGET_ACCOUNTS) - 1:
-                    time.sleep(random.randint(5, 23))
+                    natural_pause(5, 23)
 
             browser_conn.close()
 
@@ -959,9 +1032,9 @@ def main():
         print('No browsers found in AdsPower!')
         return
 
-    # Filter browsers by serial number (500-806)
-    browsers = [b for b in browsers if 500 <= int(b.get('serial_number', 0)) <= 806]
-    print(f'Filtered to browsers with serial numbers 500-806: {len(browsers)} browsers')
+    # Filter browsers by serial number (starting from 23 = tt1)
+    browsers = [b for b in browsers if int(b.get('serial_number', 0)) >= 23]
+    print(f'Filtered to browsers with serial numbers 23+: {len(browsers)} browsers')
 
     # Sort by name for consistent ordering
     browsers.sort(key=lambda x: int(re.search(r'\d+', x.get('name', '0')).group()) if re.search(r'\d+', x.get('name', '0')) else 0)
@@ -976,34 +1049,44 @@ def main():
     browsers_completed = 0
     browsers_failed = 0
 
-    # Process browsers in parallel
-    with ThreadPoolExecutor(max_workers=PARALLEL_BROWSERS) as executor:
-        # Submit all browser tasks
-        future_to_browser = {}
-        for idx, browser in enumerate(browsers):
-            future = executor.submit(process_browser, browser, idx, len(browsers))
-            future_to_browser[future] = browser
+    # Process browsers in batches - wait for entire batch to complete before starting next
+    batch_size = PARALLEL_BROWSERS
+    for batch_start in range(0, len(browsers), batch_size):
+        batch_browsers = browsers[batch_start:batch_start + batch_size]
 
-        # Collect results as they complete
-        for future in as_completed(future_to_browser):
-            browser = future_to_browser[future]
-            try:
-                result = future.result()
-                total_videos_viewed += result['videos']
-                total_comments += result['comments']
-                if result['success']:
-                    browsers_completed += 1
-                else:
+        print(f'\n--- Processing batch {batch_start//batch_size + 1} ({len(batch_browsers)} browsers) ---', flush=True)
+
+        with ThreadPoolExecutor(max_workers=batch_size) as executor:
+            # Submit browsers in this batch only
+            future_to_browser = {}
+            for idx_in_batch, browser in enumerate(batch_browsers):
+                global_idx = batch_start + idx_in_batch
+                future = executor.submit(process_browser, browser, global_idx, len(browsers))
+                future_to_browser[future] = browser
+
+            # Wait for all browsers in batch to complete
+            for future in as_completed(future_to_browser):
+                browser = future_to_browser[future]
+                try:
+                    result = future.result()
+                    total_videos_viewed += result['videos']
+                    total_comments += result['comments']
+                    if result['success']:
+                        browsers_completed += 1
+                    else:
+                        browsers_failed += 1
+                except Exception as e:
+                    print(f'  Error processing browser {browser["name"]}: {e}', flush=True)
                     browsers_failed += 1
 
-                # Progress update
-                completed = browsers_completed + browsers_failed
-                if completed % 10 == 0:
-                    print(f'\n  === Progress: {completed}/{len(browsers)} browsers, {total_comments} total comments ===\n', flush=True)
+        # Batch complete
+        completed = browsers_completed + browsers_failed
+        print(f'\n✓ Batch complete. Progress: {completed}/{len(browsers)} browsers, {total_comments} total comments', flush=True)
 
-            except Exception as e:
-                print(f'  Error processing browser {browser["name"]}: {e}', flush=True)
-                browsers_failed += 1
+        # Wait before starting next batch
+        if batch_start + batch_size < len(browsers):
+            print(f'Waiting 5 seconds before next batch...', flush=True)
+            time.sleep(5)
 
     # Final Summary
     print(f'\n{"=" * 60}')

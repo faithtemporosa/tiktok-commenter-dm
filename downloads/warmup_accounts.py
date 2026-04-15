@@ -1,242 +1,224 @@
 #!/usr/bin/env python3
 """
-Warm up accounts before targeted viewing:
-1. Repost 1-2 videos from For You page
-2. View 5-10 videos from For You page
-3. This makes accounts look natural before doing targeted viewing
+Warmup accounts with STEALTH natural browsing behavior
+Fixes: New IP warmup + CDP detection + Unnatural behavior
+
+NO reposting (causes server errors)
+ONLY natural viewing with stealth mode
 """
 
 import sys
 import os
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
+import requests
 import time
 import random
-import re
-from concurrent.futures import ThreadPoolExecutor, as_completed
 from playwright.sync_api import sync_playwright
+import json
+from datetime import datetime
+from stealth_browsing import inject_stealth, browse_for_you_page, natural_pause
 
-from comment_target_accounts import (
-    auto_signup,
-    check_login_status,
-    get_all_browsers,
-    open_browser,
-    close_browser,
-    ADSPOWER_API
-)
+ADSPOWER_API = 'http://local.adspower.net:50325'
+WARMUP_LOG_PATH = 'warmup_log.json'
 
-PARALLEL_BROWSERS = 2  # Run 2 browsers at a time, wait for both to finish before starting next batch
-VIDEOS_TO_REPOST = 2  # Repost 1-2 videos
-VIDEOS_TO_VIEW = random.randint(5, 10)  # View 5-10 videos
+def open_browser(user_id):
+    response = requests.get(f"{ADSPOWER_API}/api/v1/browser/start?user_id={user_id}", timeout=30)
+    data = response.json()
+    if data.get("code") == 0:
+        return data["data"]["ws"]["puppeteer"]
+    return None
 
-def repost_video(page, video_index):
-    """Repost a video from the For You page"""
+def close_browser(user_id):
+    requests.get(f"{ADSPOWER_API}/api/v1/browser/stop?user_id={user_id}")
+
+def load_warmup_log():
+    """Load warmup activity log"""
     try:
-        # Find share button
-        share_btn = page.locator('button[aria-label*="Share"], [data-e2e="browse-share"]').first
-        share_btn.click(timeout=5000)
-        time.sleep(2)
-
-        # Click repost option
-        repost_btn = page.locator('div:has-text("Repost"), button:has-text("Repost")').first
-        repost_btn.click(timeout=5000)
-        time.sleep(2)
-
-        print(f'    ✓ Reposted video {video_index}')
-        return True
-    except Exception as e:
-        print(f'    ⚠ Failed to repost video {video_index}: {str(e)[:50]}')
-        return False
-
-def scroll_to_next_video(page):
-    """Scroll to next video in For You page"""
-    try:
-        # Try pressing Arrow Down key
-        page.keyboard.press('ArrowDown')
-        time.sleep(2)
-        return True
+        with open(WARMUP_LOG_PATH, 'r') as f:
+            return json.load(f)
     except:
-        try:
-            # Alternative: scroll by pixel amount
-            page.evaluate('window.scrollBy(0, window.innerHeight)')
-            time.sleep(2)
-            return True
-        except:
-            return False
+        return {}
 
-def warmup_browser(browser, browser_idx, total_browsers):
-    """Warm up one browser with natural activity"""
-    user_id = browser.get('user_id')
-    browser_name = browser.get('name', f'browser_{user_id}')
+def save_warmup_log(log):
+    """Save warmup activity log"""
+    with open(WARMUP_LOG_PATH, 'w') as f:
+        json.dump(log, f, indent=2)
 
-    print(f'\n[{browser_idx+1}/{total_browsers}] {browser_name} - Warming up account', flush=True)
+def record_warmup_session(browser_name, num_videos):
+    """Record warmup session"""
+    log = load_warmup_log()
+    today = datetime.now().strftime('%Y-%m-%d')
 
-    ws_url = open_browser(user_id)
-    if not ws_url:
-        print(f'  ✗ Failed to open browser', flush=True)
-        return {'success': False}
+    if browser_name not in log:
+        log[browser_name] = {'sessions': [], 'total_videos': 0}
+
+    log[browser_name]['sessions'].append({
+        'date': today,
+        'videos_watched': num_videos
+    })
+    log[browser_name]['total_videos'] += num_videos
+
+    save_warmup_log(log)
+
+def warmup_browser(browser_name, user_id, num_videos=10):
+    """Warmup a single browser with STEALTH natural browsing"""
+
+    print(f"[{browser_name}] Starting warmup session...")
+
+    debug_url = open_browser(user_id)
+    if not debug_url:
+        print(f"[{browser_name}] ✗ Failed to open browser")
+        return False
 
     try:
         with sync_playwright() as p:
-            browser_conn = p.chromium.connect_over_cdp(ws_url)
-            context = browser_conn.contexts[0]
+            browser = p.chromium.connect_over_cdp(debug_url)
+            context = browser.contexts[0]
+
+            # Close extra pages
+            while len(context.pages) > 1:
+                context.pages[-1].close()
+
             page = context.pages[0] if context.pages else context.new_page()
 
+            # ===== FIX #1: INJECT STEALTH - Hide CDP automation =====
+            inject_stealth(page)
+            print(f"[{browser_name}] ✓ Stealth mode enabled (CDP hidden)")
+
             # Check login status
-            print(f'  Checking login status...', flush=True)
-            is_logged_in, username = check_login_status(page)
+            print(f"[{browser_name}] Checking login status...")
+            page.goto("https://www.tiktok.com/", wait_until="networkidle", timeout=60000)
+            natural_pause(3, 5)
 
-            if not is_logged_in:
-                print(f'  Not logged in - attempting auto-signup...', flush=True)
-                signup_success, username = auto_signup(page, browser_name)
+            try:
+                login_btn = page.get_by_role("link", name="Log in").first
+                is_logged_out = login_btn.is_visible(timeout=2000)
 
-                if not signup_success:
-                    print(f'  ✗ Auto-signup failed - skipping warmup', flush=True)
-                    browser_conn.close()
-                    return {'success': False}
+                if is_logged_out:
+                    print(f"[{browser_name}] ⚠ Account is logged out, skipping warmup")
+                    return False
+            except:
+                pass  # Likely logged in
 
-                print(f'  ✓ Auto-signup successful! @{username}', flush=True)
-            else:
-                print(f'  ✓ Logged in as @{username}', flush=True)
+            print(f"[{browser_name}] ✓ Logged in")
 
-            # Go to For You page (TikTok home)
-            print(f'  Opening For You page...', flush=True)
-            page.goto('https://www.tiktok.com/foryou', timeout=30000)
-            time.sleep(5)
+            # ===== FIX #2: NATURAL BROWSING BEHAVIOR =====
+            # Scroll, mouse movements, watch full videos, random pauses
+            browse_for_you_page(page, num_videos=num_videos)
 
-            # Phase 1: Repost 1-2 videos
-            videos_reposted = 0
-            num_to_repost = random.randint(1, VIDEOS_TO_REPOST)
-            print(f'  Phase 1: Reposting {num_to_repost} videos...', flush=True)
+            # Random additional natural actions
+            if random.random() < 0.3:
+                # Sometimes visit trending page (natural behavior)
+                print(f"[{browser_name}] Visiting trending...")
+                page.goto("https://www.tiktok.com/trending", wait_until="networkidle", timeout=30000)
+                natural_pause(2, 4)
 
-            for i in range(num_to_repost):
-                # Watch for a few seconds before reposting
-                watch_time = random.randint(3, 8)
-                time.sleep(watch_time)
+            # Record session for tracking
+            record_warmup_session(browser_name, num_videos)
 
-                # Try to repost
-                if repost_video(page, i + 1):
-                    videos_reposted += 1
-
-                # Scroll to next video
-                scroll_to_next_video(page)
-                time.sleep(random.randint(2, 4))
-
-            # Phase 2: View 5-10 videos from For You
-            videos_to_view = random.randint(5, 10)
-            print(f'  Phase 2: Viewing {videos_to_view} videos...', flush=True)
-
-            for i in range(videos_to_view):
-                # Watch video for random duration
-                watch_time = random.randint(5, 15)
-                print(f'    Watching video {i+1}/{videos_to_view} for {watch_time}s...', flush=True)
-
-                # Scroll while watching (simulate real behavior)
-                time.sleep(watch_time / 2)
-                page.evaluate('window.scrollBy(0, 100)')
-                time.sleep(watch_time / 2)
-
-                # Scroll to next video
-                scroll_to_next_video(page)
-                time.sleep(random.randint(2, 5))
-
-            print(f'  ✓ Warmup complete: {videos_reposted} reposts, {videos_to_view} views', flush=True)
-
-            browser_conn.close()
+            print(f"[{browser_name}] ✓ Warmup complete ({num_videos} videos)")
+            return True
 
     except Exception as e:
-        print(f'  ✗ Error during warmup: {str(e)[:100]}', flush=True)
-        close_browser(user_id)
-        return {'success': False}
+        print(f"[{browser_name}] ✗ Error: {str(e)[:60]}")
+        return False
 
-    close_browser(user_id)
-    return {'success': True}
+    finally:
+        close_browser(user_id)
+        # ===== FIX #3: IP WARMUP - Longer pauses between browsers =====
+        natural_pause(5, 10)
+
+def get_all_browsers():
+    """Get all browsers from AdsPower"""
+    all_browsers = []
+    page = 1
+
+    while True:
+        try:
+            response = requests.get(
+                f'{ADSPOWER_API}/api/v1/user/list',
+                params={'page': page, 'page_size': 100},
+                timeout=10
+            )
+            data = response.json()
+
+            if data['code'] != 0:
+                break
+
+            browsers = data['data']['list']
+            if not browsers:
+                break
+
+            all_browsers.extend(browsers)
+            page += 1
+
+        except Exception as e:
+            break
+
+    return all_browsers
 
 def main():
-    print('=' * 60)
-    print('  Account Warmup - Repost & View For You Videos')
-    print('=' * 60)
-    print(f'\nSettings:')
-    print(f'  - Videos to repost per account: 1-{VIDEOS_TO_REPOST}')
-    print(f'  - Videos to view per account: 5-10')
-    print(f'  - Parallel browsers: {PARALLEL_BROWSERS}')
-    print(f'  - Browsers to process: tt1 - tt23')
+    print("=" * 70)
+    print("STEALTH ACCOUNT WARMUP - Natural Browsing for IP Trust")
+    print("=" * 70)
+    print()
+    print("FIXES:")
+    print("  ✓ CDP detection hidden (stealth mode)")
+    print("  ✓ Natural behavior (scrolling, mouse movement, full video watch)")
+    print("  ✓ IP warmup (gradual activity over multiple days)")
+    print()
+    print("Run daily for 3-7 days before commenting automation.")
     print()
 
-    # Get ALL browsers
-    print('Loading all browsers from AdsPower...')
+    # Get all browsers
+    print("Loading browsers...")
     browsers = get_all_browsers()
-    if not browsers:
-        print('No browsers found in AdsPower!')
-        return
-
-    # Filter browsers: tt1 to tt23 by name
-    def get_browser_number(browser):
-        match = re.search(r'tt(\d+)', browser.get('name', ''))
-        return int(match.group(1)) if match else 0
-
-    browsers = [b for b in browsers
-                if 1 <= get_browser_number(b) <= 23]
-
-    print(f'Filtered to browsers tt1-tt23: {len(browsers)} browsers')
-
-    # Sort by browser number
-    browsers.sort(key=get_browser_number)
-
-    # Show first few browsers
-    print(f'\nFirst 5 browsers to warm up:')
-    for b in browsers[:5]:
-        print(f'  - {b.get("name")} (serial {b.get("serial_number")})')
-
-    print(f'\nTotal browsers to warm up: {len(browsers)}')
+    print(f"Found {len(browsers)} browsers")
     print()
 
-    browsers_completed = 0
-    browsers_failed = 0
+    # How many to warm up per session
+    default_num = min(20, len(browsers))
+    num_input = input(f"How many browsers to warm up? (default {default_num}, max {len(browsers)}): ").strip()
+    num_browsers = int(num_input) if num_input else default_num
+    num_browsers = min(num_browsers, len(browsers))
 
-    # Process browsers in batches - wait for entire batch to complete before starting next
-    batch_size = PARALLEL_BROWSERS
-    for batch_start in range(0, len(browsers), batch_size):
-        batch_browsers = browsers[batch_start:batch_start + batch_size]
+    videos_input = input("Videos to watch per browser? (default 10, range 5-20): ").strip()
+    videos_per_browser = int(videos_input) if videos_input else 10
+    videos_per_browser = max(5, min(20, videos_per_browser))
 
-        print(f'\n--- Processing batch {batch_start//batch_size + 1} ({len(batch_browsers)} browsers) ---', flush=True)
-
-        with ThreadPoolExecutor(max_workers=batch_size) as executor:
-            # Submit browsers in this batch
-            future_to_browser = {}
-            for idx_in_batch, browser in enumerate(batch_browsers):
-                global_idx = batch_start + idx_in_batch
-                future = executor.submit(warmup_browser, browser, global_idx, len(browsers))
-                future_to_browser[future] = browser
-
-            # Wait for all browsers in batch to complete
-            for future in as_completed(future_to_browser):
-                browser = future_to_browser[future]
-                try:
-                    result = future.result()
-                    if result['success']:
-                        browsers_completed += 1
-                    else:
-                        browsers_failed += 1
-                except Exception as e:
-                    browsers_failed += 1
-                    print(f'Error processing browser: {e}')
-
-        # Batch complete - wait a bit before starting next batch
-        if batch_start + batch_size < len(browsers):
-            print(f'\n✓ Batch complete. Waiting 5 seconds before next batch...', flush=True)
-            time.sleep(5)
-
-    # Final summary
-    print('\n' + '=' * 60)
-    print('  WARMUP SUMMARY')
-    print('=' * 60)
-    print(f'Browsers completed: {browsers_completed}')
-    print(f'Browsers failed: {browsers_failed}')
     print()
-    print('Accounts are now warmed up!')
-    print('You can now run targeted_accounts_view.py')
+    print(f"Will warm up {num_browsers} browsers, {videos_per_browser} videos each")
     print()
 
-if __name__ == '__main__':
+    # Select random browsers for variety
+    selected = random.sample(browsers, num_browsers)
+
+    success = 0
+    failed = 0
+
+    for i, browser in enumerate(selected, 1):
+        print(f"\n[{i}/{num_browsers}] " + "=" * 60)
+
+        browser_name = browser.get('name', 'Unknown')
+        user_id = browser.get('user_id')
+
+        if warmup_browser(browser_name, user_id, num_videos=videos_per_browser):
+            success += 1
+        else:
+            failed += 1
+
+    print()
+    print("=" * 70)
+    print(f"WARMUP SESSION COMPLETE")
+    print(f"  Success: {success}")
+    print(f"  Failed:  {failed}")
+    print()
+    print("NEXT STEPS:")
+    print("  1. Run this script daily for 3-7 days")
+    print("  2. After warmup period, accounts are ready for light automation")
+    print("  3. Start with 1 comment every 2-3 days per account")
+    print("=" * 70)
+
+if __name__ == "__main__":
     main()
