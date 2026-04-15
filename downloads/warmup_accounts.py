@@ -17,7 +17,7 @@ import random
 from playwright.sync_api import sync_playwright
 import json
 from datetime import datetime
-from stealth_browsing import inject_stealth, browse_for_you_page, natural_pause
+from stealth_browsing import inject_stealth, browse_for_you_page, random_pause
 
 ADSPOWER_API = 'http://local.adspower.net:50325'
 WARMUP_LOG_PATH = 'warmup_log.json'
@@ -89,19 +89,35 @@ def warmup_browser(browser_name, user_id, num_videos=10):
             # Check login status
             print(f"[{browser_name}] Checking login status...")
             page.goto("https://www.tiktok.com/", wait_until="networkidle", timeout=60000)
-            natural_pause(3, 5)
+            random_pause(3, 5)
 
+            is_logged_in = True
             try:
                 login_btn = page.get_by_role("link", name="Log in").first
                 is_logged_out = login_btn.is_visible(timeout=2000)
 
                 if is_logged_out:
-                    print(f"[{browser_name}] ⚠ Account is logged out, skipping warmup")
-                    return False
+                    print(f"[{browser_name}] ⚠ Account is logged out")
+                    print(f"[{browser_name}] → Running auto-signup...")
+
+                    # Import auto-signup from comment script
+                    import sys
+                    sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+                    from comment_target_accounts import auto_signup
+
+                    signup_success, username = auto_signup(page, browser_name)
+
+                    if signup_success:
+                        print(f"[{browser_name}] ✓ Auto-signup successful! Username: @{username}")
+                        is_logged_in = True
+                    else:
+                        print(f"[{browser_name}] ✗ Auto-signup failed, skipping warmup")
+                        return False
             except:
                 pass  # Likely logged in
 
-            print(f"[{browser_name}] ✓ Logged in")
+            if is_logged_in:
+                print(f"[{browser_name}] ✓ Logged in, starting warmup...")
 
             # ===== FIX #2: NATURAL BROWSING BEHAVIOR =====
             # Scroll, mouse movements, watch full videos, random pauses
@@ -112,7 +128,7 @@ def warmup_browser(browser_name, user_id, num_videos=10):
                 # Sometimes visit trending page (natural behavior)
                 print(f"[{browser_name}] Visiting trending...")
                 page.goto("https://www.tiktok.com/trending", wait_until="networkidle", timeout=30000)
-                natural_pause(2, 4)
+                random_pause(2, 4)
 
             # Record session for tracking
             record_warmup_session(browser_name, num_videos)
@@ -127,7 +143,7 @@ def warmup_browser(browser_name, user_id, num_videos=10):
     finally:
         close_browser(user_id)
         # ===== FIX #3: IP WARMUP - Longer pauses between browsers =====
-        natural_pause(5, 10)
+        random_pause(5, 10)
 
 def get_all_browsers():
     """Get all browsers from AdsPower"""
