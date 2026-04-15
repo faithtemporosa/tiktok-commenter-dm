@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """
 Comment on specific target accounts - Separate from main commenter
-All browsers view all videos per account, comment on 2 videos per account
+Comment on latest 2 videos per account, like latest 2 videos per account
+Skip viewing to save time - only interact with latest 2 videos
 Auto-signup for logged out browsers
 
 Usage: python3 comment_target_accounts.py
@@ -42,6 +43,26 @@ def normalize_video_url(video_url):
         video_id = video_url.split('/video/')[1].split('?')[0].split('/')[0]
         return video_id
     return video_url
+
+def like_video(page):
+    """Like a video"""
+    try:
+        # Try to find and click the like button
+        liked = page.evaluate('''() => {
+            const likeBtn = document.querySelector('[data-e2e="like-icon"], [data-e2e="browse-like-icon"]');
+            if (likeBtn && !likeBtn.closest('button').classList.contains('liked')) {
+                likeBtn.closest('button').click();
+                return true;
+            }
+            return false;
+        }''')
+
+        if liked:
+            time.sleep(1)
+            return True
+        return False
+    except:
+        return False
 
 def load_commented_videos():
     """Load set of already commented video IDs"""
@@ -218,7 +239,8 @@ TARGET_ACCOUNTS = [
 
 # Settings
 COMMENTS_PER_ACCOUNT = 2  # Comment on 2 videos per account
-VIEW_ALL_VIDEOS = True     # View all videos before commenting
+LIKES_PER_ACCOUNT = 2      # Like 2 videos per account
+VIEW_ALL_VIDEOS = False    # Skip viewing - just comment and like
 PARALLEL_BROWSERS = 3      # Number of browsers to run in parallel
 
 # Comments by niche - customize as needed
@@ -644,34 +666,54 @@ def view_and_comment_on_profile(page, account, browser_name):
             print(f'    No videos found on @{account}', flush=True)
             return 0, 0
 
-        print(f'    Found {len(videos)} videos to view', flush=True)
+        print(f'    Found {len(videos)} videos', flush=True)
 
         # Get niche-appropriate comments
         niche = get_niche(account)
         comments_pool = NICHE_COMMENTS.get(niche, NICHE_COMMENTS['default'])
 
-        # Find videos we haven't commented on yet (normalize URLs to video IDs for comparison)
-        uncommented_indices = [i for i, v in enumerate(videos) if normalize_video_url(v) not in already_commented]
+        # Select latest 2 videos to comment on and like (first 2 in the list)
+        # TikTok videos are typically ordered with newest first
+        num_videos_to_process = min(2, len(videos))
+
+        if num_videos_to_process == 0:
+            print(f'    No videos to process on @{account}', flush=True)
+            return 0, 0
+
+        # Find which of the first 2 videos we haven't commented on yet
+        uncommented_latest = [i for i in range(num_videos_to_process) if normalize_video_url(videos[i]) not in already_commented]
 
         # Check if we can comment today (for new accounts)
         if not can_comment_today(browser_name):
             comment_indices = set()
-            print(f'    Daily comment limit reached for new account, will only view', flush=True)
-        elif uncommented_indices:
-            # Select which videos to comment on (2 random ones from uncommented)
-            comment_indices = set(random.sample(uncommented_indices, min(COMMENTS_PER_ACCOUNT, len(uncommented_indices))))
-            print(f'    {len(uncommented_indices)} videos available for commenting (skipping {len(videos) - len(uncommented_indices)} already commented)', flush=True)
+            print(f'    Daily comment limit reached, will skip comments', flush=True)
+        elif uncommented_latest:
+            # Comment on latest uncommented videos (up to 2)
+            comment_indices = set(uncommented_latest[:COMMENTS_PER_ACCOUNT])
+            print(f'    Will comment on {len(comment_indices)} latest videos', flush=True)
         else:
-            # All videos already commented on
+            # All latest videos already commented on
             comment_indices = set()
-            print(f'    All {len(videos)} videos already commented on, will only view', flush=True)
+            print(f'    Latest 2 videos already commented on, will skip comments', flush=True)
 
-        # View ALL videos, comment on selected ones
-        for idx, video_url in enumerate(videos):
+        # Like the latest 2 videos (same videos we're commenting on)
+        like_indices = set(range(num_videos_to_process))
+
+        print(f'    Processing {num_videos_to_process} latest videos (commenting on {len(comment_indices)}, liking {len(like_indices)})', flush=True)
+
+        # Process only the latest 2 videos
+        for idx in range(num_videos_to_process):
+            video_url = videos[idx]
             try:
                 page.goto(video_url, timeout=30000)
-                time.sleep(random.randint(5, 23))  # Watch for a bit
+                time.sleep(random.randint(3, 8))  # Watch for a bit
                 videos_viewed += 1
+
+                # Like the video if selected
+                if idx in like_indices:
+                    if like_video(page):
+                        print(f'    ✓ Liked video {idx+1}', flush=True)
+                    time.sleep(random.randint(2, 4))
 
                 # Comment only on selected videos (and if allowed for new accounts)
                 if idx in comment_indices and can_comment_today(browser_name):
@@ -770,7 +812,7 @@ def view_and_comment_on_profile(page, account, browser_name):
                     else:
                         print(f'    ✗ Could not click comment icon on video {idx+1}', flush=True)
 
-                    time.sleep(random.randint(5, 23))
+                    time.sleep(random.randint(2, 5))
 
             except Exception as e:
                 print(f'    Video {idx+1} error: {str(e)[:40]}', flush=True)
@@ -904,8 +946,9 @@ def main():
     for acc in TARGET_ACCOUNTS:
         print(f'  - @{acc}')
     print(f'\nSettings:')
-    print(f'  - View all videos per account: {VIEW_ALL_VIDEOS}')
     print(f'  - Comments per account: {COMMENTS_PER_ACCOUNT}')
+    print(f'  - Likes per account: {LIKES_PER_ACCOUNT}')
+    print(f'  - Skip viewing: {not VIEW_ALL_VIDEOS}')
     print(f'  - Parallel browsers: {PARALLEL_BROWSERS}')
     print()
 
