@@ -8,26 +8,36 @@ Auto-signup for logged out browsers starting from tt3
 Usage: python3 targeted_accounts_view.py
 """
 
-import requests
+import sys
+import os
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+
 import time
 import random
 import json
 import re
-import pickle
-import sys
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from playwright.sync_api import sync_playwright
-from googleapiclient.discovery import build
-from datetime import datetime, timedelta
+from datetime import datetime
 
-ADSPOWER_API = 'http://local.adspower.net:50325'
-PROFILE_MAPPING_PATH = 'tiktok_profile_mapping.json'
-GMAIL_TOKEN_PATH = 'gmail_token.pickle'
+# Import ALL signup/browser functions from comment_target_accounts.py
+# This ensures we use the SAME working signup process
+from comment_target_accounts import (
+    auto_signup,
+    check_login_status,
+    get_all_browsers,
+    open_browser,
+    close_browser,
+    load_account_creation_dates,
+    save_account_creation_date,
+    ADSPOWER_API,
+    PROFILE_MAPPING_PATH,
+    ACCOUNT_CREATION_DATES_PATH,
+    DAILY_ACTIVITY_PATH
+)
+
+# View-only specific settings
 TARGET_STATS_PATH = 'target_accounts_view_stats.json'
-ACCOUNT_CREATION_DATES_PATH = 'account_creation_dates.json'
-DAILY_ACTIVITY_PATH = 'daily_activity_tracker.json'
-
-# New account limits - first 3 days is view-only
 VIEW_ONLY_DAYS = 3  # First 3 days: only view, no commenting or following
 MAX_VIDEOS_TO_VIEW = 10  # Max videos to view per target account
 PARALLEL_BROWSERS = 3
@@ -43,23 +53,7 @@ TARGET_ACCOUNTS = [
     'thehouseofgracehuxley'
 ]
 
-# ============ UTILITY FUNCTIONS ============
-
-def load_account_creation_dates():
-    """Load account creation dates"""
-    try:
-        with open(ACCOUNT_CREATION_DATES_PATH, 'r') as f:
-            return json.load(f)
-    except:
-        return {}
-
-def save_account_creation_date(browser_name):
-    """Save when an account was created"""
-    dates = load_account_creation_dates()
-    if browser_name not in dates:
-        dates[browser_name] = datetime.now().strftime('%Y-%m-%d')
-        with open(ACCOUNT_CREATION_DATES_PATH, 'w') as f:
-            json.dump(dates, f, indent=2)
+# ============ VIEW-ONLY SPECIFIC FUNCTIONS ============
 
 def get_account_age_days(browser_name):
     """Get how many days old an account is. Returns None if creation date unknown."""
@@ -104,324 +98,6 @@ def record_view(browser_name):
 
     with open(DAILY_ACTIVITY_PATH, 'w') as f:
         json.dump(activity, f, indent=2)
-
-def get_browser_list():
-    """Get list of browsers from AdsPower"""
-    resp = requests.get(f'{ADSPOWER_API}/api/v1/user/list?page_size=100', timeout=30)
-    return resp.json().get('data', {}).get('list', [])
-
-def get_all_browsers():
-    """Get all browsers from AdsPower (handles pagination)"""
-    all_browsers = []
-    page = 1
-    while True:
-        resp = requests.get(f'{ADSPOWER_API}/api/v1/user/list?page={page}&page_size=100', timeout=30)
-        data = resp.json().get('data', {})
-        browsers = data.get('list', [])
-        if not browsers:
-            break
-        all_browsers.extend(browsers)
-        page += 1
-        if page > 20:  # Safety limit
-            break
-    return all_browsers
-
-def open_browser(user_id):
-    """Open AdsPower browser and return websocket URL"""
-    resp = requests.get(f'{ADSPOWER_API}/api/v1/browser/start?user_id={user_id}', timeout=60)
-    data = resp.json()
-    if data.get('code') == 0:
-        return data['data']['ws']['puppeteer']
-    return None
-
-def close_browser(user_id):
-    """Close AdsPower browser"""
-    requests.get(f'{ADSPOWER_API}/api/v1/browser/stop?user_id={user_id}')
-
-# ============ AUTO-SIGNUP FUNCTIONS ============
-
-# Name generators for signup
-ADJECTIVES = ['swift', 'bright', 'cosmic', 'lunar', 'solar', 'crystal', 'ocean', 'forest',
-              'digital', 'cyber', 'tech', 'smart', 'neon', 'atomic', 'vivid', 'prism',
-              'flux', 'zen', 'drift', 'echo', 'nova', 'pixel', 'quantum', 'stellar']
-NOUNS = ['phoenix', 'dragon', 'falcon', 'eagle', 'wolf', 'tiger', 'star', 'moon',
-         'wave', 'flame', 'pixel', 'pulse', 'echo', 'spark', 'glow', 'path',
-         'stream', 'verse', 'core', 'field', 'track', 'scope', 'grid', 'focus']
-
-def generate_email():
-    adj = random.choice(ADJECTIVES)
-    noun = random.choice(NOUNS)
-    num = random.randint(100, 999)
-    return f"{adj}{noun}{num}@automateyourbizz.xyz"
-
-def generate_password():
-    adj = random.choice(ADJECTIVES).capitalize()
-    noun = random.choice(NOUNS).capitalize()
-    num = random.randint(10, 99)
-    return f"{adj}{noun}.{num}"
-
-def get_gmail_service():
-    """Get Gmail API service"""
-    try:
-        with open(GMAIL_TOKEN_PATH, 'rb') as token:
-            creds = pickle.load(token)
-        return build('gmail', 'v1', credentials=creds)
-    except:
-        return None
-
-def fetch_verification_code(email, max_attempts=30):
-    """Fetch TikTok verification code from Gmail"""
-    try:
-        service = get_gmail_service()
-        if not service:
-            print(f"    Gmail service unavailable")
-            return None
-        query = f'from:tiktok to:{email} subject:(verification OR code) is:unread newer_than:10m'
-        print(f"    Searching for TikTok email to {email}...")
-
-        for attempt in range(max_attempts):
-            results = service.users().messages().list(userId='me', q=query, maxResults=5).execute()
-            messages = results.get('messages', [])
-
-            if messages:
-                print(f"    Found {len(messages)} email(s), extracting code...")
-                msg = service.users().messages().get(userId='me', id=messages[0]['id'], format='full').execute()
-                headers = msg['payload']['headers']
-                subject = next((h['value'] for h in headers if h['name'].lower() == 'subject'), '')
-                from_header = next((h['value'] for h in headers if h['name'].lower() == 'from'), '')
-
-                print(f"    Email from: {from_header}")
-                print(f"    Subject: {subject}")
-
-                # Try to find code in subject
-                code_match = re.search(r'(\d{6})', subject)
-                if code_match:
-                    print(f"    ✓ Found code in subject: {code_match.group(1)}")
-                    return code_match.group(1)
-
-                # Try to find code in body
-                body = ''
-                if 'parts' in msg['payload']:
-                    for part in msg['payload']['parts']:
-                        if part.get('mimeType') == 'text/html':
-                            import base64
-                            body = base64.urlsafe_b64decode(part['body']['data']).decode('utf-8')
-                            break
-                        elif part.get('mimeType') == 'text/plain':
-                            import base64
-                            body = base64.urlsafe_b64decode(part['body']['data']).decode('utf-8')
-                elif 'body' in msg['payload'] and msg['payload']['body'].get('data'):
-                    import base64
-                    body = base64.urlsafe_b64decode(msg['payload']['body']['data']).decode('utf-8')
-
-                if body:
-                    code_match = re.search(r'(\d{6})', body)
-                    if code_match:
-                        print(f"    ✓ Found code in body: {code_match.group(1)}")
-                        return code_match.group(1)
-
-            if attempt < max_attempts - 1:
-                time.sleep(3)
-
-        print(f"    No verification code found after {max_attempts} attempts")
-        return None
-    except Exception as e:
-        print(f"    Gmail error: {e}")
-        return None
-
-def check_login_status(page):
-    """Check if user is logged in to TikTok. Returns (is_logged_in, username)"""
-    try:
-        page.goto('https://www.tiktok.com/profile', timeout=15000)
-        time.sleep(2)
-
-        # If URL contains /@username, user is logged in
-        if '/@' in page.url:
-            username = page.url.split('/@')[1].split('?')[0].split('/')[0]
-            return True, username
-
-        return False, None
-    except:
-        return False, None
-
-def auto_signup(page, browser_name):
-    """Automatically sign up a TikTok account. Returns (success, username)"""
-    print(f'    [{browser_name}] Starting auto-signup...', flush=True)
-
-    try:
-        # Generate credentials
-        email = generate_email()
-        password = generate_password()
-
-        print(f'    [{browser_name}] Email: {email}', flush=True)
-        print(f'    [{browser_name}] Password: {password}', flush=True)
-
-        # Go to TikTok SIGNUP page (not login)
-        page.goto('https://www.tiktok.com/signup/phone-or-email/email', timeout=30000)
-        time.sleep(3)
-
-        # Fill email and password
-        page.locator('input[name="email"], input[type="text"]').first.fill(email)
-        time.sleep(1)
-        page.locator('input[name="password"], input[type="password"]').first.fill(password)
-        time.sleep(1)
-
-        # Take screenshot before clicking send code
-        page.screenshot(path=f'downloads/before_send_code_{browser_name}.png')
-
-        # Click send code - click twice until "Resend code" appears
-        try:
-            for attempt in range(2):
-                send_btn = page.locator('button:has-text("Send code"), button:has-text("Envoyer")').first
-                if send_btn.is_visible(timeout=3000):
-                    send_btn.click()
-                    print(f'    [{browser_name}] Send code button clicked (attempt {attempt + 1})', flush=True)
-                    time.sleep(3)
-                else:
-                    break
-
-            # Verify code was sent by looking for "Resend code" button
-            resend_visible = False
-            try:
-                resend_btn = page.locator('button:has-text("Resend"), button:has-text("Resend code"), button:has-text("Renvoyer")').first
-                if resend_btn.is_visible(timeout=3000):
-                    print(f'    [{browser_name}] ✓ Code sent successfully (Resend button visible)', flush=True)
-                    resend_visible = True
-            except:
-                print(f'    [{browser_name}] ⚠ Could not verify if code was sent - continuing', flush=True)
-
-            # Take screenshot after clicking send code
-            page.screenshot(path=f'downloads/after_send_code_{browser_name}.png')
-        except Exception as send_err:
-            print(f'    [{browser_name}] Send code error: {send_err}', flush=True)
-            page.screenshot(path=f'downloads/send_code_error_{browser_name}.png')
-
-        # Fetch verification code from Gmail
-        code = fetch_verification_code(email)
-        if not code:
-            print(f'    [{browser_name}] No verification code received', flush=True)
-            return False, None
-
-        print(f'    [{browser_name}] Got code: {code}', flush=True)
-
-        # Enter code
-        page.locator('input[placeholder*="code"], input[name="code"]').fill(code)
-        time.sleep(1)
-
-        # Submit
-        page.locator('button[type="submit"], button:has-text("Next"), button:has-text("Suivant")').click(timeout=10000)
-        print(f'    [{browser_name}] Verification code submitted, waiting for username page...', flush=True)
-
-        # Wait longer for page to navigate after code submission
-        time.sleep(8)
-
-        # Take screenshot after code submission to see current state
-        page.screenshot(path=f'downloads/after_code_submit_{browser_name}.png')
-
-        # Set username - TikTok prompts for username after email verification
-        try:
-            # Generate username from email (e.g., forestcore740@... -> forestcore740)
-            username_base = email.split('@')[0]
-            print(f'    [{browser_name}] Looking for username input field...', flush=True)
-
-            # Wait for username input field to appear - try multiple times
-            username_filled = False
-            for attempt in range(3):
-                try:
-                    # Look for username input field with longer timeout
-                    username_input = page.locator('input[name="uniqueId"], input[placeholder*="username"], input[placeholder*="Username"], input[placeholder*="nom"], input[data-e2e="username-input"]').first
-
-                    # Wait for it to be visible and editable
-                    username_input.wait_for(state='visible', timeout=10000)
-                    time.sleep(2)
-
-                    # Clear and fill the username
-                    username_input.click()
-                    time.sleep(0.5)
-                    username_input.fill('')
-                    time.sleep(0.5)
-                    username_input.fill(username_base)
-                    time.sleep(1)
-
-                    print(f'    [{browser_name}] ✓ Username set to: {username_base}', flush=True)
-                    username_filled = True
-
-                    # Take screenshot after filling username
-                    page.screenshot(path=f'downloads/after_username_{browser_name}.png')
-
-                    # Click next/submit button to continue
-                    page.locator('button[type="submit"], button:has-text("Next"), button:has-text("Suivant"), button:has-text("Sign up"), button:has-text("S\'inscrire")').first.click(timeout=10000)
-                    time.sleep(3)
-                    break
-                except Exception as retry_err:
-                    if attempt < 2:
-                        print(f'    [{browser_name}] Username attempt {attempt + 1} failed, retrying...', flush=True)
-                        time.sleep(3)
-                    else:
-                        raise retry_err
-
-            if not username_filled:
-                print(f'    [{browser_name}] No username input found after 3 attempts, may be auto-assigned', flush=True)
-
-        except Exception as username_err:
-            print(f'    [{browser_name}] Username setup error: {str(username_err)[:100]}', flush=True)
-            # Take screenshot on error
-            page.screenshot(path=f'downloads/username_error_{browser_name}.png')
-            print(f'    [{browser_name}] Screenshot saved to username_error_{browser_name}.png', flush=True)
-
-        # Check if signup succeeded
-        page.goto('https://www.tiktok.com/profile', timeout=15000)
-        time.sleep(2)
-
-        if '/@' in page.url:
-            username = page.url.split('/@')[1].split('?')[0].split('/')[0]
-            print(f'    [{browser_name}] ✓ Signup success! @{username}', flush=True)
-
-            # Save to profile mapping
-            try:
-                with open(PROFILE_MAPPING_PATH, 'r') as f:
-                    mapping = json.load(f)
-            except:
-                mapping = {}
-            mapping[browser_name] = username
-            with open(PROFILE_MAPPING_PATH, 'w') as f:
-                json.dump(mapping, f, indent=2)
-
-            # Save credentials to a file
-            try:
-                creds_file = 'tiktok_accounts_credentials.json'
-                try:
-                    with open(creds_file, 'r') as f:
-                        creds = json.load(f)
-                except:
-                    creds = {}
-
-                creds[browser_name] = {
-                    'username': username,
-                    'email': email,
-                    'password': password,
-                    'created': datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-                }
-
-                with open(creds_file, 'w') as f:
-                    json.dump(creds, f, indent=2)
-                print(f'    [{browser_name}] ✓ Credentials saved to {creds_file}', flush=True)
-            except Exception as creds_err:
-                print(f'    [{browser_name}] ⚠ Failed to save credentials: {creds_err}', flush=True)
-
-            # Save account creation date
-            save_account_creation_date(browser_name)
-
-            return True, username
-        else:
-            print(f'    [{browser_name}] ✗ Signup failed - not logged in', flush=True)
-            return False, None
-
-    except Exception as e:
-        print(f'    [{browser_name}] Signup error: {e}', flush=True)
-        return False, None
-
-# ============ VIEWING FUNCTIONS ============
 
 def view_profile_videos(page, account, browser_name):
     """Visit a profile and view videos (no commenting)"""
@@ -515,8 +191,6 @@ def update_account_stats(account, videos_viewed, browser_name):
 
     with open(TARGET_STATS_PATH, 'w') as f:
         json.dump(stats, f, indent=2)
-
-# ============ MAIN PROCESSING ============
 
 def process_browser(browser, browser_idx, total_browsers):
     """Process one browser - view target accounts"""
