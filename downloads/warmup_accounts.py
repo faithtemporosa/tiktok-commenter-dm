@@ -110,24 +110,24 @@ def warmup_browser(browser_name, user_id, num_videos=10):
                 print(f"[{browser_name}] Login check error: {str(e)[:40]}")
 
             if is_logged_out:
-                    print(f"[{browser_name}] ⚠ Account is logged out")
-                    print(f"[{browser_name}] → Running auto-signup...")
+                print(f"[{browser_name}] ⚠ Account is logged out")
+                print(f"[{browser_name}] → Running auto-signup...")
 
-                    # Import auto-signup from comment script
-                    import sys
-                    sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-                    from comment_target_accounts import auto_signup
+                # Import auto-signup from comment script
+                import sys
+                sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+                from comment_target_accounts import auto_signup
 
-                    signup_success, username = auto_signup(page, browser_name)
+                signup_success, username = auto_signup(page, browser_name)
 
-                    if signup_success:
-                        print(f"[{browser_name}] ✓ Auto-signup successful! Username: @{username}")
-                        is_logged_in = True
-                    else:
-                        print(f"[{browser_name}] ✗ Auto-signup failed, skipping warmup")
-                        return False
-                else:
+                if signup_success:
+                    print(f"[{browser_name}] ✓ Auto-signup successful! Username: @{username}")
                     is_logged_in = True
+                else:
+                    print(f"[{browser_name}] ✗ Auto-signup failed, skipping warmup")
+                    return False
+            else:
+                is_logged_in = True
 
             if is_logged_in:
                 print(f"[{browser_name}] ✓ Logged in, starting warmup...")

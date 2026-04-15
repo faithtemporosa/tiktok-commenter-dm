@@ -25,7 +25,7 @@ from stealth_browsing import (
     natural_scroll,
     natural_mouse_movement,
     watch_video_naturally,
-    natural_pause,
+    random_pause,
     click_naturally,
     type_naturally
 )
@@ -520,6 +520,210 @@ def check_login_status(page):
     except:
         return False, None
 
+def download_ai_profile_pic(save_path, browser_name):
+    """Download AI-generated profile picture"""
+    try:
+        # Use random user API for realistic AI-generated photos
+        response = requests.get('https://randomuser.me/api/?gender=female', timeout=30)
+        data = response.json()
+
+        # Get the large profile picture
+        pic_url = data['results'][0]['picture']['large']
+
+        # Download the image
+        pic_response = requests.get(pic_url, timeout=30)
+        with open(save_path, 'wb') as f:
+            f.write(pic_response.content)
+
+        print(f'    [{browser_name}] ✓ Downloaded profile picture', flush=True)
+        return True
+    except Exception as e:
+        # Try alternative: thispersondoesnotexist.com
+        try:
+            print(f'    [{browser_name}] Trying alternative source...', flush=True)
+            pic_url = f'https://thispersondoesnotexist.com/image?t={int(time.time())}'
+            pic_response = requests.get(pic_url, timeout=30)
+            with open(save_path, 'wb') as f:
+                f.write(pic_response.content)
+            print(f'    [{browser_name}] ✓ Downloaded profile picture (alternative)', flush=True)
+            return True
+        except Exception as e2:
+            print(f'    [{browser_name}] ✗ Profile pic download failed', flush=True)
+            return False
+
+def generate_random_bio():
+    """Generate a random bio for new account"""
+    bios = [
+        'Just vibing ✨ | Coffee enthusiast ☕',
+        'Living life one day at a time 🌊 | Music lover 🎵',
+        'Dreamer 💫 | Adventure seeker 🌍',
+        'Creating my own sunshine ☀️ | Good vibes only ✌️',
+        'Wanderlust & city dust 🏙️ | Always exploring 🗺️',
+        'Making memories 📸 | Living in the moment 💭',
+        'Chasing dreams 🌟 | Spread love ❤️',
+        'Life is a journey 🚀 | Enjoy the ride 🎢',
+        'Stay positive 😊 | Work hard, play harder 💪',
+        'Just me being me 🙋 | Authenticity matters 💯'
+    ]
+    return random.choice(bios)
+
+def setup_new_account_profile(page, browser_name):
+    """Setup profile picture and bio for newly created account"""
+    print(f'    [{browser_name}] Setting up profile...', flush=True)
+
+    # Prepare profile picture
+    base_path = '/Users/faithtemporosa/tiktok-commenter-dm/tiktok-commenter-dm/downloads'
+    pic_dir = f'{base_path}/profile_pics'
+    import os
+    os.makedirs(pic_dir, exist_ok=True)
+    pic_path = f'{pic_dir}/{browser_name}_profile.jpg'
+
+    # Download profile picture
+    if not download_ai_profile_pic(pic_path, browser_name):
+        print(f'    [{browser_name}] ⚠ Skipping profile picture upload', flush=True)
+        pic_path = None
+
+    # Generate bio
+    bio_text = generate_random_bio()
+
+    try:
+        # Navigate to profile page
+        try:
+            page.goto('https://www.tiktok.com/@me', timeout=30000)
+            time.sleep(3)
+        except:
+            print(f'    [{browser_name}] ⚠ Could not navigate to profile', flush=True)
+            return False
+
+        # Click "Edit profile" button
+        try:
+            edit_btn = page.locator('button:has-text("Edit profile")').first
+            edit_btn.wait_for(state='visible', timeout=5000)
+            edit_btn.click()
+            time.sleep(3)
+            print(f'    [{browser_name}] ✓ Edit profile opened', flush=True)
+        except Exception as e:
+            print(f'    [{browser_name}] ⚠ Could not open Edit profile: {str(e)[:50]}', flush=True)
+            return False
+
+        # Upload profile picture if we have one
+        if pic_path:
+            pic_uploaded = False
+
+            # Method 1: Try clicking edit icons/buttons
+            try:
+                selectors = [
+                    'button[aria-label*="photo"]',
+                    'button[aria-label*="Upload"]',
+                    'div[role="button"]:near(:text("Profile photo"))',
+                ]
+
+                for selector in selectors:
+                    try:
+                        element = page.locator(selector).first
+                        element.wait_for(state='visible', timeout=2000)
+                        element.click()
+                        time.sleep(2)
+
+                        file_input = page.locator('input[type="file"]').first
+                        file_input.set_input_files(pic_path, timeout=5000)
+                        time.sleep(3)
+
+                        # Click Apply button
+                        try:
+                            apply_btn = page.locator('button:has-text("Apply")').first
+                            apply_btn.wait_for(state='visible', timeout=5000)
+                            apply_btn.click()
+                            time.sleep(2)
+                        except:
+                            pass
+
+                        pic_uploaded = True
+                        print(f'    [{browser_name}] ✓ Profile picture uploaded', flush=True)
+                        break
+                    except:
+                        continue
+            except:
+                pass
+
+            # Method 2: Direct file input with JavaScript
+            if not pic_uploaded:
+                try:
+                    page.evaluate("""() => {
+                        const inputs = document.querySelectorAll('input[type="file"]');
+                        if (inputs.length > 0) {
+                            inputs[0].style.display = 'block';
+                            inputs[0].style.visibility = 'visible';
+                            inputs[0].style.opacity = '1';
+                            inputs[0].style.position = 'relative';
+                        }
+                    }""")
+                    time.sleep(1)
+
+                    file_input = page.locator('input[type="file"]').first
+                    file_input.set_input_files(pic_path, timeout=5000)
+                    time.sleep(3)
+
+                    # Click Apply button
+                    try:
+                        apply_btn = page.locator('button:has-text("Apply")').first
+                        apply_btn.wait_for(state='visible', timeout=5000)
+                        apply_btn.click()
+                        time.sleep(2)
+                    except:
+                        pass
+
+                    pic_uploaded = True
+                    print(f'    [{browser_name}] ✓ Profile picture uploaded (direct)', flush=True)
+                except:
+                    print(f'    [{browser_name}] ⚠ Could not upload profile picture', flush=True)
+
+        # Set bio
+        try:
+            bio_selectors = [
+                'textarea[placeholder*="Bio"]',
+                'div:has-text("Bio") ~ textarea',
+                'textarea[name="bio"]',
+            ]
+
+            bio_set = False
+            for selector in bio_selectors:
+                try:
+                    bio_input = page.locator(selector).first
+                    bio_input.wait_for(state='visible', timeout=3000)
+                    bio_input.click()
+                    time.sleep(0.5)
+                    bio_input.fill('')
+                    time.sleep(0.5)
+                    bio_input.fill(bio_text)
+                    time.sleep(1)
+                    print(f'    [{browser_name}] ✓ Bio set: {bio_text}', flush=True)
+                    bio_set = True
+                    break
+                except:
+                    continue
+
+            if not bio_set:
+                print(f'    [{browser_name}] ⚠ Could not set bio', flush=True)
+        except Exception as e:
+            print(f'    [{browser_name}] ⚠ Bio update failed', flush=True)
+
+        # Save changes
+        try:
+            save_btn = page.locator('button:has-text("Save")').first
+            save_btn.wait_for(state='visible', timeout=5000)
+            save_btn.click()
+            time.sleep(3)
+            print(f'    [{browser_name}] ✓ Profile saved!', flush=True)
+            return True
+        except Exception as e:
+            print(f'    [{browser_name}] ⚠ Save button failed', flush=True)
+            return False
+
+    except Exception as e:
+        print(f'    [{browser_name}] ✗ Profile setup error: {str(e)[:50]}', flush=True)
+        return False
+
 def auto_signup(page, browser_name):
     """Automatically signup a new TikTok account"""
     print(f'    [{browser_name}] Running auto-signup...', flush=True)
@@ -641,6 +845,10 @@ def auto_signup(page, browser_name):
 
         # Wait for signup to complete
         time.sleep(5)
+
+        # Setup profile picture and bio
+        print(f'    [{browser_name}] Setting up profile...', flush=True)
+        setup_new_account_profile(page, browser_name)
 
         # Check if signup succeeded by verifying we're logged in
         try:
@@ -785,11 +993,11 @@ def view_and_comment_on_profile(page, account, browser_name):
                     commented = False
 
                     # Natural pause before commenting
-                    natural_pause(1, 2)
+                    random_pause(1, 2)
 
                     # Close any popups naturally
                     page.keyboard.press('Escape')
-                    natural_pause(0.3, 0.7)
+                    random_pause(0.3, 0.7)
 
                     # STEP 1: Click comment icon to expand comment section
                     clicked = page.evaluate('''() => {
@@ -802,7 +1010,7 @@ def view_and_comment_on_profile(page, account, browser_name):
                     }''')
 
                     if clicked:
-                        natural_pause(1.5, 2.5)  # Wait for comment section to expand
+                        random_pause(1.5, 2.5)  # Wait for comment section to expand
 
                         # STEP 2: Click on the comment input area to focus it
                         input_found = page.evaluate('''() => {
@@ -842,13 +1050,13 @@ def view_and_comment_on_profile(page, account, browser_name):
                         }''')
 
                         if input_found.get('success'):
-                            natural_pause(0.3, 0.8)
+                            random_pause(0.3, 0.8)
 
                             # ===== NATURAL TYPING with random delays =====
                             for char in comment:
                                 page.keyboard.type(char)
                                 time.sleep(random.uniform(0.05, 0.15))  # Human typing speed
-                            natural_pause(0.8, 1.5)
+                            random_pause(0.8, 1.5)
 
                             # STEP 3: Click post button
                             posted = page.evaluate('''() => {
@@ -997,7 +1205,7 @@ def process_browser(browser, browser_idx, total_browsers):
 
                 # Natural pause between accounts
                 if acc_idx < len(TARGET_ACCOUNTS) - 1:
-                    natural_pause(5, 23)
+                    random_pause(5, 23)
 
             browser_conn.close()
 
