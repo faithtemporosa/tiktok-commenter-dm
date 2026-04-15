@@ -307,10 +307,8 @@ def generate_email():
     return f"{adj}{noun}{num}@automateyourbizz.xyz"
 
 def generate_password():
-    adj = random.choice(ADJECTIVES).capitalize()
-    noun = random.choice(NOUNS).capitalize()
-    num = random.randint(10, 99)
-    return f"{adj}{noun}.{num}"
+    # Always use the same password for all signups
+    return "Spectrum.01"
 
 def get_gmail_service():
     """Get Gmail API service"""
