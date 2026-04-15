@@ -92,11 +92,24 @@ def warmup_browser(browser_name, user_id, num_videos=10):
             random_pause(3, 5)
 
             is_logged_in = True
-            try:
-                login_btn = page.get_by_role("link", name="Log in").first
-                is_logged_out = login_btn.is_visible(timeout=2000)
+            is_logged_out = False
 
-                if is_logged_out:
+            # Check for login button by getting all buttons and checking their text
+            try:
+                buttons = page.locator('button').all()
+                for btn in buttons:
+                    try:
+                        text = btn.inner_text(timeout=500)
+                        if text and 'log in' in text.lower():
+                            is_logged_out = True
+                            print(f"[{browser_name}] Found login button: '{text}'")
+                            break
+                    except:
+                        continue
+            except Exception as e:
+                print(f"[{browser_name}] Login check error: {str(e)[:40]}")
+
+            if is_logged_out:
                     print(f"[{browser_name}] ⚠ Account is logged out")
                     print(f"[{browser_name}] → Running auto-signup...")
 
@@ -113,8 +126,8 @@ def warmup_browser(browser_name, user_id, num_videos=10):
                     else:
                         print(f"[{browser_name}] ✗ Auto-signup failed, skipping warmup")
                         return False
-            except:
-                pass  # Likely logged in
+                else:
+                    is_logged_in = True
 
             if is_logged_in:
                 print(f"[{browser_name}] ✓ Logged in, starting warmup...")
