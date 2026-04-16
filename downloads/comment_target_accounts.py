@@ -30,6 +30,17 @@ from stealth_browsing import (
     type_naturally
 )
 
+# Supabase for cloud sync to Vercel dashboard
+try:
+    from supabase import create_client
+    SUPABASE_URL = "https://gisbdbbsvwjcjwovwklg.supabase.co"
+    SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imdpc2JkYmJzdndqY2p3b3Z3a2xnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njk3OTk5NzQsImV4cCI6MjA4NTM3NTk3NH0.uIKtftzl9ssaP2rXfXgHr3NFcA2PFYAUcSzQu_6ZIcI"
+    supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
+    HAS_SUPABASE = True
+except ImportError:
+    HAS_SUPABASE = False
+    print("Warning: supabase not installed, stats won't sync to cloud")
+
 # Comment functions are now inline - no need to import from main commenter
 
 ADSPOWER_API = 'http://local.adspower.net:50325'
@@ -253,9 +264,23 @@ def load_target_stats():
         return {}
 
 def save_target_stats(stats):
-    """Save target account stats to JSON"""
+    """Save target account stats to JSON and sync to Supabase"""
     with open(TARGET_STATS_PATH, 'w') as f:
         json.dump(stats, f, indent=2)
+
+    # Sync to Supabase for Vercel dashboard
+    if HAS_SUPABASE:
+        try:
+            for account, data in stats.items():
+                supabase.table('target_account_stats').upsert({
+                    'account': account,
+                    'total_views': data.get('total_views', 0),
+                    'total_comments': data.get('total_comments', 0),
+                    'browsers_engaged': len(data.get('browsers_engaged', [])),
+                    'last_updated': data.get('last_updated', '')
+                }, on_conflict='account').execute()
+        except Exception as e:
+            print(f"    Warning: Failed to sync to Supabase: {e}")
 
 def update_account_stats(account, videos_viewed, comments_made, browser_name):
     """Update stats for a target account"""

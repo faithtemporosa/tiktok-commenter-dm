@@ -63,16 +63,33 @@ function Dashboard({ onNavigate }) {
     }
   }, []);
 
-  // Fetch target accounts stats from local bot
+  // Fetch target accounts stats from Supabase
   const fetchTargetStats = useCallback(async () => {
     try {
-      const res = await fetch(`${BOT_API_URL}/api/target-accounts/summary`);
-      if (res.ok) {
-        const data = await res.json();
-        setTargetStats(data);
-      }
+      const { data, error } = await supabase
+        .from('target_account_stats')
+        .select('*')
+        .order('total_comments', { ascending: false });
+
+      if (error) throw error;
+
+      const accounts = (data || []).map(row => ({
+        name: row.account,
+        views: row.total_views || 0,
+        comments: row.total_comments || 0,
+        browsers_engaged: row.browsers_engaged || 0,
+        last_updated: row.last_updated || ''
+      }));
+
+      const totals = {
+        views: accounts.reduce((sum, a) => sum + a.views, 0),
+        comments: accounts.reduce((sum, a) => sum + a.comments, 0),
+        browsers: Math.max(...accounts.map(a => a.browsers_engaged), 0)
+      };
+
+      setTargetStats({ accounts, totals });
     } catch (err) {
-      // Bot not running, ignore
+      console.error('Error fetching target stats:', err);
     }
   }, []);
 
