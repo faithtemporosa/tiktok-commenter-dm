@@ -225,6 +225,10 @@ def main():
     videos_per_browser = int(videos_input) if videos_input else 10
     videos_per_browser = max(5, min(20, videos_per_browser))
 
+    start_input = input("Start from browser number? (default 1, e.g., 8 for tt8): ").strip()
+    start_num = int(start_input) if start_input else 1
+    start_num = max(1, start_num)
+
     print()
     print(f"Will warm up {num_browsers} browsers, {videos_per_browser} videos each")
     print()
@@ -235,8 +239,9 @@ def main():
         else 9999
     ))
 
-    # Select first N browsers starting from tt1
-    selected = browsers_sorted[:num_browsers]
+    # Select browsers starting from specified number
+    start_index = start_num - 1  # Convert to 0-based index
+    selected = browsers_sorted[start_index:start_index + num_browsers]
     print(f"Starting from: {selected[0].get('name')} to {selected[-1].get('name')}")
     print()
 
