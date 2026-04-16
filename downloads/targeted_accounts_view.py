@@ -40,7 +40,7 @@ from comment_target_accounts import (
 TARGET_STATS_PATH = 'target_accounts_view_stats.json'
 VIEW_ONLY_DAYS = 3  # First 3 days: only view, no commenting or following
 MAX_VIDEOS_TO_VIEW = 10  # Max videos to view per target account
-PARALLEL_BROWSERS = 3
+PARALLEL_BROWSERS = 2  # Keep only 2 browsers open at a time
 
 # Target accounts to view
 TARGET_ACCOUNTS = [
@@ -221,10 +221,9 @@ def process_browser(browser, browser_idx, total_browsers):
                 signup_success, username = auto_signup(page, browser_name)
 
                 if not signup_success:
-                    print(f'  ✗ Auto-signup failed for {browser_name} - leaving browser open for manual signup', flush=True)
+                    print(f'  ✗ Auto-signup failed for {browser_name} - closing browser', flush=True)
                     browser_conn.close()
-                    # DON'T close the browser - leave it open for manual signup
-                    # close_browser(user_id)
+                    close_browser(user_id)  # Close browser on failure
                     return {'success': False, 'videos': 0}
 
                 print(f'  ✓ Auto-signup successful! @{username}', flush=True)
@@ -268,7 +267,7 @@ def main():
     print(f'  - Max videos to view per account: {MAX_VIDEOS_TO_VIEW}')
     print(f'  - View-only period for new accounts: {VIEW_ONLY_DAYS} days')
     print(f'  - Parallel browsers: {PARALLEL_BROWSERS}')
-    print(f'  - Starting from: tt3')
+    print(f'  - Starting from: tt1')
     print()
 
     # Get ALL browsers
@@ -284,12 +283,12 @@ def main():
         match = re.search(r'tt(\d+)', browser.get('name', ''))
         return int(match.group(1)) if match else 0
 
-    # Filter by serial number and starting from tt3
+    # Filter by serial number and starting from tt1
     browsers = [b for b in browsers
                 if 500 <= int(b.get('serial_number', 0)) <= 806
-                and get_browser_number(b) >= 3]
+                and get_browser_number(b) >= 1]
 
-    print(f'Filtered to browsers starting from tt3 (serial 500-806): {len(browsers)} browsers')
+    print(f'Filtered to browsers starting from tt1 (serial 500-806): {len(browsers)} browsers')
 
     # Sort by browser number for consistent ordering
     browsers.sort(key=get_browser_number)

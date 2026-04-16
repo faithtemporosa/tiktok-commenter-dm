@@ -44,7 +44,7 @@ DAILY_TARGET_COMMENTS_PATH = 'daily_target_comments.json'  # Track comments per 
 # New account limits
 NEW_ACCOUNT_DAYS = 30  # Consider account "new" for first 30 days
 NEW_ACCOUNT_DAILY_FOLLOWS = 2
-NEW_ACCOUNT_DAILY_COMMENTS = 2
+NEW_ACCOUNT_DAILY_COMMENTS = 5  # Max 5 comments per browser per day
 
 def normalize_video_url(video_url):
     """Extract just the video ID from a TikTok URL to ensure consistent tracking.
@@ -299,10 +299,10 @@ TARGET_ACCOUNTS = [
 ]
 
 # Settings
-COMMENTS_PER_ACCOUNT = 1  # Comment on 1 video per account (latest only)
+COMMENTS_PER_ACCOUNT = 2  # Comment on 2 videos per account (latest 2)
 LIKES_PER_ACCOUNT = 0      # Disabled - TikTok blocks automated likes
 VIEW_ALL_VIDEOS = False    # Skip viewing - just comment
-PARALLEL_BROWSERS = 3      # Number of browsers to run in parallel
+PARALLEL_BROWSERS = 2      # Keep only 2 browsers open at a time
 
 # Comments by niche - customize as needed
 NICHE_COMMENTS = {
@@ -1236,10 +1236,9 @@ def process_browser(browser, browser_idx, total_browsers):
                 signup_success, new_username = auto_signup(page, browser_name)
 
                 if not signup_success:
-                    print(f'  ✗ Signup failed for {browser_name} - leaving browser open for manual signup', flush=True)
+                    print(f'  ✗ Signup failed for {browser_name} - closing browser', flush=True)
                     browser_conn.close()
-                    # DON'T close the browser - leave it open for manual signup
-                    # close_browser(user_id)
+                    close_browser(user_id)  # Close browser on failure
                     return {'success': False, 'videos': 0, 'comments': 0}
 
                 username = new_username
