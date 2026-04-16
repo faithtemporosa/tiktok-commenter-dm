@@ -220,8 +220,16 @@ def main():
     print(f"Will warm up {num_browsers} browsers, {videos_per_browser} videos each")
     print()
 
-    # Select random browsers for variety
-    selected = random.sample(browsers, num_browsers)
+    # Sort browsers by name (tt1, tt2, tt3, ...)
+    browsers_sorted = sorted(browsers, key=lambda x: (
+        int(x.get('name', 'tt999')[2:]) if x.get('name', '').startswith('tt') and x.get('name', '')[2:].isdigit()
+        else 9999
+    ))
+
+    # Select first N browsers starting from tt1
+    selected = browsers_sorted[:num_browsers]
+    print(f"Starting from: {selected[0].get('name')} to {selected[-1].get('name')}")
+    print()
 
     success = 0
     failed = 0
