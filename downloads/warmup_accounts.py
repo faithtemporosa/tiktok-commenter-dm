@@ -163,7 +163,8 @@ def get_all_browsers():
     all_browsers = []
     page = 1
 
-    while True:
+    print("Fetching all browsers from AdsPower...")
+    while page <= 10:  # Max 10 pages = 1000 browsers
         try:
             response = requests.get(
                 f'{ADSPOWER_API}/api/v1/user/list',
@@ -173,6 +174,11 @@ def get_all_browsers():
             data = response.json()
 
             if data['code'] != 0:
+                # Check for rate limiting
+                if 'Too many' in data.get('msg', ''):
+                    print(f"  Rate limited, waiting 2 seconds...")
+                    time.sleep(2)
+                    continue
                 break
 
             browsers = data['data']['list']
@@ -180,9 +186,12 @@ def get_all_browsers():
                 break
 
             all_browsers.extend(browsers)
+            print(f"  Loaded page {page}: {len(browsers)} browsers (total: {len(all_browsers)})")
             page += 1
+            time.sleep(1)  # Rate limit prevention
 
         except Exception as e:
+            print(f"  Error fetching browsers: {e}")
             break
 
     return all_browsers
