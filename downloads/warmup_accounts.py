@@ -22,11 +22,26 @@ from stealth_browsing import inject_stealth, browse_for_you_page, random_pause
 ADSPOWER_API = 'http://local.adspower.net:50325'
 WARMUP_LOG_PATH = 'warmup_log.json'
 
-def open_browser(user_id):
-    response = requests.get(f"{ADSPOWER_API}/api/v1/browser/start?user_id={user_id}", timeout=30)
-    data = response.json()
-    if data.get("code") == 0:
-        return data["data"]["ws"]["puppeteer"]
+def open_browser(user_id, max_retries=3):
+    """Open browser with retry logic for timeouts"""
+    for attempt in range(max_retries):
+        try:
+            response = requests.get(f"{ADSPOWER_API}/api/v1/browser/start?user_id={user_id}", timeout=60)
+            data = response.json()
+            if data.get("code") == 0:
+                return data["data"]["ws"]["puppeteer"]
+            return None
+        except requests.exceptions.Timeout:
+            if attempt < max_retries - 1:
+                wait_time = (attempt + 1) * 5  # 5s, 10s, 15s
+                print(f"    AdsPower timeout, retrying in {wait_time}s... (attempt {attempt + 2}/{max_retries})")
+                time.sleep(wait_time)
+            else:
+                print(f"    AdsPower failed after {max_retries} attempts")
+                return None
+        except Exception as e:
+            print(f"    Error opening browser: {str(e)[:50]}")
+            return None
     return None
 
 def close_browser(user_id):
