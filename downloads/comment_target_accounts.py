@@ -759,36 +759,51 @@ def auto_signup(page, browser_name):
         page.locator('input[type="password"]').fill(password)
         time.sleep(0.5)
 
-        # Click send code - verify button changes before continuing
+        # Click send code - MUST click twice (first activates, second sends)
         try:
-            # Keep clicking "Send code" until button text changes to "Resend"
-            max_clicks = 5
             code_sent = False
 
-            for click_attempt in range(max_clicks):
-                # Check if "Resend" button is visible (means code was sent)
+            # First, click Send code TWICE quickly (TikTok requires double-click)
+            send_btn = page.locator('button:has-text("Send code"), button:has-text("Envoyer")').first
+            if send_btn.is_visible(timeout=5000):
+                # First click - activates the button
+                send_btn.click()
+                print(f'    [{browser_name}] Send code clicked (1st click - activate)', flush=True)
+                time.sleep(2)  # Brief wait
+
+                # Second click - actually sends the code
                 try:
-                    resend_btn = page.locator('button:has-text("Resend code"), button:has-text("Resend"), button:has-text("Renvoyer")').first
-                    if resend_btn.is_visible(timeout=2000):
-                        print(f'    [{browser_name}] ✓ Code sent! (Resend button visible)', flush=True)
-                        code_sent = True
-                        break
+                    send_btn = page.locator('button:has-text("Send code"), button:has-text("Envoyer")').first
+                    if send_btn.is_visible(timeout=2000):
+                        send_btn.click()
+                        print(f'    [{browser_name}] Send code clicked (2nd click - send)', flush=True)
                 except:
                     pass
 
-                # If not sent yet, try to click "Send code" button
-                try:
-                    send_btn = page.locator('button:has-text("Send code"), button:has-text("Envoyer")').first
-                    if send_btn.is_visible(timeout=3000):
-                        send_btn.click()
-                        print(f'    [{browser_name}] Send code clicked (attempt {click_attempt + 1})', flush=True)
-                        time.sleep(6)  # Wait for UI to update
-                    else:
-                        # Button not visible, might already be sent
-                        print(f'    [{browser_name}] Send code button not visible', flush=True)
-                        break
-                except:
-                    break
+                # Wait for Resend button to appear (indicates code was sent)
+                time.sleep(8)  # TikTok needs time to send and update UI
+
+                # Check for Resend button
+                for check in range(5):
+                    try:
+                        resend_btn = page.locator('button:has-text("Resend code"), button:has-text("Resend"), button:has-text("Renvoyer")').first
+                        if resend_btn.is_visible(timeout=3000):
+                            print(f'    [{browser_name}] ✓ Code sent! (Resend button visible)', flush=True)
+                            code_sent = True
+                            break
+                    except:
+                        pass
+
+                    if not code_sent:
+                        # Try clicking Send code again if still visible
+                        try:
+                            send_btn = page.locator('button:has-text("Send code"), button:has-text("Envoyer")').first
+                            if send_btn.is_visible(timeout=1000):
+                                send_btn.click()
+                                print(f'    [{browser_name}] Send code clicked again (attempt {check + 3})', flush=True)
+                                time.sleep(5)
+                        except:
+                            break
 
             # Double-check code was sent
             if not code_sent:
