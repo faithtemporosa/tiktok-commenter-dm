@@ -759,48 +759,58 @@ def auto_signup(page, browser_name):
         page.locator('input[type="password"]').fill(password)
         time.sleep(0.5)
 
-        # Click send code - click twice with proper waiting
+        # Click send code - verify button changes before continuing
         try:
-            # First click
-            send_btn = page.locator('button:has-text("Send code"), button:has-text("Envoyer")').first
-            if send_btn.is_visible(timeout=3000):
-                send_btn.click()
-                print(f'    [{browser_name}] Send code clicked (1st time)', flush=True)
-                time.sleep(5)  # Wait longer after first click
+            # Keep clicking "Send code" until button text changes to "Resend"
+            max_clicks = 5
+            code_sent = False
 
-            # Second click (TikTok requires two clicks)
-            send_btn = page.locator('button:has-text("Send code"), button:has-text("Envoyer")').first
-            if send_btn.is_visible(timeout=3000):
-                send_btn.click()
-                print(f'    [{browser_name}] Send code clicked (2nd time)', flush=True)
-                time.sleep(8)  # Wait longer after second click for UI to update
+            for click_attempt in range(max_clicks):
+                # Check if "Resend" button is visible (means code was sent)
+                try:
+                    resend_btn = page.locator('button:has-text("Resend code"), button:has-text("Resend"), button:has-text("Renvoyer")').first
+                    if resend_btn.is_visible(timeout=2000):
+                        print(f'    [{browser_name}] ✓ Code sent! (Resend button visible)', flush=True)
+                        code_sent = True
+                        break
+                except:
+                    pass
 
-            # Verify code was sent by looking for "Resend code" button
-            resend_visible = False
-            try:
-                # Try multiple selectors for Resend button
-                resend_selectors = [
-                    'button:has-text("Resend code")',
-                    'button:has-text("Resend")',
-                    'button:has-text("Renvoyer")',
-                    'div:has-text("Resend code")',
-                    '[data-e2e*="resend"]'
-                ]
+                # If not sent yet, try to click "Send code" button
+                try:
+                    send_btn = page.locator('button:has-text("Send code"), button:has-text("Envoyer")').first
+                    if send_btn.is_visible(timeout=3000):
+                        send_btn.click()
+                        print(f'    [{browser_name}] Send code clicked (attempt {click_attempt + 1})', flush=True)
+                        time.sleep(6)  # Wait for UI to update
+                    else:
+                        # Button not visible, might already be sent
+                        print(f'    [{browser_name}] Send code button not visible', flush=True)
+                        break
+                except:
+                    break
 
-                for selector in resend_selectors:
+            # Double-check code was sent
+            if not code_sent:
+                # Check one more time for Resend button or code input field
+                try:
+                    resend_btn = page.locator('button:has-text("Resend"), div:has-text("Resend")').first
+                    if resend_btn.is_visible(timeout=2000):
+                        code_sent = True
+                        print(f'    [{browser_name}] ✓ Code sent (verified)', flush=True)
+                except:
+                    # Check if code input field is visible (also means code was sent)
                     try:
-                        resend_btn = page.locator(selector).first
-                        if resend_btn.is_visible(timeout=2000):
-                            print(f'    [{browser_name}] ✓ Code sent (Resend button found)', flush=True)
-                            resend_visible = True
-                            break
+                        code_input = page.locator('input[placeholder*="code"], input[name="code"]').first
+                        if code_input.is_visible(timeout=2000):
+                            code_sent = True
+                            print(f'    [{browser_name}] ✓ Code input visible (code was sent)', flush=True)
                     except:
-                        continue
+                        pass
 
-                if not resend_visible:
-                    print(f'    [{browser_name}] ⚠ Resend button not visible - continuing anyway', flush=True)
-            except:
-                print(f'    [{browser_name}] ⚠ Could not verify if code was sent - continuing', flush=True)
+            if not code_sent:
+                print(f'    [{browser_name}] ✗ Could not verify code was sent - aborting', flush=True)
+                return False, None
 
             # Take screenshot to verify current state
             screenshot_path = f'/Users/faithtemporosa/tiktok-commenter-dm/tiktok-commenter-dm/downloads/signup_{browser_name}_after_send.png'
