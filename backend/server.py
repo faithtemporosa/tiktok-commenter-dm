@@ -1324,6 +1324,112 @@ async def send_daily_summary():
     
     return {"ok": True, "sent": sent, "total_subscribers": len(subs)}
 
+# ==============================================================================
+# TARGET ACCOUNTS ENDPOINTS - For target account commenting/viewing stats
+# ==============================================================================
+TARGET_STATS_PATH = ROOT_DIR.parent / "target_accounts_stats.json"
+TARGET_SCRIPT_PATH = ROOT_DIR.parent / "downloads" / "comment_target_accounts.py"
+target_process = None
+
+@api_router.get("/target-accounts/summary")
+async def get_target_accounts_summary():
+    """Get summary of target accounts stats for dashboard"""
+    try:
+        if not TARGET_STATS_PATH.exists():
+            return {"accounts": [], "totals": {"views": 0, "comments": 0, "browsers": 0}}
+
+        with open(TARGET_STATS_PATH) as f:
+            stats = json.load(f)
+
+        accounts = []
+        total_views = 0
+        total_comments = 0
+        all_browsers = set()
+
+        for username, data in stats.items():
+            views = data.get("total_views", 0)
+            comments = data.get("total_comments", 0)
+            browsers = data.get("browsers_engaged", [])
+
+            accounts.append({
+                "name": username,
+                "views": views,
+                "comments": comments,
+                "browsers_engaged": len(browsers),
+                "last_updated": data.get("last_updated", "")
+            })
+
+            total_views += views
+            total_comments += comments
+            all_browsers.update(browsers)
+
+        return {
+            "accounts": accounts,
+            "totals": {
+                "views": total_views,
+                "comments": total_comments,
+                "browsers": len(all_browsers)
+            }
+        }
+    except Exception as e:
+        logger.error(f"Error getting target accounts summary: {e}")
+        return {"accounts": [], "totals": {"views": 0, "comments": 0, "browsers": 0}}
+
+@api_router.get("/target-accounts/logs")
+async def get_target_accounts_logs(lines: int = Query(100, ge=1, le=1000)):
+    """Get recent logs from target accounts script"""
+    import subprocess
+    try:
+        # Get last N lines from the script output
+        result = subprocess.run(
+            ["tail", "-n", str(lines), "/tmp/target_accounts.log"],
+            capture_output=True, text=True, timeout=5
+        )
+        return {"logs": result.stdout if result.returncode == 0 else "No logs available"}
+    except Exception as e:
+        return {"logs": f"Error reading logs: {e}"}
+
+@api_router.post("/target-accounts/start")
+async def start_target_accounts():
+    """Start the target accounts commenting script"""
+    import subprocess
+    global target_process
+    try:
+        if target_process and target_process.poll() is None:
+            return {"ok": False, "message": "Script already running"}
+
+        # Start the script in background, logging to file
+        log_file = open("/tmp/target_accounts.log", "w")
+        target_process = subprocess.Popen(
+            ["python3", str(TARGET_SCRIPT_PATH)],
+            stdout=log_file,
+            stderr=subprocess.STDOUT,
+            cwd=str(TARGET_SCRIPT_PATH.parent)
+        )
+        return {"ok": True, "message": "Started target accounts script", "pid": target_process.pid}
+    except Exception as e:
+        logger.error(f"Error starting target accounts script: {e}")
+        return {"ok": False, "message": str(e)}
+
+@api_router.post("/target-accounts/stop")
+async def stop_target_accounts():
+    """Stop the target accounts commenting script"""
+    import subprocess
+    global target_process
+    try:
+        # Kill by process if we have it
+        if target_process and target_process.poll() is None:
+            target_process.terminate()
+            target_process = None
+            return {"ok": True, "message": "Stopped target accounts script"}
+
+        # Otherwise try to find and kill by name
+        subprocess.run(["pkill", "-f", "comment_target_accounts.py"], timeout=5)
+        return {"ok": True, "message": "Stopped target accounts script"}
+    except Exception as e:
+        logger.error(f"Error stopping target accounts script: {e}")
+        return {"ok": False, "message": str(e)}
+
 # Include the router in the main app
 app.include_router(api_router)
 
