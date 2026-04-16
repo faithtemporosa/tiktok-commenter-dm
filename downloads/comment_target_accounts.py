@@ -759,31 +759,35 @@ def auto_signup(page, browser_name):
         page.locator('input[type="password"]').fill(password)
         time.sleep(0.5)
 
-        # Click send code - MUST click twice (first activates, second sends)
+        # Click send code - use force click and JavaScript dispatch
         try:
             code_sent = False
 
-            # First, click Send code TWICE quickly (TikTok requires double-click)
+            # Click Send code with force and JavaScript dispatch
             send_btn = page.locator('button:has-text("Send code"), button:has-text("Envoyer")').first
             if send_btn.is_visible(timeout=5000):
-                # First click - activates the button
-                send_btn.click()
-                print(f'    [{browser_name}] Send code clicked (1st click - activate)', flush=True)
-                time.sleep(2)  # Brief wait
+                # Scroll into view and focus
+                send_btn.scroll_into_view_if_needed()
+                time.sleep(0.5)
 
-                # Second click - actually sends the code
+                # First click with force
+                send_btn.click(force=True)
+                print(f'    [{browser_name}] Send code clicked (1st - force)', flush=True)
+                time.sleep(3)
+
+                # Second click with JavaScript dispatch
                 try:
                     send_btn = page.locator('button:has-text("Send code"), button:has-text("Envoyer")').first
                     if send_btn.is_visible(timeout=2000):
-                        send_btn.click()
-                        print(f'    [{browser_name}] Send code clicked (2nd click - send)', flush=True)
+                        send_btn.dispatch_event('click')
+                        print(f'    [{browser_name}] Send code clicked (2nd - JS dispatch)', flush=True)
                 except:
                     pass
 
-                # Wait for Resend button to appear (indicates code was sent)
-                time.sleep(8)  # TikTok needs time to send and update UI
+                # Wait longer for TikTok to process
+                time.sleep(10)
 
-                # Check for Resend button
+                # Check for Resend button multiple times
                 for check in range(5):
                     try:
                         resend_btn = page.locator('button:has-text("Resend code"), button:has-text("Resend"), button:has-text("Renvoyer")').first
@@ -795,12 +799,14 @@ def auto_signup(page, browser_name):
                         pass
 
                     if not code_sent:
-                        # Try clicking Send code again if still visible
+                        # Try both force click and JS dispatch
                         try:
                             send_btn = page.locator('button:has-text("Send code"), button:has-text("Envoyer")').first
                             if send_btn.is_visible(timeout=1000):
-                                send_btn.click()
-                                print(f'    [{browser_name}] Send code clicked again (attempt {check + 3})', flush=True)
+                                send_btn.click(force=True)
+                                time.sleep(1)
+                                send_btn.dispatch_event('click')
+                                print(f'    [{browser_name}] Send code clicked (attempt {check + 3})', flush=True)
                                 time.sleep(5)
                         except:
                             break
@@ -824,6 +830,10 @@ def auto_signup(page, browser_name):
                         pass
 
             if not code_sent:
+                # Take debug screenshot to see what's on screen
+                debug_path = f'/Users/faithtemporosa/tiktok-commenter-dm/tiktok-commenter-dm/downloads/debug_{browser_name}_send_failed.png'
+                page.screenshot(path=debug_path)
+                print(f'    [{browser_name}] Debug screenshot: {debug_path}', flush=True)
                 print(f'    [{browser_name}] ✗ Could not verify code was sent - aborting', flush=True)
                 return False, None
 
