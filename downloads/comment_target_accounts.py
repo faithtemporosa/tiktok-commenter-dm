@@ -1249,6 +1249,10 @@ def process_browser(browser, browser_idx, total_browsers):
             context = browser_conn.contexts[0]
             page = context.pages[0] if context.pages else context.new_page()
 
+            # Close extra tabs - keep only 1 tab per browser
+            while len(context.pages) > 1:
+                context.pages[-1].close()
+
             # ===== INJECT STEALTH MODE - Hide CDP/automation detection =====
             inject_stealth(page)
 
@@ -1348,6 +1352,15 @@ def main():
             future_to_browser = {}
             for idx_in_batch, browser in enumerate(batch_browsers):
                 global_idx = batch_start + idx_in_batch
+                browser_name = browser.get('name', f'browser_{global_idx}')
+
+                # Skip browsers that have already met daily quota
+                if not can_comment_today(browser_name):
+                    today_activity = get_today_activity(browser_name)
+                    print(f'\n[{global_idx + 1}/{len(browsers)}] {browser_name} - SKIPPED (daily quota met: {today_activity["comments"]}/{NEW_ACCOUNT_DAILY_COMMENTS} comments)', flush=True)
+                    browsers_completed += 1
+                    continue
+
                 future = executor.submit(process_browser, browser, global_idx, len(browsers))
                 future_to_browser[future] = browser
 
