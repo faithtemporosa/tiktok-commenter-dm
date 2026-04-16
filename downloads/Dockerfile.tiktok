@@ -1,0 +1,27 @@
+# TikTok Android Docker Container
+# Lightweight Android environment for TikTok automation
+
+FROM budtmo/docker-android:emulator_11.0
+
+# Set environment variables for lighter performance
+ENV DEVICE="Samsung Galaxy S10"
+ENV ANDROID_VERSION=11.0
+ENV EMULATOR_TIMEOUT=300
+ENV SCREEN_WIDTH=1080
+ENV SCREEN_HEIGHT=1920
+
+# Install required packages
+RUN apt-get update && apt-get install -y \
+    python3 \
+    python3-pip \
+    wget \
+    unzip \
+    && rm -rf /var/lib/apt/lists/*
+
+# Expose ports
+# 5555 - ADB
+# 6080 - Web interface (noVNC)
+EXPOSE 5555 6080
+
+# Start emulator
+CMD ["/bin/bash", "-c", "/opt/start-emulator.sh && tail -f /dev/null"]
