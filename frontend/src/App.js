@@ -46,6 +46,7 @@ function Dashboard({ onNavigate }) {
   const [targetStats, setTargetStats] = useState({ accounts: [], totals: { views: 0, comments: 0, browsers: 0 } });
   const [targetLogs, setTargetLogs] = useState([]);
   const [targetRunning, setTargetRunning] = useState(false);
+  const [targetCommentHistory, setTargetCommentHistory] = useState([]);
   const fileInputRef = useRef(null);
   const logsContainerRef = useRef(null);
   const targetLogsRef = useRef(null);
@@ -108,6 +109,23 @@ function Dashboard({ onNavigate }) {
       }
     } catch (err) {
       // Bot not running, ignore
+    }
+  }, []);
+
+  // Fetch target comment history from Supabase
+  const fetchTargetCommentHistory = useCallback(async () => {
+    try {
+      const { data, error } = await supabase
+        .from('target_comment_history')
+        .select('*')
+        .order('timestamp', { ascending: false })
+        .limit(100);
+
+      if (!error && data) {
+        setTargetCommentHistory(data);
+      }
+    } catch (err) {
+      console.error('Error fetching comment history:', err);
     }
   }, []);
 
@@ -177,7 +195,8 @@ function Dashboard({ onNavigate }) {
 
   const fetchAccounts = useCallback(async () => {
     try {
-      const { data, count } = await supabase.from('tiktok_accounts').select('*', { count: 'exact' }).order('browser_num', { ascending: true });
+      // Fetch from tiktok_account_history (all accounts ever used per browser)
+      const { data, count } = await supabase.from('tiktok_account_history').select('*', { count: 'exact' }).order('last_seen', { ascending: false });
       setAccounts(data || []); setAccountsTotal(count || 0);
     } catch (err) { console.error("Accounts error:", err); }
   }, []);
@@ -191,9 +210,9 @@ function Dashboard({ onNavigate }) {
 
   const fetchAll = useCallback(async () => {
     setLoading(true);
-    await Promise.all([fetchStats(), fetchReports(), fetchLogs(), fetchDmReports(), fetchPostReports(), fetchProfileMappings(), fetchAccounts(), fetchTargetStats(), fetchTargetLogs()]);
+    await Promise.all([fetchStats(), fetchReports(), fetchLogs(), fetchDmReports(), fetchPostReports(), fetchProfileMappings(), fetchAccounts(), fetchTargetStats(), fetchTargetLogs(), fetchTargetCommentHistory()]);
     setLoading(false);
-  }, [fetchStats, fetchReports, fetchLogs, fetchDmReports, fetchPostReports, fetchProfileMappings, fetchAccounts, fetchTargetStats, fetchTargetLogs]);
+  }, [fetchStats, fetchReports, fetchLogs, fetchDmReports, fetchPostReports, fetchProfileMappings, fetchAccounts, fetchTargetStats, fetchTargetLogs, fetchTargetCommentHistory]);
 
   const handleFileImport = async (event) => {
     const file = event.target.files[0]; if (!file) return;
@@ -513,6 +532,45 @@ function Dashboard({ onNavigate }) {
               </table>
             </div>
 
+            {/* Comment History Section */}
+            {targetCommentHistory.length > 0 && (
+              <div className="bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden mt-6">
+                <div className="bg-zinc-800/50 px-4 py-3 flex items-center gap-3">
+                  <MessageCircle className="w-4 h-4 text-emerald-400" />
+                  <h3 className="text-sm font-semibold">Comment History (Who Commented)</h3>
+                  <span className="text-xs px-2 py-0.5 rounded-full bg-zinc-800">{targetCommentHistory.length}</span>
+                </div>
+                <div className="max-h-64 overflow-y-auto">
+                  <table className="w-full text-sm">
+                    <thead className="bg-zinc-800/50 sticky top-0">
+                      <tr>
+                        <th className="text-left px-4 py-2 font-medium text-zinc-400">Time</th>
+                        <th className="text-left px-4 py-2 font-medium text-zinc-400">Browser</th>
+                        <th className="text-left px-4 py-2 font-medium text-zinc-400">Account</th>
+                        <th className="text-left px-4 py-2 font-medium text-zinc-400">Target</th>
+                        <th className="text-center px-4 py-2 font-medium text-zinc-400">Comments</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {targetCommentHistory.map((h, i) => (
+                        <tr key={h.id || i} className="border-t border-zinc-800 hover:bg-zinc-800/30">
+                          <td className="px-4 py-2 text-zinc-400 text-xs">{fmt(h.timestamp)}</td>
+                          <td className="px-4 py-2"><span className="px-2 py-0.5 rounded bg-violet-500/20 text-violet-400 text-xs font-mono">{h.browser_name}</span></td>
+                          <td className="px-4 py-2">
+                            <a href={`https://www.tiktok.com/@${h.tiktok_username}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-cyan-400 hover:text-cyan-300 text-xs">
+                              <ExternalLink className="w-3 h-3" />@{h.tiktok_username}
+                            </a>
+                          </td>
+                          <td className="px-4 py-2"><span className="px-2 py-0.5 rounded bg-amber-500/20 text-amber-400 text-xs">@{h.target_account}</span></td>
+                          <td className="px-4 py-2 text-center text-emerald-400">{h.comments_made}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+
             {/* Live Logs Section */}
             <div className="bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden mt-6">
               <div className="bg-zinc-800/50 px-4 py-3 flex items-center justify-between">
@@ -590,34 +648,32 @@ function Dashboard({ onNavigate }) {
         {activeTab === "accounts" && (
           <div data-testid="accounts-tab">
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
-              <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-4 text-center"><div className="text-2xl font-bold text-violet-400">{accountsTotal.toLocaleString()}</div><div className="text-xs text-zinc-500">Total Accounts</div></div>
-              <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-4 text-center"><div className="text-2xl font-bold text-emerald-400">{accounts.filter(a=>a.status==='active').length}</div><div className="text-xs text-zinc-500">Active</div></div>
-              <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-4 text-center"><div className="text-2xl font-bold text-amber-400">{accounts.filter(a=>a.status==='suspended').length}</div><div className="text-xs text-zinc-500">Suspended</div></div>
-              <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-4 text-center"><div className="text-2xl font-bold text-cyan-400">{new Set(accounts.map(a=>a.email?.split('@')[1])).size}</div><div className="text-xs text-zinc-500">Email Domains</div></div>
+              <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-4 text-center"><div className="text-2xl font-bold text-violet-400">{accountsTotal.toLocaleString()}</div><div className="text-xs text-zinc-500">Total Records</div></div>
+              <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-4 text-center"><div className="text-2xl font-bold text-emerald-400">{new Set(accounts.map(a=>a.username)).size}</div><div className="text-xs text-zinc-500">Unique Accounts</div></div>
+              <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-4 text-center"><div className="text-2xl font-bold text-cyan-400">{accounts.filter(a=>a.account_type==='signup').length}</div><div className="text-xs text-zinc-500">Signups</div></div>
+              <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-4 text-center"><div className="text-2xl font-bold text-amber-400">{new Set(accounts.map(a=>a.browser_num)).size}</div><div className="text-xs text-zinc-500">Browsers Used</div></div>
             </div>
-            <div className="mb-3 text-sm text-zinc-500">Showing {accounts.length} accounts</div>
+            <div className="mb-3 text-sm text-zinc-500">Showing {accounts.length} account records (sorted by last seen)</div>
             <div className="bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden">
               <table className="w-full text-sm" data-testid="accounts-table">
                 <thead className="bg-zinc-800/50"><tr>
                   <th className="text-left px-4 py-3 font-medium text-zinc-400">Browser</th>
-                  <th className="text-left px-4 py-3 font-medium text-zinc-400">Email</th>
-                  <th className="text-left px-4 py-3 font-medium text-zinc-400">Password</th>
                   <th className="text-left px-4 py-3 font-medium text-zinc-400">Username</th>
-                  <th className="text-left px-4 py-3 font-medium text-zinc-400">Birthdate</th>
+                  <th className="text-left px-4 py-3 font-medium text-zinc-400">Email</th>
+                  <th className="text-left px-4 py-3 font-medium text-zinc-400">Type</th>
                   <th className="text-left px-4 py-3 font-medium text-zinc-400">Status</th>
-                  <th className="text-left px-4 py-3 font-medium text-zinc-400">Created</th>
+                  <th className="text-left px-4 py-3 font-medium text-zinc-400">Last Seen</th>
                 </tr></thead>
                 <tbody>
-                  {accounts.length === 0 ? <tr><td colSpan="7" className="text-center py-12 text-zinc-500"><Users className="w-6 h-6 mx-auto mb-2 opacity-50" />No accounts yet. Run import script to add accounts.</td></tr>
+                  {accounts.length === 0 ? <tr><td colSpan="6" className="text-center py-12 text-zinc-500"><Users className="w-6 h-6 mx-auto mb-2 opacity-50" />No accounts yet. Run the target commenter to start tracking.</td></tr>
                   : accounts.map((acc, i) => (
                     <tr key={acc.id || i} className="border-t border-zinc-800 hover:bg-zinc-800/30" data-testid={`account-row-${i}`}>
-                      <td className="px-4 py-3"><span className="px-2 py-0.5 rounded bg-violet-500/20 text-violet-400 text-xs font-mono">{acc.browser_num}</span></td>
-                      <td className="px-4 py-3 text-zinc-300 text-xs font-mono">{acc.email}</td>
-                      <td className="px-4 py-3 text-zinc-400 text-xs font-mono">{acc.password}</td>
+                      <td className="px-4 py-3"><span className="px-2 py-0.5 rounded bg-violet-500/20 text-violet-400 text-xs font-mono">{acc.browser_name || `tt${acc.browser_num}`}</span></td>
                       <td className="px-4 py-3">{acc.username ? <a href={`https://www.tiktok.com/@${acc.username}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-cyan-400 hover:text-cyan-300 text-xs"><ExternalLink className="w-3 h-3" />@{acc.username}</a> : <span className="text-zinc-600 text-xs">-</span>}</td>
-                      <td className="px-4 py-3 text-zinc-400 text-xs">{acc.birthdate || '-'}</td>
-                      <td className="px-4 py-3"><span className={`px-2 py-0.5 rounded text-xs ${acc.status==='active'?'text-emerald-400 bg-emerald-500/20':acc.status==='suspended'?'text-red-400 bg-red-500/20':'text-zinc-400 bg-zinc-500/20'}`}>{acc.status}</span></td>
-                      <td className="px-4 py-3 text-zinc-500 text-xs">{acc.created_at ? new Date(acc.created_at).toLocaleDateString() : '-'}</td>
+                      <td className="px-4 py-3 text-zinc-300 text-xs font-mono">{acc.email || '-'}</td>
+                      <td className="px-4 py-3"><span className={`px-2 py-0.5 rounded text-xs ${acc.account_type==='signup'?'text-cyan-400 bg-cyan-500/20':'text-amber-400 bg-amber-500/20'}`}>{acc.account_type || 'login'}</span></td>
+                      <td className="px-4 py-3"><span className={`px-2 py-0.5 rounded text-xs ${acc.status==='active'?'text-emerald-400 bg-emerald-500/20':acc.status==='suspended'?'text-red-400 bg-red-500/20':'text-zinc-400 bg-zinc-500/20'}`}>{acc.status || 'active'}</span></td>
+                      <td className="px-4 py-3 text-zinc-400 text-xs">{acc.last_seen ? fmt(acc.last_seen) : '-'}</td>
                     </tr>
                   ))}
                 </tbody>

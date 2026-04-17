@@ -51,11 +51,13 @@ COMMENTED_VIDEOS_PATH = 'target_commented_videos.json'
 ACCOUNT_CREATION_DATES_PATH = 'account_creation_dates.json'
 DAILY_ACTIVITY_PATH = 'daily_activity_tracker.json'
 DAILY_TARGET_COMMENTS_PATH = 'daily_target_comments.json'  # Track comments per target per day
+WEEKLY_TARGET_COMMENTS_PATH = 'weekly_target_comments.json'  # Track comments per target per week
 
 # New account limits
 NEW_ACCOUNT_DAYS = 30  # Consider account "new" for first 30 days
 NEW_ACCOUNT_DAILY_FOLLOWS = 2
 NEW_ACCOUNT_DAILY_COMMENTS = 5  # Max 5 comments per browser per day
+WEEKLY_VIDEOS_PER_ACCOUNT = 2  # Max 2 videos per target account per week per browser
 
 def normalize_video_url(video_url):
     """Extract just the video ID from a TikTok URL to ensure consistent tracking.
@@ -255,6 +257,76 @@ def record_target_comment(browser_name, target_account):
     with open(DAILY_TARGET_COMMENTS_PATH, 'w') as f:
         json.dump(data, f, indent=2)
 
+def load_weekly_target_comments():
+    """Load weekly per-target-account comment tracking"""
+    try:
+        with open(WEEKLY_TARGET_COMMENTS_PATH, 'r') as f:
+            return json.load(f)
+    except:
+        return {}
+
+def get_current_week():
+    """Get current week as YYYY-WW format"""
+    from datetime import datetime
+    return datetime.now().strftime('%Y-%W')
+
+def get_weekly_comment_count(browser_name, target_account):
+    """Get how many videos this browser has commented on for this target this week"""
+    week = get_current_week()
+    data = load_weekly_target_comments()
+
+    if browser_name not in data:
+        return 0
+    if week not in data[browser_name]:
+        return 0
+
+    return data[browser_name][week].get(target_account, 0)
+
+def can_comment_on_target_this_week(browser_name, target_account):
+    """Check if browser can comment on more videos for this target this week"""
+    count = get_weekly_comment_count(browser_name, target_account)
+    return count < WEEKLY_VIDEOS_PER_ACCOUNT
+
+def has_reached_weekly_quota_all_targets(browser_name):
+    """Check if browser has reached weekly quota (2 videos) for ALL target accounts.
+    Returns True if browser should be skipped entirely (no more targets to comment on)."""
+    for account in TARGET_ACCOUNTS:
+        if can_comment_on_target_this_week(browser_name, account):
+            return False  # Can still comment on at least one target
+    return True  # Reached quota for ALL targets
+
+def record_weekly_target_comment(browser_name, target_account):
+    """Record that browser commented on a video for target account this week"""
+    week = get_current_week()
+    data = load_weekly_target_comments()
+
+    if browser_name not in data:
+        data[browser_name] = {}
+    if week not in data[browser_name]:
+        data[browser_name][week] = {}
+
+    current_count = data[browser_name][week].get(target_account, 0)
+    data[browser_name][week][target_account] = current_count + 1
+
+    # Clean up old weeks (keep only last 2 weeks)
+    from datetime import datetime, timedelta
+    current_week_num = int(datetime.now().strftime('%W'))
+    current_year = int(datetime.now().strftime('%Y'))
+
+    for browser in list(data.keys()):
+        for week_str in list(data[browser].keys()):
+            try:
+                year, week_num = week_str.split('-')
+                if int(year) < current_year or (int(year) == current_year and int(week_num) < current_week_num - 1):
+                    del data[browser][week_str]
+            except:
+                pass
+        if not data[browser]:
+            del data[browser]
+
+    with open(WEEKLY_TARGET_COMMENTS_PATH, 'w') as f:
+        json.dump(data, f, indent=2)
+
 def load_target_stats():
     """Load existing target account stats from JSON"""
     try:
@@ -282,7 +354,68 @@ def save_target_stats(stats):
         except Exception as e:
             print(f"    Warning: Failed to sync to Supabase: {e}")
 
-def update_account_stats(account, videos_viewed, comments_made, browser_name):
+def sync_account_to_supabase(browser_name, username, email=None, account_type='login', status='active'):
+    """Sync TikTok account info to Supabase tiktok_account_history table.
+    Records ALL accounts that have ever been used on each browser.
+
+    Args:
+        browser_name: Browser identifier (e.g., 'tt23')
+        username: TikTok username
+        email: Email used for signup (optional)
+        account_type: 'signup' for new accounts, 'login' for existing
+        status: 'active', 'logged_out', 'suspended'
+    """
+    if not HAS_SUPABASE or not username:
+        return
+
+    try:
+        # Extract browser number from name (e.g., "tt23" -> 23)
+        browser_num = int(re.search(r'\d+', browser_name).group()) if re.search(r'\d+', browser_name) else None
+        now = time.strftime('%Y-%m-%d %H:%M:%S')
+
+        # Record in history table (tracks ALL accounts per browser)
+        history_record = {
+            'browser_num': browser_num,
+            'browser_name': browser_name,
+            'username': username,
+            'account_type': account_type,
+            'status': status,
+            'last_seen': now
+        }
+
+        if email:
+            history_record['email'] = email
+
+        # Upsert based on browser_num + username (composite key)
+        # This creates new record for each unique browser+username combo
+        supabase.table('tiktok_account_history').upsert(
+            history_record,
+            on_conflict='browser_num,username'
+        ).execute()
+
+        print(f'    ✓ Synced @{username} ({account_type}, {status}) to Supabase', flush=True)
+    except Exception as e:
+        # Don't fail the whole process if sync fails
+        pass
+
+def mark_previous_account_logged_out(browser_name):
+    """Mark the previous account on this browser as logged out.
+    Called when we detect a browser is no longer logged in."""
+    try:
+        # Load profile mapping to get the previous username
+        with open(PROFILE_MAPPING_PATH, 'r') as f:
+            mapping = json.load(f)
+
+        if browser_name in mapping:
+            previous_username = mapping[browser_name]
+            if previous_username:
+                # Mark as logged out in Supabase
+                sync_account_to_supabase(browser_name, previous_username, account_type='login', status='logged_out')
+                print(f'    ⚠ Marked @{previous_username} as logged out', flush=True)
+    except:
+        pass
+
+def update_account_stats(account, videos_viewed, comments_made, browser_name, tiktok_username=None):
     """Update stats for a target account"""
     stats = load_target_stats()
 
@@ -301,9 +434,10 @@ def update_account_stats(account, videos_viewed, comments_made, browser_name):
         stats[account]['browsers_engaged'].append(browser_name)
     stats[account]['last_updated'] = time.strftime('%Y-%m-%d %H:%M:%S')
 
-    # Keep last 100 sessions
+    # Keep last 100 sessions - now includes tiktok_username
     stats[account]['sessions'].append({
         'browser': browser_name,
+        'tiktok_username': tiktok_username,
         'views': videos_viewed,
         'comments': comments_made,
         'timestamp': time.strftime('%Y-%m-%d %H:%M:%S')
@@ -311,6 +445,19 @@ def update_account_stats(account, videos_viewed, comments_made, browser_name):
     stats[account]['sessions'] = stats[account]['sessions'][-100:]
 
     save_target_stats(stats)
+
+    # Sync comment activity to Supabase if any comments were made
+    if comments_made > 0 and HAS_SUPABASE and tiktok_username:
+        try:
+            supabase.table('target_comment_history').insert({
+                'browser_name': browser_name,
+                'tiktok_username': tiktok_username,
+                'target_account': account,
+                'comments_made': comments_made,
+                'timestamp': time.strftime('%Y-%m-%d %H:%M:%S')
+            }).execute()
+        except:
+            pass
 
 # Target accounts to comment on (edit this list as needed)
 TARGET_ACCOUNTS = [
@@ -970,13 +1117,19 @@ def auto_signup(page, browser_name):
 
 # ============ END AUTO-SIGNUP FUNCTIONS ============
 
-def view_and_comment_on_profile(page, account, browser_name):
+def view_and_comment_on_profile(page, account, browser_name, tiktok_username=None):
     """Visit a profile and comment on latest 1 video (once per day per target)"""
     print(f'    Visiting @{account}...', flush=True)
 
     # CHECK: Has this browser already commented on this target account today?
     if has_commented_on_target_today(browser_name, account):
         print(f'    ⏭  Already commented on @{account} today - skipping', flush=True)
+        return 0, 0
+
+    # CHECK: Has this browser reached weekly quota for this target? (2 videos per week per target)
+    weekly_count = get_weekly_comment_count(browser_name, account)
+    if not can_comment_on_target_this_week(browser_name, account):
+        print(f'    ⏭  Weekly quota reached for @{account} ({weekly_count}/{WEEKLY_VIDEOS_PER_ACCOUNT} videos) - skipping', flush=True)
         return 0, 0
 
     videos_viewed = 0
@@ -1037,16 +1190,9 @@ def view_and_comment_on_profile(page, account, browser_name):
         niche = get_niche(account)
         comments_pool = NICHE_COMMENTS.get(niche, NICHE_COMMENTS['default'])
 
-        # Select latest 1 video to comment on (first video in the list)
-        # TikTok videos are typically ordered with newest first
+        # Select videos to comment on (newest first)
         if len(videos) == 0:
             print(f'    No videos to process on @{account}', flush=True)
-            return 0, 0
-
-        # Check if the latest video has already been commented on
-        latest_video_id = normalize_video_url(videos[0])
-        if latest_video_id in already_commented:
-            print(f'    Latest video already commented on - skipping', flush=True)
             return 0, 0
 
         # Check if we can comment today (for new accounts)
@@ -1054,11 +1200,21 @@ def view_and_comment_on_profile(page, account, browser_name):
             print(f'    Daily comment limit reached, will skip comments', flush=True)
             return 0, 0
 
-        # Process ONLY the latest video (index 0)
-        print(f'    Will comment on latest video', flush=True)
+        # Find the first video that hasn't been commented on yet
+        video_to_comment = None
+        for idx, video_url in enumerate(videos[:COMMENTS_PER_ACCOUNT + 5]):  # Check a few more in case some are already commented
+            video_id = normalize_video_url(video_url)
+            if video_id not in already_commented:
+                video_to_comment = video_url
+                print(f'    Found uncommented video (index {idx})', flush=True)
+                break
 
-        # Process only the latest 1 video
-        for idx in [0]:
+        if video_to_comment is None:
+            print(f'    All recent videos already commented on - skipping', flush=True)
+            return 0, 0
+
+        # Process the found video
+        for video_url in [video_to_comment]:
             video_url = videos[idx]
             try:
                 page.goto(video_url, timeout=30000)
@@ -1151,19 +1307,48 @@ def view_and_comment_on_profile(page, account, browser_name):
                             if not posted.get('success'):
                                 page.keyboard.press('Enter')
 
-                            time.sleep(2)
-                            print(f'    ✓ Commented: "{comment}"', flush=True)
-                            commented = True
-                            comments_made += 1
+                            time.sleep(3)
 
-                            # Save this video as commented to prevent re-commenting
-                            save_commented_video(video_url)
+                            # Verify comment was actually posted by checking for our comment text
+                            verify_result = page.evaluate('''(commentText) => {
+                                const comments = document.querySelectorAll('[data-e2e="comment-item"], [class*="CommentItem"], [class*="comment-text"]');
+                                for (const c of comments) {
+                                    if (c.textContent.includes(commentText.substring(0, 20))) {
+                                        return {verified: true};
+                                    }
+                                }
+                                // Also check if there's an error message
+                                const error = document.querySelector('[class*="error"], [class*="failed"], [class*="blocked"]');
+                                if (error && error.textContent) {
+                                    return {verified: false, error: error.textContent.substring(0, 50)};
+                                }
+                                return {verified: false};
+                            }''', comment)
 
-                            # Record comment for daily limit tracking
-                            record_comment(browser_name)
+                            if verify_result.get('verified'):
+                                print(f'    ✓ Commented: "{comment}"', flush=True)
+                                commented = True
+                                comments_made += 1
 
-                            # Record that we commented on this target account today
-                            record_target_comment(browser_name, account)
+                                # Save this video as commented to prevent re-commenting
+                                save_commented_video(video_url)
+
+                                # Record comment for daily limit tracking
+                                record_comment(browser_name)
+
+                                # Record that we commented on this target account today
+                                record_target_comment(browser_name, account)
+
+                                # Record for weekly quota (2 videos per target per week)
+                                record_weekly_target_comment(browser_name, account)
+                            else:
+                                error_msg = verify_result.get('error', 'Comment may not have posted')
+                                print(f'    ⚠ Comment not verified: "{comment[:30]}..." - {error_msg}', flush=True)
+                                # Take debug screenshot
+                                debug_path = f'/Users/faithtemporosa/tiktok-commenter-dm/tiktok-commenter-dm/downloads/debug_{browser_name}_comment_failed.png'
+                                page.screenshot(path=debug_path)
+                                # Don't count as success
+                                commented = False
                         else:
                             print(f'    ✗ Could not find comment input on video {idx+1}', flush=True)
                     else:
@@ -1247,11 +1432,18 @@ def process_browser(browser, browser_idx, total_browsers):
         with sync_playwright() as p:
             browser_conn = p.chromium.connect_over_cdp(ws_url)
             context = browser_conn.contexts[0]
-            page = context.pages[0] if context.pages else context.new_page()
 
-            # Close extra tabs - keep only 1 tab per browser
-            while len(context.pages) > 1:
-                context.pages[-1].close()
+            # Close ALL extra tabs first - keep only 1 tab
+            if len(context.pages) > 1:
+                print(f'    Closing {len(context.pages) - 1} extra tabs...', flush=True)
+                # Keep first tab, close all others
+                for extra_page in context.pages[1:]:
+                    try:
+                        extra_page.close()
+                    except:
+                        pass
+
+            page = context.pages[0] if context.pages else context.new_page()
 
             # ===== INJECT STEALTH MODE - Hide CDP/automation detection =====
             inject_stealth(page)
@@ -1262,6 +1454,8 @@ def process_browser(browser, browser_idx, total_browsers):
 
             if not is_logged_in:
                 print(f'  ⚠ {browser_name} NOT logged in - running auto-signup...', flush=True)
+                # Mark previous account as logged out (if any was recorded)
+                mark_previous_account_logged_out(browser_name)
                 signup_success, new_username = auto_signup(page, browser_name)
 
                 if not signup_success:
@@ -1272,19 +1466,23 @@ def process_browser(browser, browser_idx, total_browsers):
 
                 username = new_username
                 print(f'  ✓ {browser_name} now logged in as @{username}', flush=True)
+                # Sync new signup account to Supabase history
+                sync_account_to_supabase(browser_name, username, account_type='signup')
             else:
                 print(f'  ✓ {browser_name} logged in as @{username}', flush=True)
+                # Sync existing login to Supabase history
+                sync_account_to_supabase(browser_name, username, account_type='login')
 
             # Process ALL target accounts with this browser
             for acc_idx, account in enumerate(TARGET_ACCOUNTS):
                 print(f'  [{acc_idx+1}/{len(TARGET_ACCOUNTS)}] @{account}', flush=True)
 
-                videos, comments = view_and_comment_on_profile(page, account, browser_name)
+                videos, comments = view_and_comment_on_profile(page, account, browser_name, username)
                 browser_videos += videos
                 browser_comments += comments
 
-                # Update stats for this target account
-                update_account_stats(account, videos, comments, browser_name)
+                # Update stats for this target account (includes tiktok_username for history)
+                update_account_stats(account, videos, comments, browser_name, username)
 
                 # Natural pause between accounts
                 if acc_idx < len(TARGET_ACCOUNTS) - 1:
@@ -1299,6 +1497,10 @@ def process_browser(browser, browser_idx, total_browsers):
 
     close_browser(user_id)
     print(f'  {browser_name} done: {browser_videos} videos viewed, {browser_comments} comments', flush=True)
+
+    # Sync account to Supabase with updated last_commented if any comments were made
+    if browser_comments > 0 and username:
+        sync_account_to_supabase(browser_name, username)
 
     return {'success': True, 'videos': browser_videos, 'comments': browser_comments}
 
@@ -1358,6 +1560,12 @@ def main():
                 if not can_comment_today(browser_name):
                     today_activity = get_today_activity(browser_name)
                     print(f'\n[{global_idx + 1}/{len(browsers)}] {browser_name} - SKIPPED (daily quota met: {today_activity["comments"]}/{NEW_ACCOUNT_DAILY_COMMENTS} comments)', flush=True)
+                    browsers_completed += 1
+                    continue
+
+                # Skip browsers that have reached weekly quota for ALL target accounts
+                if has_reached_weekly_quota_all_targets(browser_name):
+                    print(f'\n[{global_idx + 1}/{len(browsers)}] {browser_name} - SKIPPED (weekly quota {WEEKLY_VIDEOS_PER_ACCOUNT}/{WEEKLY_VIDEOS_PER_ACCOUNT} reached for all {len(TARGET_ACCOUNTS)} targets)', flush=True)
                     browsers_completed += 1
                     continue
 
