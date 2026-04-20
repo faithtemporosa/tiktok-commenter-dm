@@ -4,6 +4,72 @@
 
 ---
 
+## Prerequisites (Do These First!)
+
+### 1. Install LDPlayer
+
+```
+Download from: https://www.ldplayer.net/
+Install to default location: C:\Program Files\LDPlayer\LDPlayer9
+Open LDPlayer once to complete initial setup
+```
+
+### 2. Install Python
+
+```powershell
+# Download from https://www.python.org/downloads/
+# Or via winget:
+winget install Python.Python.3.12
+
+# Verify:
+python --version
+```
+
+### 3. Install Node.js
+
+```powershell
+# Download from https://nodejs.org/
+# Or via winget:
+winget install OpenJS.NodeJS
+
+# Verify:
+node --version
+```
+
+### 4. Verify ADB (Android Debug Bridge)
+
+```powershell
+# Usually comes with LDPlayer
+# Or download from: https://developer.android.com/studio/releases/platform-tools
+
+# Verify:
+adb version
+```
+
+### Quick Install All (PowerShell as Admin):
+
+```powershell
+# Install dependencies
+winget install Python.Python.3.12
+winget install OpenJS.NodeJS
+
+# Restart PowerShell after installing, then verify:
+python --version
+node --version
+adb version
+```
+
+### Prerequisites Checklist:
+
+| Step | Action | Verify |
+|------|--------|--------|
+| 1 | Install LDPlayer | Open LDPlayer app |
+| 2 | Install Python | `python --version` |
+| 3 | Install Node.js | `node --version` |
+| 4 | Verify ADB | `adb version` |
+
+---
+
 ## Quick Start
 
 ```powershell
