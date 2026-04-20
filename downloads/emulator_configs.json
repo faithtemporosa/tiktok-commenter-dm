@@ -1,0 +1,30 @@
+{
+  "emulators": [
+    {
+      "name": "Emulator-1",
+      "udid": "emulator-5554",
+      "tiktok_account": "account1",
+      "device_name": "Android Emulator",
+      "notes": "BlueStacks default instance"
+    },
+    {
+      "name": "Emulator-2",
+      "udid": "emulator-5556",
+      "tiktok_account": "account2",
+      "device_name": "Android Emulator",
+      "notes": "BlueStacks instance 2"
+    }
+  ],
+  "settings": {
+    "parallel_emulators": 2,
+    "comments_per_account": 2,
+    "appium_server": "http://localhost:4723"
+  },
+  "notes": [
+    "Find emulator UDID with: adb devices",
+    "BlueStacks: emulator-5554, emulator-5556, etc.",
+    "NOX: 127.0.0.1:62001, 127.0.0.1:62025, etc.",
+    "Start Appium: appium",
+    "Run script: python3 comment_target_emulator.py"
+  ]
+}

@@ -89,24 +89,46 @@ def like_video(page):
     except:
         return False
 
-def load_commented_videos():
-    """Load set of already commented video IDs"""
+def load_commented_videos(browser_name=None):
+    """Load set of already commented video IDs for a specific browser.
+    Each browser tracks its own commented videos independently."""
     try:
         with open(COMMENTED_VIDEOS_PATH, 'r') as f:
-            return set(json.load(f))
+            data = json.load(f)
+            # Handle both old format (list) and new format (dict per browser)
+            if isinstance(data, list):
+                # Old global format - return empty for per-browser queries
+                return set()
+            elif browser_name and browser_name in data:
+                return set(data[browser_name])
+            return set()
     except:
         return set()
 
-def save_commented_video(video_url):
-    """Save a video ID as commented"""
+def save_commented_video(video_url, browser_name):
+    """Save a video ID as commented for a specific browser"""
     video_id = normalize_video_url(video_url)
-    commented = load_commented_videos()
-    commented.add(video_id)
-    # Keep only last 10000 videos to prevent file from growing too large
-    if len(commented) > 10000:
-        commented = set(list(commented)[-10000:])
+    try:
+        with open(COMMENTED_VIDEOS_PATH, 'r') as f:
+            data = json.load(f)
+            # Convert old format to new if needed
+            if isinstance(data, list):
+                data = {}
+    except:
+        data = {}
+
+    if browser_name not in data:
+        data[browser_name] = []
+
+    if video_id not in data[browser_name]:
+        data[browser_name].append(video_id)
+
+    # Keep only last 100 videos per browser
+    if len(data[browser_name]) > 100:
+        data[browser_name] = data[browser_name][-100:]
+
     with open(COMMENTED_VIDEOS_PATH, 'w') as f:
-        json.dump(list(commented), f)
+        json.dump(data, f, indent=2)
 
 def load_account_creation_dates():
     """Load account creation dates"""
@@ -1136,8 +1158,8 @@ def view_and_comment_on_profile(page, account, browser_name, tiktok_username=Non
     comments_made = 0
     followed = False
 
-    # Load already commented videos to avoid re-commenting
-    already_commented = load_commented_videos()
+    # Load already commented videos for THIS browser (each browser tracks independently)
+    already_commented = load_commented_videos(browser_name)
 
     # Check if this is a new account and what limits apply
     is_new = is_new_account(browser_name)
@@ -1330,8 +1352,8 @@ def view_and_comment_on_profile(page, account, browser_name, tiktok_username=Non
                                 commented = True
                                 comments_made += 1
 
-                                # Save this video as commented to prevent re-commenting
-                                save_commented_video(video_url)
+                                # Save this video as commented for THIS browser
+                                save_commented_video(video_url, browser_name)
 
                                 # Record comment for daily limit tracking
                                 record_comment(browser_name)

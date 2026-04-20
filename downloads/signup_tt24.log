@@ -1,5 +1,0 @@
-Traceback (most recent call last):
-  File "/Users/faithtemporosa/tiktok-commenter-dm/tiktok-commenter-dm/downloads/simple_signup.py", line 314, in <module>
-    browsers = [int(x) for x in sys.argv[1:]] if len(sys.argv) > 1 else [754, 753, 752, 751]
-                ~~~^^^
-ValueError: invalid literal for int() with base 10: 'tt24'

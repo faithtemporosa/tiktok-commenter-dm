@@ -79,18 +79,30 @@
     "2026-04-15": {
       "follows": 0,
       "comments": 7
+    },
+    "2026-04-17": {
+      "follows": 0,
+      "comments": 5
     }
   },
   "tt1": {
     "2026-04-15": {
       "follows": 0,
       "comments": 4
+    },
+    "2026-04-17": {
+      "follows": 0,
+      "comments": 6
     }
   },
   "tt7": {
     "2026-04-15": {
       "follows": 1,
       "comments": 0
+    },
+    "2026-04-17": {
+      "follows": 1,
+      "comments": 3
     }
   },
   "tt10": {
@@ -114,6 +126,40 @@
   "tt21": {
     "2026-04-15": {
       "follows": 0,
+      "comments": 1
+    }
+  },
+  "tt4": {
+    "2026-04-17": {
+      "follows": 0,
+      "comments": 6
+    }
+  },
+  "tt6": {
+    "2026-04-17": {
+      "follows": 0,
+      "comments": 5
+    }
+  },
+  "tt23": {
+    "2026-04-17": {
+      "follows": 7,
+      "comments": 0
+    }
+  },
+  "tt12": {
+    "2026-04-17": {
+      "follows": 0,
+      "comments": 4
+    },
+    "2026-04-18": {
+      "follows": 0,
+      "comments": 6
+    }
+  },
+  "tt66": {
+    "2026-04-17": {
+      "follows": 1,
       "comments": 1
     }
   }
