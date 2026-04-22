@@ -24,6 +24,7 @@ if hasattr(sys.stderr, 'reconfigure'):
 import requests
 import time
 import json
+import os
 import random
 import string
 import threading
@@ -61,6 +62,7 @@ except ImportError:
 # =============================================================================
 ADSPOWER_API = "http://localhost:50325"
 LOCAL_BOT_API = "http://localhost:9000"
+SIGNUP_EMAIL_ATTEMPTS = int(os.environ.get("SIGNUP_EMAIL_ATTEMPTS", "1"))
 
 # =============================================================================
 # GLOBAL STATE
@@ -187,7 +189,7 @@ def generate_username(profile_name):
 
 def open_browser(profile_id):
     try:
-        response = requests.get(f"{ADSPOWER_API}/api/v1/browser/start?user_id={profile_id}", timeout=120)
+        response = requests.get(f"{ADSPOWER_API}/api/v1/browser/start?user_id={profile_id}", timeout=45)
         data = response.json()
         if data.get("code") == 0:
             return data.get("data", {})
@@ -280,7 +282,7 @@ def run_signup_for_profile(profile_name, profile_id):
                 page = context.pages[0] if context.pages else context.new_page()
                 page.bring_to_front()
 
-                for email_attempt in range(1, 3):
+                for email_attempt in range(1, SIGNUP_EMAIL_ATTEMPTS + 1):
                     if email_attempt > 1:
                         log(f"  Retrying {profile_name} with a different email address before closing browser")
                         try:
@@ -303,9 +305,9 @@ def run_signup_for_profile(profile_name, profile_id):
                         clear_not_logged_in(profile_name)
                         return True
 
-                    log(f"  Signup attempt {email_attempt}/2 failed for {profile_name}")
+                    log(f"  Signup attempt {email_attempt}/{SIGNUP_EMAIL_ATTEMPTS} failed for {profile_name}")
 
-                log(f"  Signup failed for {profile_name} after trying a different email")
+                log(f"  Signup failed for {profile_name}")
                 return False
         except Exception as e:
             log(f"  ✗ Working signup error: {e}")
@@ -526,7 +528,7 @@ def run_signup_thread(profiles_to_signup):
 
         # Delay between profiles
         if i < len(profiles_to_signup) - 1 and signup_status["running"]:
-            delay = random.randint(10, 20)
+            delay = random.randint(2, 4)
             log(f"  Waiting {delay}s before next profile...")
             time.sleep(delay)
 

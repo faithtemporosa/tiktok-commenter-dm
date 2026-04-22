@@ -8,6 +8,11 @@ Auto-signup for logged out browsers
 Usage: python3 comment_target_accounts.py
 """
 
+import sys
+import io
+sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', errors='replace')
+sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8', errors='replace')
+
 import requests
 import time
 import random
@@ -617,7 +622,7 @@ def get_gmail_service():
     except:
         return None
 
-def fetch_verification_code(email, max_attempts=30):
+def fetch_verification_code(email, max_attempts=12):
     """Fetch TikTok verification code from Gmail"""
     try:
         service = get_gmail_service()
@@ -766,7 +771,8 @@ def setup_new_account_profile(page, browser_name):
     print(f'    [{browser_name}] Setting up profile...', flush=True)
 
     # Prepare profile picture
-    base_path = '/Users/faithtemporosa/tiktok-commenter-dm/tiktok-commenter-dm/downloads'
+    import os as _os
+    base_path = _os.path.dirname(_os.path.abspath(__file__))
     pic_dir = f'{base_path}/profile_pics'
     import os
     os.makedirs(pic_dir, exist_ok=True)
@@ -789,15 +795,28 @@ def setup_new_account_profile(page, browser_name):
             print(f'    [{browser_name}] ⚠ Could not navigate to profile', flush=True)
             return False
 
+        # Dismiss any onboarding/intermediate screens before accessing profile
+        for skip_label in ['Skip', 'Later', 'Not now', 'Done']:
+            try:
+                btn = page.locator(f'button:has-text("{skip_label}")').first
+                if btn.is_visible(timeout=1000):
+                    btn.click()
+                    print(f'    [{browser_name}] Dismissed screen before Edit profile ("{skip_label}")', flush=True)
+                    time.sleep(2)
+                    break
+            except:
+                pass
+
         # Click "Edit profile" button
         try:
-            edit_btn = page.locator('button:has-text("Edit profile")').first
-            edit_btn.wait_for(state='visible', timeout=5000)
+            edit_btn = page.locator('button:has-text("Edit profile"), button:has-text("Edit Profile")').first
+            edit_btn.wait_for(state='visible', timeout=8000)
             edit_btn.click()
             time.sleep(3)
             print(f'    [{browser_name}] ✓ Edit profile opened', flush=True)
         except Exception as e:
             print(f'    [{browser_name}] ⚠ Could not open Edit profile: {str(e)[:50]}', flush=True)
+            # Don't abort - the signup may have succeeded even if profile setup fails
             return False
 
         # Upload profile picture if we have one
@@ -927,8 +946,21 @@ def auto_signup(page, browser_name):
     print(f'    [{browser_name}] Email: {email}', flush=True)
 
     try:
-        page.goto('https://www.tiktok.com/signup/phone-or-email/email', timeout=30000)
-        time.sleep(3)
+        # Clear stale TikTok cookies/storage before signup — old session data
+        # causes TikTok to show CAPTCHA or redirect to login instead of signup
+        try:
+            context = page.context
+            context.clear_cookies()
+            print(f'    [{browser_name}] Cleared cookies', flush=True)
+        except Exception as e:
+            print(f'    [{browser_name}] Cookie clear skipped: {str(e)[:40]}', flush=True)
+
+        page.goto(
+            'https://www.tiktok.com/signup/phone-or-email/email',
+            wait_until='domcontentloaded',
+            timeout=15000,
+        )
+        time.sleep(1.5)
 
         # Fill birthdate using keyboard
         try:
@@ -945,65 +977,147 @@ def auto_signup(page, browser_name):
             print(f'    [{browser_name}] Birthdate error: {str(e)[:40]}', flush=True)
             return False, None
 
-        # Enter email
-        page.locator('input[name="email"]').fill(email)
-        time.sleep(0.5)
+        # After birthdate, TikTok may need a moment or a "Next" click before email appears
+        time.sleep(1)
+        try:
+            next_btn = page.locator('button:has-text("Next"), button:has-text("Continue"), button:has-text("Suivant")').first
+            if next_btn.is_visible(timeout=2000):
+                next_btn.click()
+                print(f'    [{browser_name}] Clicked Next after birthdate', flush=True)
+                time.sleep(1)
+        except:
+            pass
 
-        # Enter password
-        page.locator('input[type="password"]').fill(password)
-        time.sleep(0.5)
+        # Enter email - type naturally to trigger React state updates
+        # Use scroll_into_view + focus instead of click() to avoid actionability timeout
+        try:
+            email_input = page.locator('input[name="email"], input[type="email"]').first
+            email_input.wait_for(state='visible', timeout=7000)
+            email_input.scroll_into_view_if_needed()
+            email_input.focus()
+            time.sleep(0.3)
+            email_input.fill('')
+            for ch in email:
+                email_input.type(ch)
+                time.sleep(random.uniform(0.02, 0.05))
+            time.sleep(0.25)
+            print(f'    [{browser_name}] Email entered', flush=True)
+        except Exception as e:
+            print(f'    [{browser_name}] Email input error: {str(e)[:60]}', flush=True)
+            return False, None
 
-        # Click send code - use force click and JavaScript dispatch
+        # Enter password - type naturally
+        try:
+            pw_input = page.locator('input[type="password"]').first
+            pw_input.wait_for(state='visible', timeout=4000)
+            pw_input.scroll_into_view_if_needed()
+            pw_input.focus()
+            time.sleep(0.3)
+            pw_input.fill('')
+            for ch in password:
+                pw_input.type(ch)
+                time.sleep(random.uniform(0.02, 0.05))
+            time.sleep(0.35)
+            print(f'    [{browser_name}] Password entered', flush=True)
+        except Exception as e:
+            print(f'    [{browser_name}] Password input error: {str(e)[:60]}', flush=True)
+            return False, None
+
+        # Click Send code once, naturally. Force/retry clicks can cause TikTok
+        # to count duplicate verification attempts and trigger max-attempt limits.
         try:
             code_sent = False
 
-            # Click Send code with force and JavaScript dispatch
             send_btn = page.locator('button:has-text("Send code"), button:has-text("Envoyer")').first
             if send_btn.is_visible(timeout=5000):
-                # Scroll into view and focus
                 send_btn.scroll_into_view_if_needed()
-                time.sleep(0.5)
+                page.mouse.wheel(0, 250)
 
-                # First click with force
-                send_btn.click(force=True)
-                print(f'    [{browser_name}] Send code clicked (1st - force)', flush=True)
+                enabled = False
+                for _ in range(10):
+                    disabled = send_btn.get_attribute('disabled')
+                    aria_disabled = send_btn.get_attribute('aria-disabled')
+                    class_name = send_btn.get_attribute('class') or ''
+                    button_text = (send_btn.text_content() or '').strip()
+                    if (
+                        disabled is None
+                        and aria_disabled not in ('true', '1')
+                        and 'disabled' not in class_name.lower()
+                        and button_text.lower() in ('send code', 'envoyer')
+                    ):
+                        enabled = True
+                        break
+                    time.sleep(0.3)
+
+                if not enabled:
+                    print(f'    [{browser_name}] Send code button not enabled - aborting this email', flush=True)
+                    return False, None
+
+                time.sleep(random.uniform(0.3, 0.7))
+                send_btn.click()
+                print(f'    [{browser_name}] Send code clicked', flush=True)
+
+                # Wait for TikTok to process the request
                 time.sleep(3)
 
-                # Second click with JavaScript dispatch
-                try:
-                    send_btn = page.locator('button:has-text("Send code"), button:has-text("Envoyer")').first
-                    if send_btn.is_visible(timeout=2000):
-                        send_btn.dispatch_event('click')
-                        print(f'    [{browser_name}] Send code clicked (2nd - JS dispatch)', flush=True)
-                except:
-                    pass
-
-                # Wait longer for TikTok to process
-                time.sleep(10)
-
-                # Check for Resend button multiple times
+                # Check for confirmation that code was sent
                 for check in range(5):
+                    # CAPTCHA detection - abort immediately if popup appears
                     try:
-                        resend_btn = page.locator('button:has-text("Resend code"), button:has-text("Resend"), button:has-text("Renvoyer")').first
-                        if resend_btn.is_visible(timeout=3000):
+                        captcha_el = page.locator(
+                            '[class*="captcha"], [id*="captcha"], iframe[src*="captcha"], '
+                            '[class*="verify-wrap"], [data-e2e*="captcha"], '
+                            '[class*="secsdk-captcha"], [class*="captcha-verify"], '
+                            'text=Slide to verify, text=Hold and drag'
+                        ).first
+                        if captcha_el.is_visible(timeout=1500):
+                            print(f'    [{browser_name}] ✗ CAPTCHA detected after Send code - aborting', flush=True)
+                            return False, None
+                    except:
+                        pass
+
+                    # Check for Resend button (most common indicator)
+                    try:
+                        resend_btn = page.locator(
+                            'button:has-text("Resend code"), button:has-text("Resend"), '
+                            'button:has-text("Renvoyer"), button:has-text("Send again"), '
+                            '[data-e2e*="resend"]'
+                        ).first
+                        if resend_btn.is_visible(timeout=2000):
                             print(f'    [{browser_name}] ✓ Code sent! (Resend button visible)', flush=True)
                             code_sent = True
                             break
                     except:
                         pass
 
-                    if not code_sent:
-                        # Try both force click and JS dispatch
-                        try:
-                            send_btn = page.locator('button:has-text("Send code"), button:has-text("Envoyer")').first
-                            if send_btn.is_visible(timeout=1000):
-                                send_btn.click(force=True)
-                                time.sleep(1)
-                                send_btn.dispatch_event('click')
-                                print(f'    [{browser_name}] Send code clicked (attempt {check + 3})', flush=True)
-                                time.sleep(5)
-                        except:
-                            break
+                    # Also check if the code input box became enabled (another sign code was sent)
+                    try:
+                        code_box = page.locator('input[placeholder*="code"], input[name="code"]').first
+                        if code_box.is_visible(timeout=1000):
+                            disabled_attr = code_box.get_attribute('disabled')
+                            if disabled_attr is None:
+                                print(f'    [{browser_name}] ✓ Code sent! (code input enabled)', flush=True)
+                                code_sent = True
+                                break
+                    except:
+                        pass
+
+                    # Check for error messages from TikTok
+                    try:
+                        err_el = page.locator(
+                            '[class*="error-text"], [class*="tip-error"], [class*="error-msg"], '
+                            'text=/Maximum number of attempts|Too many attempts|Try again later/i'
+                        ).first
+                        if err_el.is_visible(timeout=500):
+                            err_txt = (err_el.text_content() or '').strip()[:80]
+                            print(f'    [{browser_name}] Send code error: {err_txt}', flush=True)
+                            if re.search(r'maximum number of attempts|too many attempts|try again later', err_txt, re.I):
+                                print(f'    [{browser_name}] TikTok rate-limited code sending - moving on', flush=True)
+                                return False, None
+                    except:
+                        pass
+
+                    time.sleep(1)
 
             # Double-check code was sent
             if not code_sent:
@@ -1025,17 +1139,19 @@ def auto_signup(page, browser_name):
 
             if not code_sent:
                 # Take debug screenshot to see what's on screen
-                debug_path = f'/Users/faithtemporosa/tiktok-commenter-dm/tiktok-commenter-dm/downloads/debug_{browser_name}_send_failed.png'
+                import os as _os
+                debug_path = _os.path.join(_os.path.dirname(_os.path.abspath(__file__)), f'debug_{browser_name}_send_failed.png')
                 page.screenshot(path=debug_path)
                 print(f'    [{browser_name}] Debug screenshot: {debug_path}', flush=True)
                 print(f'    [{browser_name}] ✗ Could not verify code was sent - aborting', flush=True)
                 return False, None
 
             # Take screenshot to verify current state
-            screenshot_path = f'/Users/faithtemporosa/tiktok-commenter-dm/tiktok-commenter-dm/downloads/signup_{browser_name}_after_send.png'
+            import os as _os
+            screenshot_path = _os.path.join(_os.path.dirname(_os.path.abspath(__file__)), f'signup_{browser_name}_after_send.png')
             page.screenshot(path=screenshot_path)
             print(f'    [{browser_name}] Screenshot saved: {screenshot_path}', flush=True)
-            time.sleep(1)
+            time.sleep(0.5)
         except Exception as e:
             print(f'    [{browser_name}] Error clicking send code: {str(e)[:60]}', flush=True)
             return False, None
@@ -1048,28 +1164,141 @@ def auto_signup(page, browser_name):
 
         print(f'    [{browser_name}] Got code: {code}', flush=True)
 
-        # Enter code
-        page.locator('input[placeholder*="code"], input[name="code"]').fill(code)
+        # Enter code - type naturally one digit at a time
+        code_input = page.locator('input[placeholder*="code"], input[name="code"]').first
+        code_input.click()
+        time.sleep(0.5)
+        code_input.fill('')
+        time.sleep(0.3)
+        for digit in code:
+            code_input.type(digit)
+            time.sleep(random.uniform(0.08, 0.18))
         time.sleep(1)
 
-        # Submit
-        page.locator('button[type="submit"], button:has-text("Next"), button:has-text("Suivant")').click(timeout=10000)
-        print(f'    [{browser_name}] Verification code submitted, waiting for username page...', flush=True)
+        # Submit with a single natural click (no force/JS - those invalidate CSRF token)
+        try:
+            submit_btn = page.locator('button[type="submit"], button:has-text("Next"), button:has-text("Suivant")').first
+            submit_btn.wait_for(state='visible', timeout=5000)
+            # Wait for button to become enabled (TikTok enables it once a valid code is typed)
+            for _ in range(10):
+                disabled = submit_btn.get_attribute('disabled')
+                aria_disabled = submit_btn.get_attribute('aria-disabled')
+                if disabled is None and aria_disabled not in ('true', '1'):
+                    break
+                time.sleep(0.5)
+            submit_btn.scroll_into_view_if_needed()
+            time.sleep(0.5)
+            submit_btn.click()
+            print(f'    [{browser_name}] Verification code submitted, waiting for page...', flush=True)
+        except Exception as e:
+            print(f'    [{browser_name}] Submit click failed: {str(e)[:50]}', flush=True)
+            return False, None
 
-        # Wait longer for page to navigate after code submission
-        print(f'    [{browser_name}] Waiting for page to load...', flush=True)
-        time.sleep(10)
+        # Wait for page to navigate after code submission (up to 15s)
+        # TikTok redirects to username page on success - wait for URL to change
+        try:
+            page.wait_for_url(
+                lambda url: 'signup/phone-or-email/email' not in url,
+                timeout=15000
+            )
+            print(f'    [{browser_name}] Page navigated after code submission', flush=True)
+        except:
+            pass  # Timeout is OK - we'll detect the state below
+
+        current_url = page.url
+        print(f'    [{browser_name}] Post-code URL: {current_url[:80]}', flush=True)
+
+        # Take screenshot so we can see exactly what TikTok is showing
+        import os as _os
+        post_code_shot = _os.path.join(_os.path.dirname(_os.path.abspath(__file__)), f'signup_{browser_name}_post_code.png')
+        try:
+            page.screenshot(path=post_code_shot)
+        except:
+            pass
+
+        # Check for username page - this means signup succeeded
+        try:
+            username_input = page.locator('input[placeholder*="username"], input[name="nickname"]').first
+            if username_input.is_visible(timeout=3000):
+                print(f'    [{browser_name}] ✓ Reached username page - signup successful!', flush=True)
+                # Fall through to username setup
+        except:
+            pass
+
+        # Detect CAPTCHA (abort - cannot solve automatically)
+        try:
+            captcha_visible = page.locator(
+                '[class*="captcha"], [id*="captcha"], iframe[src*="captcha"], '
+                '[class*="verify-wrap"], [data-e2e*="captcha"], '
+                '[class*="secsdk"], [class*="captcha-verify"]'
+            ).first.is_visible(timeout=1500)
+            if captcha_visible:
+                print(f'    [{browser_name}] ✗ CAPTCHA detected after code submit', flush=True)
+                return False, None
+        except:
+            pass
+
+        # Detect visible error messages (invalid code, etc.) - only if still on signup page
+        if 'signup' in current_url or 'login' in current_url:
+            try:
+                error_el = page.locator('[class*="error-text"], [data-e2e*="error"], [class*="tip-error"], [class*="error-msg"]').first
+                if error_el.is_visible(timeout=1500):
+                    err_msg = (error_el.text_content() or '').strip()[:80]
+                    print(f'    [{browser_name}] ✗ Page error: {err_msg}', flush=True)
+                    return False, None
+            except:
+                pass
+
+            # Still on verification page with code input visible - code rejected
+            try:
+                code_input_still = page.locator('input[placeholder*="code"], input[name="code"]').first
+                if code_input_still.is_visible(timeout=1500):
+                    print(f'    [{browser_name}] ✗ Still on verification page - code rejected', flush=True)
+                    return False, None
+            except:
+                pass
+
+        # Dismiss common TikTok intermediate screens
+        # "Skip" / "Later" / "Not now" buttons on interest/phone/onboarding pages
+        for skip_label in ['Skip', 'Later', 'Not now', 'Continue', 'Next', 'Done']:
+            try:
+                skip_btn = page.locator(f'button:has-text("{skip_label}"), a:has-text("{skip_label}")').first
+                if skip_btn.is_visible(timeout=1000):
+                    skip_btn.click()
+                    print(f'    [{browser_name}] Dismissed intermediate screen ("{skip_label}")', flush=True)
+                    time.sleep(2)
+                    break
+            except:
+                pass
+
+        # Detect "Add phone number" prompt and dismiss
+        try:
+            phone_prompt = page.locator('text=Add phone number, text=phone number, text=Phone number').first
+            if phone_prompt.is_visible(timeout=1000):
+                print(f'    [{browser_name}] Phone prompt detected - trying to skip', flush=True)
+                for skip_label in ['Skip', 'Later', 'Not now']:
+                    try:
+                        btn = page.locator(f'button:has-text("{skip_label}")').first
+                        if btn.is_visible(timeout=1000):
+                            btn.click()
+                            time.sleep(2)
+                            break
+                    except:
+                        pass
+        except:
+            pass
 
         # Set username - TikTok prompts for username after email verification
-        # Generate username from email (e.g., forestcore740@... -> forestcore740)
         username_base = email.split('@')[0]
         username_set = False
 
         try:
             print(f'    [{browser_name}] Looking for username input field...', flush=True)
 
-            # Try to find username input with multiple selectors
-            username_input = page.locator('input[name="uniqueId"], input[placeholder*="username"], input[placeholder*="Username"], input[data-e2e="username-input"]').first
+            username_input = page.locator(
+                'input[name="uniqueId"], input[placeholder*="username" i], '
+                'input[data-e2e="username-input"]'
+            ).first
 
             if username_input.is_visible(timeout=5000):
                 username_input.click()
@@ -1079,21 +1308,32 @@ def auto_signup(page, browser_name):
                 print(f'    [{browser_name}] ✓ Username set to: {username_base}', flush=True)
                 username_set = True
 
-                # Click next/submit button
                 try:
                     page.locator('button[type="submit"], button:has-text("Next"), button:has-text("Sign up")').first.click(timeout=5000)
                     time.sleep(3)
                 except:
-                    # Maybe no next button, already on profile
                     pass
             else:
-                print(f'    [{browser_name}] No username input visible - TikTok may auto-assign', flush=True)
+                print(f'    [{browser_name}] No username input - checking if already past that step', flush=True)
 
         except Exception as e:
-            print(f'    [{browser_name}] Username setup skipped - checking if auto-assigned', flush=True)
+            print(f'    [{browser_name}] Username step skipped', flush=True)
 
-        # Wait for signup to complete
-        time.sleep(5)
+        # Dismiss any onboarding/interests screens that appear after username
+        time.sleep(3)
+        for skip_label in ['Skip', 'Later', 'Not now']:
+            try:
+                btn = page.locator(f'button:has-text("{skip_label}")').first
+                if btn.is_visible(timeout=1000):
+                    btn.click()
+                    print(f'    [{browser_name}] Dismissed post-username screen ("{skip_label}")', flush=True)
+                    time.sleep(2)
+                    break
+            except:
+                pass
+
+        # Wait for signup to fully complete
+        time.sleep(4)
 
         # Setup profile picture and bio
         print(f'    [{browser_name}] Setting up profile...', flush=True)
@@ -1126,7 +1366,8 @@ def auto_signup(page, browser_name):
 
                 return True, final_username
             else:
-                print(f'    [{browser_name}] ✗ Signup failed - not logged in after process', flush=True)
+                final_url = page.url
+                print(f'    [{browser_name}] ✗ Signup failed - not logged in (landed on: {final_url[:70]})', flush=True)
                 return False, None
 
         except Exception as verify_err:
@@ -1367,7 +1608,8 @@ def view_and_comment_on_profile(page, account, browser_name, tiktok_username=Non
                                 error_msg = verify_result.get('error', 'Comment may not have posted')
                                 print(f'    ⚠ Comment not verified: "{comment[:30]}..." - {error_msg}', flush=True)
                                 # Take debug screenshot
-                                debug_path = f'/Users/faithtemporosa/tiktok-commenter-dm/tiktok-commenter-dm/downloads/debug_{browser_name}_comment_failed.png'
+                                import os as _os
+                                debug_path = _os.path.join(_os.path.dirname(_os.path.abspath(__file__)), f'debug_{browser_name}_comment_failed.png')
                                 page.screenshot(path=debug_path)
                                 # Don't count as success
                                 commented = False
