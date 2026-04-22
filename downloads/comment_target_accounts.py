@@ -1216,6 +1216,10 @@ def auto_signup(page, browser_name):
         except:
             pass
 
+        if 'login/download-app' in current_url:
+            print(f'    [{browser_name}] TikTok redirected to app-download security page - fresh proxy/browser needed', flush=True)
+            return False, None
+
         # Check for username page - this means signup succeeded
         try:
             username_input = page.locator('input[placeholder*="username"], input[name="nickname"]').first

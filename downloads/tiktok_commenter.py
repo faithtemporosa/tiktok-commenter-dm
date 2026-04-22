@@ -361,6 +361,15 @@ def clear_not_logged_in():
     not_logged_in_browsers = []
     save_not_logged_in()
 
+def remove_not_logged_in(profile_name):
+    """Remove one browser from the not logged in list"""
+    global not_logged_in_browsers
+    not_logged_in_browsers = [
+        b for b in not_logged_in_browsers
+        if b.get("profile") != profile_name
+    ]
+    save_not_logged_in()
+
 def get_not_logged_in_list():
     """Get list of not logged in browsers"""
     return not_logged_in_browsers
@@ -5727,7 +5736,12 @@ def api_get_not_logged_in():
 
 @app.route('/api/not-logged-in/clear', methods=['POST'])
 def api_clear_not_logged_in():
-    """Clear the not logged in browsers list"""
+    """Clear one browser, or the whole not logged in browsers list."""
+    data = request.json or {}
+    profile = (data.get("profile") or "").strip()
+    if profile:
+        remove_not_logged_in(profile)
+        return jsonify({"ok": True, "profile": profile, "count": len(get_not_logged_in_list())})
     clear_not_logged_in()
     return jsonify({"ok": True})
 
