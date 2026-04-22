@@ -280,18 +280,32 @@ def run_signup_for_profile(profile_name, profile_id):
                 page = context.pages[0] if context.pages else context.new_page()
                 page.bring_to_front()
 
-                signup_success, new_username = working_auto_signup(page, profile_name)
-                if signup_success:
-                    log(f"  ✓ Signup successful for {profile_name}: @{new_username}")
-                    signup_status["created_accounts"].append({
-                        "profile": profile_name,
-                        "username": new_username,
-                        "created_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-                    })
-                    clear_not_logged_in(profile_name)
-                    return True
+                for email_attempt in range(1, 3):
+                    if email_attempt > 1:
+                        log(f"  Retrying {profile_name} with a different email address before closing browser")
+                        try:
+                            while len(context.pages) > 1:
+                                context.pages[-1].close()
+                            page = context.pages[0] if context.pages else context.new_page()
+                            page.bring_to_front()
+                            page.goto("about:blank", timeout=10000)
+                        except Exception:
+                            page = context.new_page()
 
-                log(f"  ✗ Signup failed for {profile_name}")
+                    signup_success, new_username = working_auto_signup(page, profile_name)
+                    if signup_success:
+                        log(f"  Signup successful for {profile_name}: @{new_username}")
+                        signup_status["created_accounts"].append({
+                            "profile": profile_name,
+                            "username": new_username,
+                            "created_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                        })
+                        clear_not_logged_in(profile_name)
+                        return True
+
+                    log(f"  Signup attempt {email_attempt}/2 failed for {profile_name}")
+
+                log(f"  Signup failed for {profile_name} after trying a different email")
                 return False
         except Exception as e:
             log(f"  ✗ Working signup error: {e}")
