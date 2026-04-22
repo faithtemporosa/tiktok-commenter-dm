@@ -410,14 +410,6 @@ SCRIPT_CONTROLS = {
 script_processes = {}
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 
-try:
-    import tiktok_signup as signup_engine
-    HAS_SIGNUP_ENGINE = True
-except Exception as e:
-    signup_engine = None
-    HAS_SIGNUP_ENGINE = False
-    print(f"Note: signup engine unavailable: {e}")
-
 def _script_log_file(script_key):
     return os.path.join(SCRIPT_DIR, f"script_{script_key}.log")
 
@@ -498,6 +490,48 @@ def _stop_script(script_key):
     if log_handle:
         log_handle.close()
     return True, "Script stopped"
+
+def _start_signup_process(profiles_to_signup):
+    if _script_is_running("signup"):
+        return False, "Signup is already running"
+
+    profiles_file = os.path.join(SCRIPT_DIR, "signup_profiles_to_run.json")
+    with open(profiles_file, "w", encoding="utf-8") as f:
+        json.dump({"profiles": profiles_to_signup}, f, indent=2)
+
+    log_file = _script_log_file("signup")
+    log_handle = open(log_file, "w", encoding="utf-8", errors="replace")
+    command = [sys.executable, "-u", "tiktok_signup.py", "--profiles-file", profiles_file]
+    popen_kwargs = {
+        "stdout": log_handle,
+        "stderr": subprocess.STDOUT,
+        "cwd": SCRIPT_DIR,
+    }
+    if os.name == "nt":
+        popen_kwargs["creationflags"] = subprocess.CREATE_NEW_PROCESS_GROUP
+    else:
+        popen_kwargs["start_new_session"] = True
+
+    proc = subprocess.Popen(command, **popen_kwargs)
+    proc._script_log_handle = log_handle
+    script_processes["signup"] = proc
+    return True, f"Started Signup for {len(profiles_to_signup)} profile(s)"
+
+def _signup_process_status():
+    proc = script_processes.get("signup")
+    return_code = proc.poll() if proc else None
+    running = return_code is None if proc else False
+    return {
+        "running": running,
+        "return_code": return_code,
+        "logs": _script_tail("signup", 120),
+        "progress": 0,
+        "total": 0,
+        "completed": [],
+        "failed": [],
+        "created_accounts": [],
+        "current_profile": None,
+    }
 
 # DM Settings - Updated for brand outreach
 dm_settings = {
@@ -6184,20 +6218,12 @@ def api_signup_not_logged_in():
 
 @app.route('/api/signup/status', methods=['GET'])
 def api_signup_status():
-    if not HAS_SIGNUP_ENGINE:
-        return jsonify({
-            "running": False,
-            "logs": ["Signup engine is unavailable. Check tiktok_signup.py imports."],
-            "error": "Signup engine unavailable"
-        }), 503
-    return jsonify(signup_engine.signup_status)
+    return jsonify(_signup_process_status())
 
 @app.route('/api/signup/start', methods=['POST'])
 def api_signup_start():
-    if not HAS_SIGNUP_ENGINE:
-        return jsonify({"error": "Signup engine unavailable"}), 503
-    if signup_engine.signup_status.get("running"):
-        return jsonify({"error": "Already running"}), 400
+    if _script_is_running("signup"):
+        return jsonify({"error": "Signup is already running"}), 400
 
     data = request.json or {}
     profiles_to_signup = data.get("profiles") or [
@@ -6207,26 +6233,19 @@ def api_signup_start():
     if not profiles_to_signup:
         return jsonify({"error": "No not-logged-in profiles found"}), 400
 
-    t = threading.Thread(
-        target=signup_engine.run_signup_thread,
-        args=(profiles_to_signup,),
-        daemon=True
-    )
-    t.start()
-    return jsonify({"ok": True, "total": len(profiles_to_signup)})
+    ok, message = _start_signup_process(profiles_to_signup)
+    status_code = 200 if ok else 400
+    return jsonify({"ok": ok, "message": message, "total": len(profiles_to_signup)}), status_code
 
 @app.route('/api/signup/stop', methods=['POST'])
 def api_signup_stop():
-    if not HAS_SIGNUP_ENGINE:
-        return jsonify({"error": "Signup engine unavailable"}), 503
-    signup_engine.signup_status["running"] = False
-    return jsonify({"ok": True})
+    ok, message = _stop_script("signup")
+    status_code = 200 if ok else 400
+    return jsonify({"ok": ok, "message": message}), status_code
 
 @app.route('/api/signup/accounts', methods=['GET'])
 def api_signup_accounts():
-    if not HAS_SIGNUP_ENGINE:
-        return jsonify([]), 503
-    return jsonify(signup_engine.signup_status.get("created_accounts", []))
+    return jsonify([])
 
 @app.route('/api/target-accounts', methods=['GET'])
 def api_get_target_accounts():

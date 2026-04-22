@@ -631,7 +631,20 @@ if __name__ == "__main__":
     import argparse
     parser = argparse.ArgumentParser()
     parser.add_argument('--port', type=int, default=9005)
+    parser.add_argument('--profiles-file', help='Run signup for profiles from a JSON file, then exit without starting the web UI')
     args = parser.parse_args()
+
+    if args.profiles_file:
+        with open(args.profiles_file, 'r', encoding='utf-8') as f:
+            payload = json.load(f)
+        profiles_to_signup = payload.get("profiles", payload) if isinstance(payload, dict) else payload
+        profiles_to_signup = [p for p in profiles_to_signup if p]
+        if not profiles_to_signup:
+            print("No profiles provided")
+            sys.exit(1)
+        run_signup_thread(profiles_to_signup)
+        sys.exit(0)
+
     print("=" * 50)
     print(f"  TikTok Signup Bot - http://localhost:{args.port}")
     print("=" * 50)
