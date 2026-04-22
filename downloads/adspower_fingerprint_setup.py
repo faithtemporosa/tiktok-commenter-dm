@@ -20,6 +20,12 @@ import json
 
 ADSPOWER_API = "http://localhost:50325"
 
+WINDOWS_USER_AGENT = (
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+    "AppleWebKit/537.36 (KHTML, like Gecko) "
+    "Chrome/143.0.0.0 Safari/537.36"
+)
+
 # Common screen resolutions (most popular desktop sizes)
 SCREEN_RESOLUTIONS = [
     "1920_1080",
@@ -173,8 +179,11 @@ def generate_fingerprint_config(country_code=None):
     """Generate a randomized fingerprint config matching AdsPower UI settings"""
 
     fingerprint = {
-        # WebRTC - Disable UDP (prevents leaks)
-        "webrtc": "disable_udp",
+        # User-Agent / OS - keep profiles on a stable Windows identity
+        "ua": WINDOWS_USER_AGENT,
+
+        # WebRTC - disabled so websites cannot obtain a direct/local IP
+        "webrtc": "disabled",
 
         # Timezone - Based on IP (auto-detect from proxy)
         "automatic_timezone": "1",

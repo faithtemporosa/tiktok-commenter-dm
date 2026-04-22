@@ -22,7 +22,7 @@ ADSPOWER_BASE_URLS = (
 WINDOWS_USER_AGENT = (
     "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
     "AppleWebKit/537.36 (KHTML, like Gecko) "
-    "Chrome/124.0.0.0 Safari/537.36"
+    "Chrome/143.0.0.0 Safari/537.36"
 )
 
 WINDOWS_FINGERPRINT = {
@@ -30,6 +30,7 @@ WINDOWS_FINGERPRINT = {
     "automatic_timezone": "1",
     "language_switch": "1",
     "page_language_switch": "1",
+    "ua": WINDOWS_USER_AGENT,
     "screen_resolution": "random",
     "fonts": [],
     "canvas": "1",
@@ -41,9 +42,6 @@ WINDOWS_FINGERPRINT = {
     "flash": "block",
     "media_devices": "1",
     "client_rects": "1",
-    "platform": "Win32",
-    "ua_platform": "Windows",
-    "os": "Windows",
     "webgl_vendor": "Google Inc. (Intel)",
     "webgl_renderer": (
         "ANGLE (Intel, Intel(R) UHD Graphics Direct3D11 vs_5_0 ps_5_0, D3D11)"
@@ -54,12 +52,12 @@ WINDOWS_FINGERPRINT = {
 def find_adspower_base_url(timeout=10):
     for base_url in ADSPOWER_BASE_URLS:
         try:
-            response = requests.get(
+            payload = request_json(
+                "GET",
                 f"{base_url}/api/v1/user/list",
                 params={"page": 1, "page_size": 1},
                 timeout=timeout,
             )
-            payload = response.json()
             if payload.get("code") == 0:
                 return base_url
         except Exception:
@@ -118,10 +116,6 @@ def update_profile(base_url, profile):
     user_id = profile["user_id"]
     payload = {
         "user_id": user_id,
-        "user_agent": WINDOWS_USER_AGENT,
-        "ua_platform": "Windows",
-        "screen_width": 1920,
-        "screen_height": 1080,
         "fingerprint_config": WINDOWS_FINGERPRINT,
     }
 
@@ -132,6 +126,16 @@ def update_profile(base_url, profile):
         timeout=30,
     )
     return result
+
+
+def stop_profile(base_url, profile):
+    user_id = profile["user_id"]
+    return request_json(
+        "GET",
+        f"{base_url}/api/v1/browser/stop",
+        params={"user_id": user_id},
+        timeout=15,
+    )
 
 
 def main():
@@ -148,6 +152,11 @@ def main():
         "--output",
         default="downloads/adspower_windows_os_updates.json",
         help="Write update results to this JSON file",
+    )
+    parser.add_argument(
+        "--stop-first",
+        action="store_true",
+        help="Stop each AdsPower browser before updating its fingerprint",
     )
     args = parser.parse_args()
 
@@ -167,6 +176,11 @@ def main():
             continue
 
         try:
+            stop_result = None
+            if args.stop_first:
+                stop_result = stop_profile(base_url, profile)
+                time.sleep(0.2)
+
             result = update_profile(base_url, profile)
             ok = result.get("code") == 0
             status = "OK" if ok else "FAILED"
@@ -176,6 +190,7 @@ def main():
                     "user_id": user_id,
                     "name": name,
                     "ok": ok,
+                    "stop_result": stop_result,
                     "result": result,
                 }
             )

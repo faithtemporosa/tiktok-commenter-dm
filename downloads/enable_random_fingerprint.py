@@ -1,7 +1,11 @@
 #!/usr/bin/env python3
 """
-Enable Random Fingerprint for All AdsPower Profiles
+DEPRECATED: Enable Random Fingerprint for All AdsPower Profiles
 Uses pyautogui to click through each profile.
+
+Do not run this for TikTok profiles. Broad random fingerprint changes can switch
+profiles away from their stable Windows identity and trigger platform mismatch
+signals.
 
 BEFORE RUNNING:
 1. Open AdsPower
@@ -49,6 +53,10 @@ START_FROM = 23  # Start from this profile number (1-indexed)
 
 
 def main():
+    print("This script is deprecated and intentionally blocked.")
+    print("Use update_adspower_os_windows.py to keep stable Windows fingerprints.")
+    return
+
     print("=" * 60)
     print("  Enable Random Fingerprint - PyAutoGUI")
     print("=" * 60)
