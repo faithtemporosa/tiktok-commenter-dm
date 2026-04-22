@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """
-AdsPower TikTok Direct Commenter v2
+MAIN SCRIPT — tiktok_commenter.py
 ===================================
+AdsPower TikTok Direct Commenter v2
 Directly comments on TikTok videos using JavaScript injection for reliability.
 
 SETUP:
@@ -32,9 +33,12 @@ import traceback
 import asyncio
 import webbrowser
 import subprocess
+import os
 from datetime import datetime, timedelta
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from flask import Flask, render_template_string, jsonify, request
+
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 
 # AI for reply drafting
 try:
@@ -303,13 +307,13 @@ profiles = []
 comments_cache = {}
 commented_videos = set()
 
-REPORT_FILE = "tiktok_comments_history.json"
-DM_REPORT_FILE = "tiktok_dm_history.json"
-DM_TARGETS_FILE = "tiktok_dm_targets.json"
-POST_QUEUE_FILE = "tiktok_post_queue.json"
-POST_HISTORY_FILE = "tiktok_post_history.json"
-SCREENSHOTS_FOLDER = "comment_screenshots"
-NOT_LOGGED_IN_FILE = "not_logged_in_browsers.json"
+REPORT_FILE = os.path.join(SCRIPT_DIR, "tiktok_comments_history.json")
+DM_REPORT_FILE = os.path.join(SCRIPT_DIR, "tiktok_dm_history.json")
+DM_TARGETS_FILE = os.path.join(SCRIPT_DIR, "tiktok_dm_targets.json")
+POST_QUEUE_FILE = os.path.join(SCRIPT_DIR, "tiktok_post_queue.json")
+POST_HISTORY_FILE = os.path.join(SCRIPT_DIR, "tiktok_post_history.json")
+SCREENSHOTS_FOLDER = os.path.join(SCRIPT_DIR, "comment_screenshots")
+NOT_LOGGED_IN_FILE = os.path.join(SCRIPT_DIR, "not_logged_in_browsers.json")
 
 # Track browsers that are not logged in
 not_logged_in_browsers = []
@@ -362,7 +366,6 @@ def get_not_logged_in_list():
     return not_logged_in_browsers
 
 # Create screenshots folder if it doesn't exist
-import os
 if not os.path.exists(SCREENSHOTS_FOLDER):
     os.makedirs(SCREENSHOTS_FOLDER)
 
@@ -408,8 +411,6 @@ SCRIPT_CONTROLS = {
 }
 
 script_processes = {}
-SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
-
 def _script_log_file(script_key):
     return os.path.join(SCRIPT_DIR, f"script_{script_key}.log")
 
@@ -6358,7 +6359,8 @@ if __name__ == "__main__":
     args = parser.parse_args()
     PORT = args.port
     print("=" * 50)
-    print(f"  TikTok Commenter - http://localhost:{PORT}")
+    print(f"  [MAIN] TikTok Commenter - tiktok_commenter.py")
+    print(f"  http://localhost:{PORT}")
     print("=" * 50)
     load_report_history()  # Load past runs
     load_dm_data()  # Load DM data
