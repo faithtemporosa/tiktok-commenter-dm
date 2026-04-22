@@ -49,6 +49,7 @@ function Dashboard({ onNavigate }) {
   const [targetCommentHistory, setTargetCommentHistory] = useState([]);
   const [scriptStatuses, setScriptStatuses] = useState({});
   const [scriptLogs, setScriptLogs] = useState({});
+  const [signupStatus, setSignupStatus] = useState(null);
   const [warmupSettings, setWarmupSettings] = useState({ num: 20, videos: 10, start: 1 });
   const fileInputRef = useRef(null);
   const logsContainerRef = useRef(null);
@@ -181,6 +182,49 @@ function Dashboard({ onNavigate }) {
     }
   }, [fetchScriptStatus, fetchScriptLog]);
 
+  const fetchSignupStatus = useCallback(async () => {
+    try {
+      const res = await fetch(`${BOT_API_URL}/api/signup/status`);
+      if (!res.ok) return;
+      setSignupStatus(await res.json());
+    } catch (err) {
+      // Local bot not running, ignore
+    }
+  }, []);
+
+  const startSignup = useCallback(async () => {
+    try {
+      const listRes = await fetch(`${BOT_API_URL}/api/signup/not-logged-in`);
+      const list = listRes.ok ? await listRes.json() : { browsers: [] };
+      const profiles = (list.browsers || []).map(b => b.profile).filter(Boolean);
+      if (profiles.length === 0) {
+        setSignupStatus(prev => ({
+          ...(prev || {}),
+          running: false,
+          logs: [...((prev && prev.logs) || []), "No not-logged-in profiles found."]
+        }));
+        return;
+      }
+      await fetch(`${BOT_API_URL}/api/signup/start`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ profiles })
+      });
+      await fetchSignupStatus();
+    } catch (err) {
+      console.error('Error starting signup:', err);
+    }
+  }, [fetchSignupStatus]);
+
+  const stopSignup = useCallback(async () => {
+    try {
+      await fetch(`${BOT_API_URL}/api/signup/stop`, { method: 'POST' });
+      await fetchSignupStatus();
+    } catch (err) {
+      console.error('Error stopping signup:', err);
+    }
+  }, [fetchSignupStatus]);
+
   const fetchStats = useCallback(async () => {
     try {
       // Use local midnight for "today" calculation
@@ -262,9 +306,9 @@ function Dashboard({ onNavigate }) {
 
   const fetchAll = useCallback(async () => {
     setLoading(true);
-    await Promise.all([fetchStats(), fetchReports(), fetchLogs(), fetchDmReports(), fetchPostReports(), fetchProfileMappings(), fetchAccounts(), fetchTargetStats(), fetchTargetLogs(), fetchTargetCommentHistory(), fetchScriptStatus()]);
+    await Promise.all([fetchStats(), fetchReports(), fetchLogs(), fetchDmReports(), fetchPostReports(), fetchProfileMappings(), fetchAccounts(), fetchTargetStats(), fetchTargetLogs(), fetchTargetCommentHistory(), fetchScriptStatus(), fetchSignupStatus()]);
     setLoading(false);
-  }, [fetchStats, fetchReports, fetchLogs, fetchDmReports, fetchPostReports, fetchProfileMappings, fetchAccounts, fetchTargetStats, fetchTargetLogs, fetchTargetCommentHistory, fetchScriptStatus]);
+  }, [fetchStats, fetchReports, fetchLogs, fetchDmReports, fetchPostReports, fetchProfileMappings, fetchAccounts, fetchTargetStats, fetchTargetLogs, fetchTargetCommentHistory, fetchScriptStatus, fetchSignupStatus]);
 
   const handleFileImport = async (event) => {
     const file = event.target.files[0]; if (!file) return;
@@ -310,9 +354,9 @@ function Dashboard({ onNavigate }) {
   }, [fetchStats, fetchReports, fetchLogs, fetchDmReports, fetchPostReports]);
   useEffect(() => {
     if (!autoRefresh) return;
-    const iv = setInterval(() => { fetchStats(); fetchReports(); fetchLogs(); fetchDmReports(); fetchPostReports(); fetchScriptStatus(); }, REFRESH_INTERVAL);
+    const iv = setInterval(() => { fetchStats(); fetchReports(); fetchLogs(); fetchDmReports(); fetchPostReports(); fetchScriptStatus(); fetchSignupStatus(); }, REFRESH_INTERVAL);
     return () => clearInterval(iv);
-  }, [autoRefresh, fetchStats, fetchReports, fetchLogs, fetchDmReports, fetchPostReports, fetchScriptStatus]);
+  }, [autoRefresh, fetchStats, fetchReports, fetchLogs, fetchDmReports, fetchPostReports, fetchScriptStatus, fetchSignupStatus]);
   useEffect(() => { if (logsContainerRef.current) logsContainerRef.current.scrollTop = logsContainerRef.current.scrollHeight; }, [logs]);
 
   const fmt = (ts) => {
@@ -351,9 +395,10 @@ function Dashboard({ onNavigate }) {
   ];
 
   const scriptPanel = ({ keyName, title, icon: Icon, description, children, externalUrl }) => {
-    const status = scriptStatuses[keyName] || {};
+    const isSignup = keyName === "signup";
+    const status = isSignup ? (signupStatus || {}) : (scriptStatuses[keyName] || {});
     const running = !!status.running;
-    const lines = scriptLogs[keyName] || [];
+    const lines = isSignup ? (signupStatus?.logs || []) : (scriptLogs[keyName] || []);
     return (
       <div data-testid={`${keyName}-script-tab`}>
         <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-4 mb-4 flex items-center justify-between gap-4 flex-wrap">
@@ -369,13 +414,13 @@ function Dashboard({ onNavigate }) {
           </div>
           <div className="flex items-center gap-2 flex-wrap">
             {children}
-            {externalUrl && <a href={externalUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-zinc-700 hover:bg-zinc-600 text-xs transition-all"><ExternalLink className="w-3.5 h-3.5" />Open</a>}
+            {externalUrl && !isSignup && <a href={externalUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-zinc-700 hover:bg-zinc-600 text-xs transition-all"><ExternalLink className="w-3.5 h-3.5" />Open</a>}
             {!running ? (
-              <button onClick={() => startScript(keyName, keyName === 'warmup' ? warmupSettings : {})} className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-xs transition-all"><Play className="w-3.5 h-3.5" />Start</button>
+              <button onClick={() => isSignup ? startSignup() : startScript(keyName, keyName === 'warmup' ? warmupSettings : {})} className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-xs transition-all"><Play className="w-3.5 h-3.5" />Start</button>
             ) : (
-              <button onClick={() => stopScript(keyName)} className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-red-600 hover:bg-red-500 text-xs transition-all"><Pause className="w-3.5 h-3.5" />Stop</button>
+              <button onClick={() => isSignup ? stopSignup() : stopScript(keyName)} className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-red-600 hover:bg-red-500 text-xs transition-all"><Pause className="w-3.5 h-3.5" />Stop</button>
             )}
-            <button onClick={() => fetchScriptLog(keyName)} className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-violet-600 hover:bg-violet-500 text-xs transition-all"><RefreshCw className="w-3.5 h-3.5" />Log</button>
+            <button onClick={() => isSignup ? fetchSignupStatus() : fetchScriptLog(keyName)} className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-violet-600 hover:bg-violet-500 text-xs transition-all"><RefreshCw className="w-3.5 h-3.5" />Log</button>
           </div>
         </div>
         <div className="bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden">
@@ -539,8 +584,7 @@ function Dashboard({ onNavigate }) {
           keyName: "signup",
           title: "TikTok Signup Bot",
           icon: Users,
-          description: "Starts the signup bot web UI on port 9005",
-          externalUrl: "http://localhost:9005"
+          description: "Runs signup automation through the local bot on port 9000"
         })}
 
         {activeTab === "proxy" && scriptPanel({

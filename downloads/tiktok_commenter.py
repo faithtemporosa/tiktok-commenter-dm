@@ -381,12 +381,6 @@ SCRIPT_CONTROLS = {
         "description": "Natural browsing warmup for AdsPower profiles.",
         "args": ["--num={num}", "--videos={videos}", "--start={start}"]
     },
-    "signup": {
-        "label": "TikTok Signup",
-        "script": "tiktok_signup.py",
-        "description": "Launches the signup bot UI on its own localhost port.",
-        "args": []
-    },
     "target_comments": {
         "label": "Target Comments",
         "script": "comment_target_accounts.py",
@@ -415,6 +409,14 @@ SCRIPT_CONTROLS = {
 
 script_processes = {}
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+
+try:
+    import tiktok_signup as signup_engine
+    HAS_SIGNUP_ENGINE = True
+except Exception as e:
+    signup_engine = None
+    HAS_SIGNUP_ENGINE = False
+    print(f"Note: signup engine unavailable: {e}")
 
 def _script_log_file(script_key):
     return os.path.join(SCRIPT_DIR, f"script_{script_key}.log")
@@ -4494,15 +4496,14 @@ DASHBOARD_HTML = """
         <div id="tab-signup" style="display:none">
             <div class="card">
                 <div class="card-title"><span>TikTok Signup Bot</span><span id="signup-state" style="color:#71717a">Stopped</span></div>
-                <div style="font-size:12px;color:#a1a1aa;margin-bottom:16px;">Starts the signup bot web UI on port 9005.</div>
+                <div style="font-size:12px;color:#a1a1aa;margin-bottom:16px;">Runs signup automation through this dashboard on port 9000.</div>
                 <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;">
-                    <button class="btn btn-success" id="signup-startb" onclick="startNamedScript('signup')">Start Signup UI</button>
-                    <button class="btn btn-danger" id="signup-stopb" onclick="stopScript('signup')" style="display:none">Stop</button>
-                    <a href="http://localhost:9005" target="_blank" class="btn btn-secondary" style="text-decoration:none;">Open Signup UI</a>
+                    <button class="btn btn-success" id="signup-startb" onclick="startSignup()">Start Signup</button>
+                    <button class="btn btn-danger" id="signup-stopb" onclick="stopSignup()" style="display:none">Stop</button>
                 </div>
             </div>
             <div class="card" style="margin-top:20px;">
-                <div class="card-title"><span>Signup Log</span><button class="btn btn-secondary" style="padding:4px 8px" onclick="loadDedicatedLog('signup','signup-logs')">Refresh</button></div>
+                <div class="card-title"><span>Signup Log</span><button class="btn btn-secondary" style="padding:4px 8px" onclick="refreshSignup()">Refresh</button></div>
                 <div class="logs" id="signup-logs" style="height:320px;">Ready.</div>
             </div>
         </div>
@@ -4916,7 +4917,7 @@ DASHBOARD_HTML = """
         const SHEETS=['Bump Connect','Kollabsy','Bump Syndicate'];
         setInterval(upd,1000);
         window.addEventListener('load', function(){ sync(); upd(); });
-        function showTab(t){document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));event.target.classList.add('active');['main','warmup','signup','proxy','scheduler','timer','targets','dm','replies','post','profiles','report'].forEach(id=>{document.getElementById('tab-'+id).style.display=t==id?'block':'none';});if(['warmup','signup','proxy','scheduler','timer'].includes(t))refreshScripts();if(t=='warmup')loadDedicatedLog('warmup','warmup-logs');if(t=='signup')loadDedicatedLog('signup','signup-logs');if(t=='proxy')loadDedicatedLog('proxy_update','proxy_update-logs');if(t=='scheduler')loadDedicatedLog('view_scheduler','view_scheduler-logs');if(t=='timer')loadDedicatedLog('viewing_timer','viewing_timer-logs');if(t=='targets')updTargets();if(t=='dm')updDm();if(t=='replies')refreshReplies();if(t=='post')updPost();if(t=='profiles')refreshProfileMapping();if(t=='report')fetchCloudStats();}
+        function showTab(t){document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));event.target.classList.add('active');['main','warmup','signup','proxy','scheduler','timer','targets','dm','replies','post','profiles','report'].forEach(id=>{document.getElementById('tab-'+id).style.display=t==id?'block':'none';});if(['warmup','proxy','scheduler','timer'].includes(t))refreshScripts();if(t=='warmup')loadDedicatedLog('warmup','warmup-logs');if(t=='signup')refreshSignup();if(t=='proxy')loadDedicatedLog('proxy_update','proxy_update-logs');if(t=='scheduler')loadDedicatedLog('view_scheduler','view_scheduler-logs');if(t=='timer')loadDedicatedLog('viewing_timer','viewing_timer-logs');if(t=='targets')updTargets();if(t=='dm')updDm();if(t=='replies')refreshReplies();if(t=='post')updPost();if(t=='profiles')refreshProfileMapping();if(t=='report')fetchCloudStats();}
         async function sync(){const r=await fetch('/api/sync-profiles',{method:'POST'});profiles=(await r.json()).profiles||[];render();updateProfileCounts();}
         async function loadC(){const r=await fetch('/api/load-comments',{method:'POST'});const d=await r.json();alert('Loaded:\\n'+Object.entries(d.counts).map(([k,v])=>k+': '+v).join('\\n'));}
         function render(){const e=document.getElementById('pl');if(!profiles.length){e.innerHTML='<div style="text-align:center;color:#71717a;padding:40px">Click Sync to load 25 profiles</div>';return;}e.innerHTML=profiles.map(p=>'<div class="profile '+(selected.has(p.user_id)?'selected':'')+'" onclick="tog(\\''+p.user_id+'\\')"><input type="checkbox" '+(selected.has(p.user_id)?'checked':'')+' onclick="event.stopPropagation();tog(\\''+p.user_id+'\\')"><div style="flex:1"><div style="font-weight:500">'+(p.name||p.user_id)+'</div><div style="font-size:11px;color:#71717a">'+p.user_id+'</div></div></div>').join('');document.getElementById('pc').textContent=selected.size+'/'+profiles.length+' selected';}
@@ -5057,7 +5058,37 @@ DASHBOARD_HTML = """
             const e=document.getElementById(elementId);
             if(e)e.innerHTML=(d.lines&&d.lines.length)?d.lines.map(l=>'<div>'+l.replace(/</g,'&lt;').replace(/>/g,'&gt;')+'</div>').join(''):'No log output yet.';
         }
-        setInterval(()=>{if(['tab-warmup','tab-signup','tab-proxy','tab-scheduler','tab-timer'].some(id=>document.getElementById(id).style.display!='none'))refreshScripts();},3000);
+        async function refreshSignup(){
+            try{
+                const r=await fetch('/api/signup/status');
+                const d=await r.json();
+                const running=!!d.running;
+                const state=document.getElementById('signup-state');
+                const startBtn=document.getElementById('signup-startb');
+                const stopBtn=document.getElementById('signup-stopb');
+                const logs=document.getElementById('signup-logs');
+                if(state)state.innerHTML=running?'<span style="color:#4ade80">Running</span>':'<span style="color:#71717a">Stopped</span>';
+                if(startBtn)startBtn.style.display=running?'none':'inline';
+                if(stopBtn)stopBtn.style.display=running?'inline':'none';
+                if(logs)logs.innerHTML=(d.logs&&d.logs.length)?d.logs.slice(-100).map(l=>'<div>'+String(l).replace(/</g,'&lt;').replace(/>/g,'&gt;')+'</div>').join(''):'No log output yet.';
+            }catch(e){console.error('Signup refresh error:',e);}
+        }
+        async function startSignup(){
+            try{
+                const list=await fetch('/api/signup/not-logged-in').then(r=>r.json());
+                const profiles=(list.browsers||[]).map(b=>b.profile).filter(Boolean);
+                if(!profiles.length){alert('No not-logged-in profiles found.');return;}
+                const r=await fetch('/api/signup/start',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({profiles})});
+                const d=await r.json().catch(()=>({}));
+                if(!r.ok)alert(d.error||'Failed to start signup');
+                setTimeout(refreshSignup,500);
+            }catch(e){alert('Failed to start signup');}
+        }
+        async function stopSignup(){
+            await fetch('/api/signup/stop',{method:'POST'});
+            setTimeout(refreshSignup,500);
+        }
+        setInterval(()=>{if(['tab-warmup','tab-proxy','tab-scheduler','tab-timer'].some(id=>document.getElementById(id).style.display!='none'))refreshScripts();if(document.getElementById('tab-signup').style.display!='none')refreshSignup();},3000);
 
         // Target Account Functions
         let targetStatus={running:false,logs:[],stats:{}};
@@ -6141,6 +6172,57 @@ def api_script_log(script_key):
         "running": _script_is_running(script_key),
         "lines": _script_tail(script_key, lines),
     })
+
+@app.route('/api/signup/not-logged-in', methods=['GET'])
+def api_signup_not_logged_in():
+    browsers = get_not_logged_in_list()
+    return jsonify({"browsers": browsers, "count": len(browsers)})
+
+@app.route('/api/signup/status', methods=['GET'])
+def api_signup_status():
+    if not HAS_SIGNUP_ENGINE:
+        return jsonify({
+            "running": False,
+            "logs": ["Signup engine is unavailable. Check tiktok_signup.py imports."],
+            "error": "Signup engine unavailable"
+        }), 503
+    return jsonify(signup_engine.signup_status)
+
+@app.route('/api/signup/start', methods=['POST'])
+def api_signup_start():
+    if not HAS_SIGNUP_ENGINE:
+        return jsonify({"error": "Signup engine unavailable"}), 503
+    if signup_engine.signup_status.get("running"):
+        return jsonify({"error": "Already running"}), 400
+
+    data = request.json or {}
+    profiles_to_signup = data.get("profiles") or [
+        b.get("profile") for b in get_not_logged_in_list() if b.get("profile")
+    ]
+    profiles_to_signup = [p for p in profiles_to_signup if p]
+    if not profiles_to_signup:
+        return jsonify({"error": "No not-logged-in profiles found"}), 400
+
+    t = threading.Thread(
+        target=signup_engine.run_signup_thread,
+        args=(profiles_to_signup,),
+        daemon=True
+    )
+    t.start()
+    return jsonify({"ok": True, "total": len(profiles_to_signup)})
+
+@app.route('/api/signup/stop', methods=['POST'])
+def api_signup_stop():
+    if not HAS_SIGNUP_ENGINE:
+        return jsonify({"error": "Signup engine unavailable"}), 503
+    signup_engine.signup_status["running"] = False
+    return jsonify({"ok": True})
+
+@app.route('/api/signup/accounts', methods=['GET'])
+def api_signup_accounts():
+    if not HAS_SIGNUP_ENGINE:
+        return jsonify([]), 503
+    return jsonify(signup_engine.signup_status.get("created_accounts", []))
 
 @app.route('/api/target-accounts', methods=['GET'])
 def api_get_target_accounts():
