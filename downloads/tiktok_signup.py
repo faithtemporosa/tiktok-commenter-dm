@@ -32,6 +32,14 @@ from datetime import datetime, timedelta
 from flask import Flask, render_template_string, jsonify, request
 
 try:
+    from comment_target_accounts import auto_signup as working_auto_signup
+    HAS_WORKING_SIGNUP = True
+except Exception as e:
+    working_auto_signup = None
+    HAS_WORKING_SIGNUP = False
+    print(f"ERROR: Could not import working auto_signup: {e}")
+
+try:
     from playwright.sync_api import sync_playwright
     HAS_PLAYWRIGHT = True
 except ImportError:
@@ -246,6 +254,50 @@ def run_signup_for_profile(profile_name, profile_id):
     """Run TikTok signup flow for a single profile"""
     log(f"\n{'='*40}")
     log(f"  Starting signup for: {profile_name}")
+
+    if HAS_WORKING_SIGNUP:
+        browser_data = open_browser(profile_id)
+        if not browser_data or browser_data == "SKIP":
+            log(f"  ✗ Could not open browser for {profile_name}")
+            return False
+
+        ws_endpoint = browser_data.get("ws", {}).get("puppeteer")
+        if not ws_endpoint:
+            log(f"  ✗ No WebSocket endpoint for {profile_name}")
+            close_browser(profile_id)
+            return False
+
+        try:
+            with sync_playwright() as p:
+                browser = p.chromium.connect_over_cdp(ws_endpoint)
+                context = browser.contexts[0]
+                while len(context.pages) > 1:
+                    try:
+                        context.pages[-1].close()
+                    except Exception:
+                        break
+                page = context.pages[0] if context.pages else context.new_page()
+                page.bring_to_front()
+
+                signup_success, new_username = working_auto_signup(page, profile_name)
+                if signup_success:
+                    log(f"  ✓ Signup successful for {profile_name}: @{new_username}")
+                    signup_status["created_accounts"].append({
+                        "profile": profile_name,
+                        "username": new_username,
+                        "created_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                    })
+                    clear_not_logged_in(profile_name)
+                    return True
+
+                log(f"  ✗ Signup failed for {profile_name}")
+                return False
+        except Exception as e:
+            log(f"  ✗ Working signup error: {e}")
+            traceback.print_exc()
+            return False
+        finally:
+            close_browser(profile_id)
 
     # Create temp email
     email, email_pass, _ = create_temp_email()
