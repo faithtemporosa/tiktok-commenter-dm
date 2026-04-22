@@ -47,6 +47,9 @@ function Dashboard({ onNavigate }) {
   const [targetLogs, setTargetLogs] = useState([]);
   const [targetRunning, setTargetRunning] = useState(false);
   const [targetCommentHistory, setTargetCommentHistory] = useState([]);
+  const [scriptStatuses, setScriptStatuses] = useState({});
+  const [scriptLogs, setScriptLogs] = useState({});
+  const [warmupSettings, setWarmupSettings] = useState({ num: 20, videos: 10, start: 1 });
   const fileInputRef = useRef(null);
   const logsContainerRef = useRef(null);
   const targetLogsRef = useRef(null);
@@ -129,6 +132,55 @@ function Dashboard({ onNavigate }) {
     }
   }, []);
 
+  const fetchScriptStatus = useCallback(async () => {
+    try {
+      const res = await fetch(`${BOT_API_URL}/api/scripts/status`);
+      if (!res.ok) return;
+      const data = await res.json();
+      const byKey = {};
+      (data.scripts || []).forEach(s => { byKey[s.key] = s; });
+      setScriptStatuses(byKey);
+    } catch (err) {
+      // Local bot not running, ignore
+    }
+  }, []);
+
+  const fetchScriptLog = useCallback(async (key) => {
+    try {
+      const res = await fetch(`${BOT_API_URL}/api/scripts/${key}/log?lines=100`);
+      if (!res.ok) return;
+      const data = await res.json();
+      setScriptLogs(prev => ({ ...prev, [key]: data.lines || [] }));
+    } catch (err) {
+      // Local bot not running, ignore
+    }
+  }, []);
+
+  const startScript = useCallback(async (key, options = {}) => {
+    try {
+      const res = await fetch(`${BOT_API_URL}/api/scripts/${key}/start`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(options)
+      });
+      await res.json().catch(() => ({}));
+      await fetchScriptStatus();
+      await fetchScriptLog(key);
+    } catch (err) {
+      console.error(`Error starting ${key}:`, err);
+    }
+  }, [fetchScriptStatus, fetchScriptLog]);
+
+  const stopScript = useCallback(async (key) => {
+    try {
+      await fetch(`${BOT_API_URL}/api/scripts/${key}/stop`, { method: 'POST' });
+      await fetchScriptStatus();
+      await fetchScriptLog(key);
+    } catch (err) {
+      console.error(`Error stopping ${key}:`, err);
+    }
+  }, [fetchScriptStatus, fetchScriptLog]);
+
   const fetchStats = useCallback(async () => {
     try {
       // Use local midnight for "today" calculation
@@ -210,9 +262,9 @@ function Dashboard({ onNavigate }) {
 
   const fetchAll = useCallback(async () => {
     setLoading(true);
-    await Promise.all([fetchStats(), fetchReports(), fetchLogs(), fetchDmReports(), fetchPostReports(), fetchProfileMappings(), fetchAccounts(), fetchTargetStats(), fetchTargetLogs(), fetchTargetCommentHistory()]);
+    await Promise.all([fetchStats(), fetchReports(), fetchLogs(), fetchDmReports(), fetchPostReports(), fetchProfileMappings(), fetchAccounts(), fetchTargetStats(), fetchTargetLogs(), fetchTargetCommentHistory(), fetchScriptStatus()]);
     setLoading(false);
-  }, [fetchStats, fetchReports, fetchLogs, fetchDmReports, fetchPostReports, fetchProfileMappings, fetchAccounts, fetchTargetStats, fetchTargetLogs, fetchTargetCommentHistory]);
+  }, [fetchStats, fetchReports, fetchLogs, fetchDmReports, fetchPostReports, fetchProfileMappings, fetchAccounts, fetchTargetStats, fetchTargetLogs, fetchTargetCommentHistory, fetchScriptStatus]);
 
   const handleFileImport = async (event) => {
     const file = event.target.files[0]; if (!file) return;
@@ -258,9 +310,9 @@ function Dashboard({ onNavigate }) {
   }, [fetchStats, fetchReports, fetchLogs, fetchDmReports, fetchPostReports]);
   useEffect(() => {
     if (!autoRefresh) return;
-    const iv = setInterval(() => { fetchStats(); fetchReports(); fetchLogs(); fetchDmReports(); fetchPostReports(); }, REFRESH_INTERVAL);
+    const iv = setInterval(() => { fetchStats(); fetchReports(); fetchLogs(); fetchDmReports(); fetchPostReports(); fetchScriptStatus(); }, REFRESH_INTERVAL);
     return () => clearInterval(iv);
-  }, [autoRefresh, fetchStats, fetchReports, fetchLogs, fetchDmReports, fetchPostReports]);
+  }, [autoRefresh, fetchStats, fetchReports, fetchLogs, fetchDmReports, fetchPostReports, fetchScriptStatus]);
   useEffect(() => { if (logsContainerRef.current) logsContainerRef.current.scrollTop = logsContainerRef.current.scrollHeight; }, [logs]);
 
   const fmt = (ts) => {
@@ -280,9 +332,15 @@ function Dashboard({ onNavigate }) {
   const trunc = (c, m = 50) => !c ? "-" : c.length > m ? c.substring(0, m) + "..." : c;
   const brandColor = (s) => s === "Bump Connect" ? "text-emerald-400 bg-emerald-500/20" : s === "Kollabsy" ? "text-violet-400 bg-violet-500/20" : s === "Bump Syndicate" ? "text-amber-400 bg-amber-500/20" : "text-zinc-400 bg-zinc-500/20";
   const logColor = (m) => m.includes("\u2717") || m.includes("Error") || m.includes("Failed") ? "text-red-400" : m.includes("\u2713") || m.includes("SUCCESS") || m.includes("Completed") ? "text-emerald-400" : m.includes("\u26A0") ? "text-amber-400" : m.includes("\u2192") || m.includes("Starting") ? "text-blue-400" : "text-zinc-400";
+  const scriptLogColor = (m) => (m || '').includes('FAILED') || (m || '').includes('Error') || (m || '').includes('\u2717') ? 'text-red-400' : (m || '').includes('\u2713') || (m || '').includes('COMPLETE') || (m || '').includes('Started') ? 'text-emerald-400' : 'text-zinc-400';
 
   const tabs = [
     { id: "comments", label: "Comments", icon: MessageCircle, count: stats?.total_comments },
+    { id: "warmup", label: "Warmup", icon: Sparkles },
+    { id: "signup", label: "Signup", icon: Users },
+    { id: "proxy", label: "Proxy Fix", icon: RefreshCw },
+    { id: "scheduler", label: "Scheduler", icon: CalendarClock },
+    { id: "timer", label: "Timer", icon: Clock },
     { id: "targets", label: "Targets", icon: Target, count: targetStats?.accounts?.length },
     { id: "dms", label: "DMs", icon: Send, count: stats?.dm_total },
     { id: "posts", label: "Posts", icon: Video, count: stats?.post_total },
@@ -291,6 +349,44 @@ function Dashboard({ onNavigate }) {
     { id: "logs", label: "Live Logs", icon: Terminal },
     { id: "settings", label: "Settings", icon: SettingsIcon }
   ];
+
+  const scriptPanel = ({ keyName, title, icon: Icon, description, children, externalUrl }) => {
+    const status = scriptStatuses[keyName] || {};
+    const running = !!status.running;
+    const lines = scriptLogs[keyName] || [];
+    return (
+      <div data-testid={`${keyName}-script-tab`}>
+        <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-4 mb-4 flex items-center justify-between gap-4 flex-wrap">
+          <div className="flex items-center gap-3">
+            <Icon className="w-5 h-5 text-violet-400" />
+            <div>
+              <div className="font-medium">{title}</div>
+              <div className="text-xs text-zinc-500">{description}</div>
+            </div>
+            <span className={`flex items-center gap-1 px-2 py-1 rounded text-xs ${running ? 'bg-emerald-500/20 text-emerald-400' : 'bg-zinc-700 text-zinc-400'}`}>
+              {running ? <Play className="w-3 h-3" /> : <Pause className="w-3 h-3" />}{running ? 'Running' : 'Stopped'}
+            </span>
+          </div>
+          <div className="flex items-center gap-2 flex-wrap">
+            {children}
+            {externalUrl && <a href={externalUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-zinc-700 hover:bg-zinc-600 text-xs transition-all"><ExternalLink className="w-3.5 h-3.5" />Open</a>}
+            {!running ? (
+              <button onClick={() => startScript(keyName, keyName === 'warmup' ? warmupSettings : {})} className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-xs transition-all"><Play className="w-3.5 h-3.5" />Start</button>
+            ) : (
+              <button onClick={() => stopScript(keyName)} className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-red-600 hover:bg-red-500 text-xs transition-all"><Pause className="w-3.5 h-3.5" />Stop</button>
+            )}
+            <button onClick={() => fetchScriptLog(keyName)} className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-violet-600 hover:bg-violet-500 text-xs transition-all"><RefreshCw className="w-3.5 h-3.5" />Log</button>
+          </div>
+        </div>
+        <div className="bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden">
+          <div className="bg-zinc-800/50 px-4 py-3 flex items-center gap-3"><Terminal className="w-4 h-4 text-zinc-400" /><h3 className="text-sm font-semibold">{title} Log</h3></div>
+          <div className="h-80 overflow-y-auto p-4 font-mono text-xs">
+            {lines.length === 0 ? <div className="text-center text-zinc-500 py-8">No log output yet</div> : lines.map((line, i) => <div key={i} className={`py-0.5 ${scriptLogColor(line)}`}>{line}</div>)}
+          </div>
+        </div>
+      </div>
+    );
+  };
 
   return (
     <div className="min-h-screen bg-zinc-950 text-zinc-100">
@@ -420,6 +516,53 @@ function Dashboard({ onNavigate }) {
             </div>
           </div>
         )}
+
+        {/* SCRIPT CONTROLS */}
+        {activeTab === "warmup" && scriptPanel({
+          keyName: "warmup",
+          title: "Warm Up Accounts",
+          icon: Sparkles,
+          description: "Natural browsing warmup for AdsPower profiles",
+          children: (
+            <div className="flex items-center gap-2 flex-wrap">
+              <label className="text-xs text-zinc-500">Browsers</label>
+              <input type="number" min="1" max="505" value={warmupSettings.num} onChange={e => setWarmupSettings(v => ({ ...v, num: Number(e.target.value) }))} className="w-20 px-2 py-1.5 bg-zinc-800 border border-zinc-700 rounded-lg text-xs" />
+              <label className="text-xs text-zinc-500">Videos</label>
+              <input type="number" min="5" max="20" value={warmupSettings.videos} onChange={e => setWarmupSettings(v => ({ ...v, videos: Number(e.target.value) }))} className="w-20 px-2 py-1.5 bg-zinc-800 border border-zinc-700 rounded-lg text-xs" />
+              <label className="text-xs text-zinc-500">Start tt</label>
+              <input type="number" min="1" max="505" value={warmupSettings.start} onChange={e => setWarmupSettings(v => ({ ...v, start: Number(e.target.value) }))} className="w-20 px-2 py-1.5 bg-zinc-800 border border-zinc-700 rounded-lg text-xs" />
+            </div>
+          )
+        })}
+
+        {activeTab === "signup" && scriptPanel({
+          keyName: "signup",
+          title: "TikTok Signup Bot",
+          icon: Users,
+          description: "Starts the signup bot web UI on port 9005",
+          externalUrl: "http://localhost:9005"
+        })}
+
+        {activeTab === "proxy" && scriptPanel({
+          keyName: "proxy_update",
+          title: "Proxy Fix",
+          icon: RefreshCw,
+          description: "Updates proxies only for browsers listed as not logged in"
+        })}
+
+        {activeTab === "scheduler" && scriptPanel({
+          keyName: "view_scheduler",
+          title: "View Scheduler",
+          icon: CalendarClock,
+          description: "Scheduled TikTok viewing automation; run in CMD for full interactive menu control"
+        })}
+
+        {activeTab === "timer" && scriptPanel({
+          keyName: "viewing_timer",
+          title: "Viewing Timer",
+          icon: Clock,
+          description: "Timed viewing sessions; run in CMD for full interactive menu control"
+        })}
 
         {/* TARGETS */}
         {activeTab === "targets" && (

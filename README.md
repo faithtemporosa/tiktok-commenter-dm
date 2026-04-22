@@ -135,7 +135,7 @@ Comments on target accounts with:
 python3 tiktok_commenter.py
 ```
 
-Then open: http://localhost:9090
+Then open: http://localhost:9000
 
 Features:
 - Web-based control panel

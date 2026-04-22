@@ -146,7 +146,7 @@ playwright install chromium
 python tiktok_commenter.py
 ```
 
-5. **Open Dashboard**: http://localhost:9090
+5. **Open Dashboard**: http://localhost:9000
 
 ---
 
@@ -196,7 +196,7 @@ python tiktok_commenter.py
 +--------+            +--------+            +--------+
 | Local  |            | React  |            | FastAPI|
 | Bot    | ---------> | Frontend| <-------> | Backend|
-| (9090) |    sync    | (Vercel)|    API    |(Render)|
+| (9000) |    sync    | (Vercel)|    API    |(Render)|
 +--------+            +--------+            +--------+
     |                                            |
     v                                            v

@@ -10,7 +10,7 @@ SETUP:
 RUN:
     python adspower_dashboard.py
 
-Open http://localhost:9090 in your browser.
+Open http://localhost:9000 in your browser.
 """
 
 import requests
@@ -696,7 +696,7 @@ def api_clear_logs():
 if __name__ == "__main__":
     print("=" * 50)
     print("  AdsPower Rebotou Automation Dashboard")
-    print("  Open: http://localhost:9090")
+    print("  Open: http://localhost:9000")
     print("=" * 50)
     print()
     
@@ -706,4 +706,4 @@ if __name__ == "__main__":
         print("⚠️  Install: pip install pyperclip")
     print()
     
-    app.run(host="0.0.0.0", port=9090, debug=False)
+    app.run(host="0.0.0.0", port=9000, debug=False)

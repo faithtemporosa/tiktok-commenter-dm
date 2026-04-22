@@ -9,11 +9,16 @@ ONLY natural viewing with stealth mode
 
 import sys
 import os
+if hasattr(sys.stdout, 'reconfigure'):
+    sys.stdout.reconfigure(encoding='utf-8')
+if hasattr(sys.stderr, 'reconfigure'):
+    sys.stderr.reconfigure(encoding='utf-8')
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 import requests
 import time
 import random
+import argparse
 from playwright.sync_api import sync_playwright
 import json
 from datetime import datetime
@@ -212,6 +217,12 @@ def get_all_browsers():
     return all_browsers
 
 def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--num", type=int, default=None, help="Number of browsers to warm up")
+    parser.add_argument("--videos", type=int, default=None, help="Videos to watch per browser")
+    parser.add_argument("--start", type=int, default=None, help="Start browser number, e.g. 8 for tt8")
+    args = parser.parse_args()
+
     print("=" * 70)
     print("STEALTH ACCOUNT WARMUP - Natural Browsing for IP Trust")
     print("=" * 70)
@@ -232,16 +243,25 @@ def main():
 
     # How many to warm up per session
     default_num = min(20, len(browsers))
-    num_input = input(f"How many browsers to warm up? (default {default_num}, max {len(browsers)}): ").strip()
-    num_browsers = int(num_input) if num_input else default_num
+    if args.num is not None:
+        num_browsers = args.num
+    else:
+        num_input = input(f"How many browsers to warm up? (default {default_num}, max {len(browsers)}): ").strip()
+        num_browsers = int(num_input) if num_input else default_num
     num_browsers = min(num_browsers, len(browsers))
 
-    videos_input = input("Videos to watch per browser? (default 10, range 5-20): ").strip()
-    videos_per_browser = int(videos_input) if videos_input else 10
+    if args.videos is not None:
+        videos_per_browser = args.videos
+    else:
+        videos_input = input("Videos to watch per browser? (default 10, range 5-20): ").strip()
+        videos_per_browser = int(videos_input) if videos_input else 10
     videos_per_browser = max(5, min(20, videos_per_browser))
 
-    start_input = input("Start from browser number? (default 1, e.g., 8 for tt8): ").strip()
-    start_num = int(start_input) if start_input else 1
+    if args.start is not None:
+        start_num = args.start
+    else:
+        start_input = input("Start from browser number? (default 1, e.g., 8 for tt8): ").strip()
+        start_num = int(start_input) if start_input else 1
     start_num = max(1, start_num)
 
     print()

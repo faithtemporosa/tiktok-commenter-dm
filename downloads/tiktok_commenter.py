@@ -11,7 +11,7 @@ SETUP:
 RUN:
     python tiktok_commenter.py
 
-Open http://localhost:9090
+Open http://localhost:9000
 """
 
 import sys
@@ -31,6 +31,7 @@ import random
 import traceback
 import asyncio
 import webbrowser
+import subprocess
 from datetime import datetime, timedelta
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from flask import Flask, render_template_string, jsonify, request
@@ -62,6 +63,223 @@ try:
 except ImportError:
     HAS_PLAYWRIGHT = False
     print("ERROR: Install playwright: pip install playwright && playwright install chromium")
+
+# Auto-signup imports
+import csv as _csv
+import pickle as _pickle
+try:
+    from googleapiclient.discovery import build as _gmail_build
+    HAS_GMAIL = True
+except ImportError:
+    HAS_GMAIL = False
+
+_ADJECTIVES = ['swift','bright','cosmic','lunar','solar','crystal','neon','atomic','vivid','prism','flux','zen','drift','echo','nova','pixel']
+_NOUNS = ['star','wave','pulse','echo','spark','flame','moon','phoenix','glow','path','stream','verse','core','field','track','scope']
+
+def _generate_creds():
+    adj = random.choice(_ADJECTIVES)
+    noun = random.choice(_NOUNS)
+    return f"{adj}{noun}{random.randint(100,999)}@automateyourbizz.xyz", f"{adj}{noun}{random.randint(10,99)}", f"{adj.capitalize()}{noun.capitalize()}.{random.randint(10,99)}"
+
+def _fetch_verification_code(email):
+    try:
+        _token_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'gmail_token.pickle')
+        with open(_token_path, 'rb') as f:
+            creds = _pickle.load(f)
+        service = _gmail_build('gmail', 'v1', credentials=creds)
+        query = f'from:tiktok to:{email} subject:(verification OR code) is:unread newer_than:10m'
+        for _ in range(30):
+            results = service.users().messages().list(userId='me', q=query, maxResults=5).execute()
+            if results.get('messages'):
+                msg = service.users().messages().get(userId='me', id=results['messages'][0]['id'], format='full').execute()
+                subject = next((h['value'] for h in msg['payload']['headers'] if h['name'].lower() == 'subject'), '')
+                match = re.search(r'(\d{6})', subject)
+                if match:
+                    service.users().messages().modify(userId='me', id=results['messages'][0]['id'], body={'removeLabelIds': ['UNREAD']}).execute()
+                    return match.group(1)
+            time.sleep(5)
+    except Exception as e:
+        log(f"  ⚠ Gmail error: {str(e)[:50]}")
+    return None
+
+def _load_csv_credentials():
+    creds = {}
+    try:
+        with open('tiktok_accounts.csv', 'r') as f:
+            for row in _csv.DictReader(f):
+                pb = row.get('Proxy browser', '')
+                if pb and pb.isdigit() and row.get('Status') == 'created':
+                    creds[int(pb)] = {'username': row.get('Username',''), 'password': row.get('Password',''), 'email': row.get('Email','')}
+    except Exception:
+        pass
+    return creds
+
+def _attempt_login(page, username, password, email=None):
+    """Try to log in using existing credentials."""
+    try:
+        page.goto("https://www.tiktok.com", wait_until="domcontentloaded", timeout=30000)
+        time.sleep(3)
+        # Click Log in button
+        for selector in ['a:has-text("Log in")', 'button:has-text("Log in")', 'text="Log in"']:
+            try:
+                btn = page.locator(selector).first
+                if btn.is_visible(timeout=1000):
+                    btn.click(force=True); time.sleep(3); break
+            except: continue
+        # Use phone/email
+        for selector in ['text="Use phone or email"', 'text=/.*phone.*email.*/i']:
+            try:
+                page.click(selector, timeout=2000); time.sleep(2); break
+            except: continue
+        # Email/username tab
+        try:
+            tab = page.locator('a:has-text("Email or username")').first
+            if tab.is_visible(timeout=1000): tab.click(); time.sleep(1)
+        except: pass
+        # Fill credentials
+        for sel in ['input[placeholder*="Email" i]', 'input[placeholder*="username" i]', 'input[type="text"]']:
+            try:
+                inp = page.locator(sel).first
+                if inp.is_visible(timeout=1000): inp.fill(username); time.sleep(1); break
+            except: continue
+        try:
+            page.locator('input[type="password"]').first.fill(password); time.sleep(1)
+        except: pass
+        page.keyboard.press("Enter"); time.sleep(5)
+        # Handle verification code if prompted
+        try:
+            code_inp = page.locator('input[placeholder*="code" i]').first
+            if code_inp.is_visible(timeout=3000) and email:
+                code = _fetch_verification_code(email)
+                if code:
+                    code_inp.fill(code); time.sleep(1); page.keyboard.press("Enter"); time.sleep(5)
+        except: pass
+        # Check login success
+        time.sleep(3)
+        url = page.url
+        return 'foryou' in url or 'following' in url or '@' in url
+    except Exception as e:
+        log(f"  ⚠ Login attempt error: {str(e)[:60]}")
+        return False
+
+def _attempt_signup(page, profile_name):
+    """Create a fresh TikTok account in the browser."""
+    email, username, password = _generate_creds()
+    log(f"  → [{profile_name}] Signing up: {email}")
+    try:
+        page.goto("https://www.tiktok.com/signup/phone-or-email/email", wait_until="domcontentloaded", timeout=45000)
+        time.sleep(5)
+        # Birthdate
+        try:
+            page.locator("[role='combobox'][aria-label*='Month']").click(); time.sleep(0.5)
+            page.locator("[role='option']:has-text('January')").first.click(); time.sleep(0.5)
+            page.locator("[role='combobox'][aria-label*='Day']").click(); time.sleep(0.5)
+            page.locator("[role='option']:has-text('15')").first.click(); time.sleep(0.5)
+            page.locator("[role='combobox'][aria-label*='Year']").click(); time.sleep(0.5)
+            page.locator("[role='option']:has-text('2001')").first.click(); time.sleep(1)
+        except: pass
+        # Email & password
+        try:
+            email_input = page.locator("input[type='text'], input[type='email']").first
+            email_input.click(); time.sleep(0.5)
+            email_input.fill(email); time.sleep(2)
+        except Exception as e:
+            log(f"  ⚠ [{profile_name}] Email input error: {str(e)[:40]}")
+        try:
+            pwd_input = page.locator("input[type='password']").first
+            pwd_input.click(); time.sleep(0.5)
+            pwd_input.fill(password); time.sleep(2)
+        except Exception as e:
+            log(f"  ⚠ [{profile_name}] Password input error: {str(e)[:40]}")
+
+        # Send code — try multiple selectors and methods
+        log(f"  → [{profile_name}] Clicking Send code...")
+        send_code_clicked = False
+        send_code_selectors = [
+            "button:has-text('Send code')",
+            "button:has-text('Send Code')",
+            "button:has-text('Get code')",
+            "button:has-text('Get Code')",
+            "[data-e2e='send-code-button']",
+            "button[class*='send']",
+        ]
+        for attempt_sc in range(5):
+            for sel in send_code_selectors:
+                try:
+                    btn = page.locator(sel).first
+                    if btn.is_visible(timeout=1500):
+                        btn.scroll_into_view_if_needed()
+                        time.sleep(0.5)
+                        btn.click(force=True)
+                        log(f"  → [{profile_name}] Clicked send code ({sel})")
+                        send_code_clicked = True
+                        time.sleep(4)
+                        break
+                except: continue
+            if send_code_clicked:
+                # Check if code was actually sent (Resend visible)
+                try:
+                    if page.locator("text=/Resend/i, text=/resend/i").is_visible(timeout=2000):
+                        log(f"  ✓ [{profile_name}] Code sent!")
+                        break
+                except: pass
+                break
+            time.sleep(2)
+
+        if not send_code_clicked:
+            # Last resort: find any button near the email field via JS
+            try:
+                page.evaluate('''() => {
+                    const btns = Array.from(document.querySelectorAll('button'));
+                    const sendBtn = btns.find(b => /send|get/i.test(b.textContent) && /code/i.test(b.textContent));
+                    if (sendBtn) sendBtn.click();
+                }''')
+                log(f"  → [{profile_name}] Clicked send code via JS fallback")
+                time.sleep(4)
+            except: pass
+
+        # Get and enter code
+        code = _fetch_verification_code(email)
+        if not code:
+            log(f"  ✗ [{profile_name}] Signup: no verification code received"); return False
+        log(f"  → [{profile_name}] Code: {code}")
+        page.locator("input[placeholder*='code' i]").first.fill(code); time.sleep(2)
+        page.locator("button:has-text('Next'), button:has-text('Sign up')").first.click(); time.sleep(8)
+        # Set username
+        try:
+            un_input = page.locator("input[placeholder='Username']").first
+            if un_input.is_visible(timeout=5000):
+                un_input.fill(username); time.sleep(3)
+                page.locator("button:has-text('Sign up')").first.click(); time.sleep(10)
+        except: pass
+        time.sleep(5)
+        url = page.url
+        success = 'foryou' in url or '@' in url
+        if success:
+            log(f"  ✓ [{profile_name}] Signup success: @{username}")
+        else:
+            log(f"  ✗ [{profile_name}] Signup failed")
+        return success
+    except Exception as e:
+        log(f"  ✗ [{profile_name}] Signup error: {str(e)[:80]}")
+        return False
+
+def auto_login_or_signup(page, profile_name):
+    """Try CSV login first, then fresh signup. Returns True if now logged in."""
+    # Extract browser number from profile name (e.g. tt23 -> 23)
+    num_match = re.search(r'\d+', profile_name)
+    browser_num = int(num_match.group()) if num_match else None
+    csv_creds = _load_csv_credentials()
+    if browser_num and browser_num in csv_creds:
+        c = csv_creds[browser_num]
+        log(f"  → [{profile_name}] Trying login with saved credentials (@{c['username']})...")
+        if _attempt_login(page, c['username'], c['password'], c.get('email')):
+            log(f"  ✓ [{profile_name}] Logged in as @{c['username']}")
+            return True
+        log(f"  ⚠ [{profile_name}] Login failed, trying signup...")
+    else:
+        log(f"  → [{profile_name}] No saved credentials, signing up...")
+    return _attempt_signup(page, profile_name)
 
 # =============================================================================
 # CONFIGURATION
@@ -155,6 +373,129 @@ settings = {
     "parallel_browsers": 2,  # Number of browsers to run in parallel (1-10, recommended: 2-3)
     "target_hashtag": "",  # Target hashtag to search (e.g., #socialmedia)
 }
+
+SCRIPT_CONTROLS = {
+    "warmup": {
+        "label": "Warm Up Accounts",
+        "script": "warmup_accounts.py",
+        "description": "Natural browsing warmup for AdsPower profiles.",
+        "args": ["--num={num}", "--videos={videos}", "--start={start}"]
+    },
+    "signup": {
+        "label": "TikTok Signup",
+        "script": "tiktok_signup.py",
+        "description": "Launches the signup bot UI on its own localhost port.",
+        "args": []
+    },
+    "target_comments": {
+        "label": "Target Comments",
+        "script": "comment_target_accounts.py",
+        "description": "Runs target account comment automation.",
+        "args": ["--parallel={parallel}"]
+    },
+    "view_scheduler": {
+        "label": "View Scheduler",
+        "script": "tiktok_view_scheduler.py",
+        "description": "Scheduled TikTok viewing automation.",
+        "args": []
+    },
+    "viewing_timer": {
+        "label": "Viewing Timer",
+        "script": "viewing_timer.py",
+        "description": "Interactive timed viewing sessions.",
+        "args": []
+    },
+    "proxy_update": {
+        "label": "Proxy Fix",
+        "script": "update_not_logged_in_proxies.py",
+        "description": "Changes proxies for browsers listed as not logged in.",
+        "args": []
+    },
+}
+
+script_processes = {}
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+
+def _script_log_file(script_key):
+    return os.path.join(SCRIPT_DIR, f"script_{script_key}.log")
+
+def _script_is_running(script_key):
+    proc = script_processes.get(script_key)
+    return bool(proc and proc.poll() is None)
+
+def _script_tail(script_key, lines=80):
+    log_file = _script_log_file(script_key)
+    try:
+        with open(log_file, "r", encoding="utf-8", errors="replace") as f:
+            all_lines = f.readlines()
+        return [line.rstrip() for line in all_lines[-lines:]]
+    except FileNotFoundError:
+        return []
+
+def _build_script_command(script_key, options=None):
+    config = SCRIPT_CONTROLS[script_key]
+    options = options or {}
+    command = [sys.executable, "-u", config["script"]]
+    for arg in config.get("args", []):
+        if "{parallel}" in arg:
+            parallel = max(1, min(10, int(options.get("parallel", 2))))
+            command.append(arg.format(parallel=parallel))
+        elif "{num}" in arg:
+            num = max(1, int(options.get("num", 20)))
+            command.append(arg.format(num=num))
+        elif "{videos}" in arg:
+            videos = max(5, min(20, int(options.get("videos", 10))))
+            command.append(arg.format(videos=videos))
+        elif "{start}" in arg:
+            start = max(1, int(options.get("start", 1)))
+            command.append(arg.format(start=start))
+        else:
+            command.append(arg)
+    return command
+
+def _start_script(script_key, options=None):
+    if script_key not in SCRIPT_CONTROLS:
+        return False, "Unknown script"
+    if _script_is_running(script_key):
+        return False, "Script is already running"
+
+    config = SCRIPT_CONTROLS[script_key]
+    script_path = os.path.join(SCRIPT_DIR, config["script"])
+    if not os.path.exists(script_path):
+        return False, f"{config['script']} was not found"
+
+    log_file = _script_log_file(script_key)
+    log_handle = open(log_file, "w", encoding="utf-8", errors="replace")
+    command = _build_script_command(script_key, options)
+    popen_kwargs = {
+        "stdout": log_handle,
+        "stderr": subprocess.STDOUT,
+        "cwd": SCRIPT_DIR,
+    }
+    if os.name == "nt":
+        popen_kwargs["creationflags"] = subprocess.CREATE_NEW_PROCESS_GROUP
+    else:
+        popen_kwargs["start_new_session"] = True
+
+    proc = subprocess.Popen(command, **popen_kwargs)
+    proc._script_log_handle = log_handle
+    script_processes[script_key] = proc
+    return True, f"Started {config['label']}"
+
+def _stop_script(script_key):
+    proc = script_processes.get(script_key)
+    if not proc or proc.poll() is not None:
+        return False, "Script is not running"
+    proc.terminate()
+    try:
+        proc.wait(timeout=8)
+    except subprocess.TimeoutExpired:
+        proc.kill()
+        proc.wait(timeout=5)
+    log_handle = getattr(proc, "_script_log_handle", None)
+    if log_handle:
+        log_handle.close()
+    return True, "Script stopped"
 
 # DM Settings - Updated for brand outreach
 dm_settings = {
@@ -3175,6 +3516,162 @@ def click_post_button(page):
     
     return result
 
+def _is_captcha_visible(page):
+    """Check if a captcha/verification popup is visible."""
+    try:
+        return page.evaluate('''() => {
+            const selectors = [
+                '[class*="captcha"]', '[id*="captcha"]',
+                '[class*="secsdk-captcha"]', '[class*="cap-flex"]',
+                '[class*="TUXCaptcha"]', '[class*="verify-wrap"]',
+                '[data-e2e*="captcha"]', 'iframe[src*="captcha"]',
+                'iframe[src*="verify"]', '[class*="slideCaptcha"]',
+                '[class*="drag_captcha"]', '[class*="puzzle"]',
+                '[class*="captcha-verify"]', '[class*="slider"]'
+            ];
+            return selectors.some(sel => {
+                const el = document.querySelector(sel);
+                return el && el.offsetParent !== null;
+            });
+        }''')
+    except:
+        return False
+
+def _try_close_captcha(page):
+    """Try clicking the X / close button on the captcha popup."""
+    try:
+        closed = page.evaluate('''() => {
+            // Look for close/X button inside captcha container
+            const closeSelectors = [
+                '[class*="captcha"] [class*="close"]',
+                '[class*="captcha"] button[aria-label*="close" i]',
+                '[class*="captcha"] button[aria-label*="Close" i]',
+                '[class*="verify"] [class*="close"]',
+                '[class*="cap-flex"] svg[class*="close"]',
+                '[class*="cap-flex"] button',
+            ];
+            for (let sel of closeSelectors) {
+                const el = document.querySelector(sel);
+                if (el && el.offsetParent !== null) { el.click(); return true; }
+            }
+            // Try any X button visible on top of captcha
+            const allBtns = document.querySelectorAll('button, [role="button"]');
+            for (let btn of allBtns) {
+                const txt = btn.textContent.trim();
+                if ((txt === 'X' || txt === '×' || txt === '✕') && btn.offsetParent) {
+                    btn.click(); return true;
+                }
+            }
+            return false;
+        }''')
+        return closed
+    except:
+        return False
+
+def _try_solve_slider_captcha(page, profile_name):
+    """Attempt to solve TikTok's drag-slider puzzle captcha."""
+    try:
+        # Find the slider handle/button
+        slider = page.evaluate('''() => {
+            const selectors = [
+                '[class*="slider"] button',
+                '[class*="slider-btn"]',
+                '[class*="secsdk"] button',
+                '[class*="captcha"] button',
+                '[class*="drag"] button',
+                '.captcha_verify_slide--button',
+            ];
+            for (let sel of selectors) {
+                const el = document.querySelector(sel);
+                if (el && el.offsetParent !== null) {
+                    const rect = el.getBoundingClientRect();
+                    return { x: rect.x + rect.width/2, y: rect.y + rect.height/2, width: rect.width };
+                }
+            }
+            return null;
+        }''')
+
+        if not slider:
+            return False
+
+        log(f"  → [{profile_name}] Attempting slider captcha solve...")
+        sx, sy = slider['x'], slider['y']
+
+        # Try dragging to several positions (puzzle piece can be at 30-70% of track width)
+        track_width = page.evaluate('''() => {
+            const track = document.querySelector('[class*="slider-track"], [class*="captcha-slider"], [class*="verify-bar"]');
+            return track ? track.getBoundingClientRect().width : 300;
+        }''') or 300
+
+        for pct in [0.4, 0.55, 0.35, 0.65, 0.5]:
+            drag_to = sx + (track_width * pct)
+            page.mouse.move(sx, sy)
+            time.sleep(0.3)
+            page.mouse.down()
+            time.sleep(0.2)
+            # Drag slowly in steps
+            steps = 15
+            for i in range(1, steps + 1):
+                step_x = sx + (drag_to - sx) * (i / steps)
+                page.mouse.move(step_x, sy + random.uniform(-1, 1))
+                time.sleep(random.uniform(0.02, 0.05))
+            page.mouse.up()
+            time.sleep(1.5)
+
+            if not _is_captcha_visible(page):
+                log(f"  ✓ [{profile_name}] Slider captcha solved!")
+                return True
+
+            # Reset for next attempt — move back to start
+            page.mouse.move(sx, sy)
+            time.sleep(0.5)
+
+        return False
+    except Exception as e:
+        log(f"  ⚠ [{profile_name}] Slider solve error: {str(e)[:50]}")
+        return False
+
+def wait_for_captcha(page, profile_name, max_wait=120):
+    """Detect captcha popups, try to close or solve them, wait up to max_wait seconds."""
+    detected = False
+    waited = 0
+    interval = 3
+
+    while waited < max_wait:
+        try:
+            if not _is_captcha_visible(page):
+                if detected:
+                    log(f"  ✓ [{profile_name}] Captcha cleared, resuming...")
+                return detected
+
+            if not detected:
+                log(f"  ⚠ [{profile_name}] Captcha detected — trying to solve/close...")
+                detected = True
+
+            # 1. Try clicking X to close it
+            if _try_close_captcha(page):
+                log(f"  → [{profile_name}] Clicked close on captcha")
+                time.sleep(2)
+                if not _is_captcha_visible(page):
+                    log(f"  ✓ [{profile_name}] Captcha closed!")
+                    return True
+
+            # 2. Try solving the slider
+            if _try_solve_slider_captcha(page, profile_name):
+                return True
+
+            # 3. Still there — wait and retry
+            log(f"  → [{profile_name}] Captcha still visible, waiting {interval}s...")
+            time.sleep(interval)
+            waited += interval
+
+        except Exception:
+            return False
+
+    log(f"  ⚠ [{profile_name}] Captcha timed out after {max_wait}s, continuing anyway...")
+    return detected
+
+
 def process_single_video_with_retry(page, video_num, profile_name, target_videos):
     """Process a single video with retry logic"""
     global commented_videos
@@ -3187,9 +3684,12 @@ def process_single_video_with_retry(page, video_num, profile_name, target_videos
             
             # Check for login redirect - this is called on EVERY video attempt
             if not check_login_status(page):
-                log(f"    ⚠ NOT LOGGED IN - skipping this browser")
+                log(f"    ⚠ NOT LOGGED IN - Attempting auto login/signup...")
                 track_not_logged_in(profile_name, source="commenter")
-                return False, "login_required"
+                if not auto_login_or_signup(page, profile_name):
+                    log(f"    ✗ Auto login/signup failed — skipping browser")
+                    return False, "login_required"
+                log(f"    ✓ Now logged in, continuing...")
             
             # Handle hashtag/search grid view
             if "/tag/" in current_url or "/search" in current_url:
@@ -3405,14 +3905,17 @@ def process_single_video_with_retry(page, video_num, profile_name, target_videos
             # Step 4: Post comment
             log(f"    → Posting...")
             post_result = click_post_button(page)
-            
+
             if not post_result.get('success'):
                 log(f"    → Trying Enter key...")
                 page.keyboard.press("Enter")
             else:
                 log(f"    ✓ Clicked post ({post_result.get('method')})")
-            
+
             time.sleep(2)
+
+            # Wait if TikTok shows a captcha/verification after posting
+            wait_for_captcha(page, profile_name)
 
             # Take screenshot as proof of comment
             screenshot_path = None
@@ -3482,13 +3985,16 @@ def run_tiktok_commenter(ws_endpoint, profile_name, sheet_name):
 
                 # Check if redirected to login page
                 if "login" in current_url.lower() or "signup" in current_url.lower():
-                    log(f"  ⚠ NOT LOGGED IN - Skipping browser")
+                    log(f"  ⚠ NOT LOGGED IN - Attempting auto login/signup...")
                     track_not_logged_in(profile_name, source="commenter")
-                    browser.close()
-                    return False
+                    if not auto_login_or_signup(page, profile_name):
+                        log(f"  ✗ [{profile_name}] Auto login/signup failed — skipping")
+                        browser.close()
+                        return False
+                    log(f"  ✓ [{profile_name}] Now logged in, continuing...")
 
-                if "/@" in current_url:
-                    match = re.search(r'/@([^/?]+)', current_url)
+                if "/@" in page.url:
+                    match = re.search(r'/@([^/?]+)', page.url)
                     if match:
                         detected_username = match.group(1)
                         set_tiktok_username(profile_name, detected_username)
@@ -3496,16 +4002,18 @@ def run_tiktok_commenter(ws_endpoint, profile_name, sheet_name):
                 else:
                     # No username detected - might not be logged in
                     log(f"  ⚠ No account detected - checking login status...")
-                    # Check if login button is visible
                     login_visible = page.evaluate('''() => {
                         const loginBtn = document.querySelector('[data-e2e="login-button"], a[href*="login"]');
                         return loginBtn && loginBtn.offsetParent !== null;
                     }''')
                     if login_visible:
-                        log(f"  ⚠ NOT LOGGED IN - Skipping browser")
+                        log(f"  ⚠ NOT LOGGED IN - Attempting auto login/signup...")
                         track_not_logged_in(profile_name, source="commenter")
-                        browser.close()
-                        return False
+                        if not auto_login_or_signup(page, profile_name):
+                            log(f"  ✗ [{profile_name}] Auto login/signup failed — skipping")
+                            browser.close()
+                            return False
+                        log(f"  ✓ [{profile_name}] Now logged in, continuing...")
             except Exception as e:
                 log(f"  ⚠ Profile check error: {str(e)[:40]}")
 
@@ -3554,17 +4062,23 @@ def run_tiktok_commenter(ws_endpoint, profile_name, sheet_name):
                 log(f"  ⚠ Slow load, continuing anyway...")
             
             time.sleep(8)  # Give more time for content to load
-            
+
+            # Wait out any captcha/verification on page load
+            wait_for_captcha(page, profile_name)
+
             # Check if logged in
             current_url = page.url
             log(f"  📍 URL: {current_url}")
             
             # Check if redirected to login
             if "login" in current_url.lower() or "signup" in current_url.lower():
-                log(f"  ⚠ NOT LOGGED IN - Closing browser automatically")
+                log(f"  ⚠ NOT LOGGED IN - Attempting auto login/signup...")
                 track_not_logged_in(profile_name, source="commenter")
-                browser.close()
-                return False
+                if not auto_login_or_signup(page, profile_name):
+                    log(f"  ✗ [{profile_name}] Auto login/signup failed — skipping")
+                    browser.close()
+                    return False
+                log(f"  ✓ [{profile_name}] Now logged in, continuing...")
 
             # Also check page content for login prompts
             try:
@@ -3576,10 +4090,13 @@ def run_tiktok_commenter(ws_endpoint, profile_name, sheet_name):
                     return false;
                 }''')
                 if login_check:
-                    log(f"  ⚠ LOGIN REQUIRED - Closing browser automatically")
+                    log(f"  ⚠ LOGIN REQUIRED - Attempting auto login/signup...")
                     track_not_logged_in(profile_name, source="commenter")
-                    browser.close()
-                    return False
+                    if not auto_login_or_signup(page, profile_name):
+                        log(f"  ✗ [{profile_name}] Auto login/signup failed — skipping")
+                        browser.close()
+                        return False
+                    log(f"  ✓ [{profile_name}] Now logged in, continuing...")
             except:
                 pass
             
@@ -3896,6 +4413,11 @@ DASHBOARD_HTML = """
         
         <div class="tabs">
             <div class="tab active" onclick="showTab('main')">🎮 Control</div>
+            <div class="tab" onclick="showTab('warmup')">Warmup</div>
+            <div class="tab" onclick="showTab('signup')">Signup</div>
+            <div class="tab" onclick="showTab('proxy')">Proxy Fix</div>
+            <div class="tab" onclick="showTab('scheduler')">Scheduler</div>
+            <div class="tab" onclick="showTab('timer')">Timer</div>
             <div class="tab" onclick="showTab('targets')">🎯 Targets</div>
             <div class="tab" onclick="showTab('dm')">💬 DM</div>
             <div class="tab" onclick="showTab('replies')">📨 Replies</div>
@@ -3941,6 +4463,92 @@ DASHBOARD_HTML = """
             <div class="card" style="margin-top:20px;">
                 <div class="card-title"><span>Log</span><button class="btn btn-secondary" style="padding:4px 8px" onclick="clrLog()">Clear</button></div>
                 <div class="logs" id="logs">Ready - Select all 25 profiles and click Start...</div>
+            </div>
+        </div>
+
+        <div id="tab-warmup" style="display:none">
+            <div class="grid">
+                <div class="card">
+                    <div class="card-title"><span>Warm Up Accounts</span><span id="warmup-state" style="color:#71717a">Stopped</span></div>
+                    <div class="settings">
+                        <div class="setting-row"><label>Browsers:</label><input type="number" id="warmup-num" value="20" min="1" max="505"></div>
+                        <div class="setting-row"><label>Videos/browser:</label><input type="number" id="warmup-videos" value="10" min="5" max="20"></div>
+                        <div class="setting-row"><label>Start at tt:</label><input type="number" id="warmup-start" value="1" min="1" max="505"></div>
+                    </div>
+                    <div style="display:flex;gap:12px;margin-top:16px;">
+                        <button class="btn btn-success" id="warmup-startb" onclick="startWarmup()">Start Warmup</button>
+                        <button class="btn btn-danger" id="warmup-stopb" onclick="stopScript('warmup')" style="display:none">Stop</button>
+                    </div>
+                </div>
+                <div class="card">
+                    <div class="card-title"><span>Warmup Notes</span></div>
+                    <div style="font-size:12px;color:#a1a1aa;line-height:1.8;">Uses natural browsing behavior and stealth injection. Run small batches first if AdsPower or TikTok starts rate limiting.</div>
+                </div>
+            </div>
+            <div class="card" style="margin-top:20px;">
+                <div class="card-title"><span>Warmup Log</span><button class="btn btn-secondary" style="padding:4px 8px" onclick="loadDedicatedLog('warmup','warmup-logs')">Refresh</button></div>
+                <div class="logs" id="warmup-logs" style="height:320px;">Ready.</div>
+            </div>
+        </div>
+
+        <div id="tab-signup" style="display:none">
+            <div class="card">
+                <div class="card-title"><span>TikTok Signup Bot</span><span id="signup-state" style="color:#71717a">Stopped</span></div>
+                <div style="font-size:12px;color:#a1a1aa;margin-bottom:16px;">Starts the signup bot web UI on port 9005.</div>
+                <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;">
+                    <button class="btn btn-success" id="signup-startb" onclick="startNamedScript('signup')">Start Signup UI</button>
+                    <button class="btn btn-danger" id="signup-stopb" onclick="stopScript('signup')" style="display:none">Stop</button>
+                    <a href="http://localhost:9005" target="_blank" class="btn btn-secondary" style="text-decoration:none;">Open Signup UI</a>
+                </div>
+            </div>
+            <div class="card" style="margin-top:20px;">
+                <div class="card-title"><span>Signup Log</span><button class="btn btn-secondary" style="padding:4px 8px" onclick="loadDedicatedLog('signup','signup-logs')">Refresh</button></div>
+                <div class="logs" id="signup-logs" style="height:320px;">Ready.</div>
+            </div>
+        </div>
+
+        <div id="tab-proxy" style="display:none">
+            <div class="card">
+                <div class="card-title"><span>Proxy Fix</span><span id="proxy_update-state" style="color:#71717a">Stopped</span></div>
+                <div style="font-size:12px;color:#a1a1aa;margin-bottom:16px;">Updates proxies only for browsers listed in not_logged_in_browsers.json.</div>
+                <div style="display:flex;gap:12px;">
+                    <button class="btn btn-success" id="proxy_update-startb" onclick="startNamedScript('proxy_update')">Update Not Logged In Proxies</button>
+                    <button class="btn btn-danger" id="proxy_update-stopb" onclick="stopScript('proxy_update')" style="display:none">Stop</button>
+                </div>
+            </div>
+            <div class="card" style="margin-top:20px;">
+                <div class="card-title"><span>Proxy Fix Log</span><button class="btn btn-secondary" style="padding:4px 8px" onclick="loadDedicatedLog('proxy_update','proxy_update-logs')">Refresh</button></div>
+                <div class="logs" id="proxy_update-logs" style="height:320px;">Ready.</div>
+            </div>
+        </div>
+
+        <div id="tab-scheduler" style="display:none">
+            <div class="card">
+                <div class="card-title"><span>View Scheduler</span><span id="view_scheduler-state" style="color:#71717a">Stopped</span></div>
+                <div style="font-size:12px;color:#a1a1aa;margin-bottom:16px;">This script has an interactive menu. Use the log to see prompts; for full menu control, run it in CMD.</div>
+                <div style="display:flex;gap:12px;">
+                    <button class="btn btn-success" id="view_scheduler-startb" onclick="startNamedScript('view_scheduler')">Start Scheduler</button>
+                    <button class="btn btn-danger" id="view_scheduler-stopb" onclick="stopScript('view_scheduler')" style="display:none">Stop</button>
+                </div>
+            </div>
+            <div class="card" style="margin-top:20px;">
+                <div class="card-title"><span>Scheduler Log</span><button class="btn btn-secondary" style="padding:4px 8px" onclick="loadDedicatedLog('view_scheduler','view_scheduler-logs')">Refresh</button></div>
+                <div class="logs" id="view_scheduler-logs" style="height:320px;">Ready.</div>
+            </div>
+        </div>
+
+        <div id="tab-timer" style="display:none">
+            <div class="card">
+                <div class="card-title"><span>Viewing Timer</span><span id="viewing_timer-state" style="color:#71717a">Stopped</span></div>
+                <div style="font-size:12px;color:#a1a1aa;margin-bottom:16px;">This script has an interactive menu. Use the log to see prompts; for full menu control, run it in CMD.</div>
+                <div style="display:flex;gap:12px;">
+                    <button class="btn btn-success" id="viewing_timer-startb" onclick="startNamedScript('viewing_timer')">Start Timer</button>
+                    <button class="btn btn-danger" id="viewing_timer-stopb" onclick="stopScript('viewing_timer')" style="display:none">Stop</button>
+                </div>
+            </div>
+            <div class="card" style="margin-top:20px;">
+                <div class="card-title"><span>Timer Log</span><button class="btn btn-secondary" style="padding:4px 8px" onclick="loadDedicatedLog('viewing_timer','viewing_timer-logs')">Refresh</button></div>
+                <div class="logs" id="viewing_timer-logs" style="height:320px;">Ready.</div>
             </div>
         </div>
 
@@ -4308,7 +4916,7 @@ DASHBOARD_HTML = """
         const SHEETS=['Bump Connect','Kollabsy','Bump Syndicate'];
         setInterval(upd,1000);
         window.addEventListener('load', function(){ sync(); upd(); });
-        function showTab(t){document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));event.target.classList.add('active');document.getElementById('tab-main').style.display=t=='main'?'block':'none';document.getElementById('tab-targets').style.display=t=='targets'?'block':'none';document.getElementById('tab-dm').style.display=t=='dm'?'block':'none';document.getElementById('tab-replies').style.display=t=='replies'?'block':'none';document.getElementById('tab-post').style.display=t=='post'?'block':'none';document.getElementById('tab-profiles').style.display=t=='profiles'?'block':'none';document.getElementById('tab-report').style.display=t=='report'?'block':'none';if(t=='targets')updTargets();if(t=='dm')updDm();if(t=='replies')refreshReplies();if(t=='post')updPost();if(t=='profiles')refreshProfileMapping();if(t=='report')fetchCloudStats();}
+        function showTab(t){document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));event.target.classList.add('active');['main','warmup','signup','proxy','scheduler','timer','targets','dm','replies','post','profiles','report'].forEach(id=>{document.getElementById('tab-'+id).style.display=t==id?'block':'none';});if(['warmup','signup','proxy','scheduler','timer'].includes(t))refreshScripts();if(t=='warmup')loadDedicatedLog('warmup','warmup-logs');if(t=='signup')loadDedicatedLog('signup','signup-logs');if(t=='proxy')loadDedicatedLog('proxy_update','proxy_update-logs');if(t=='scheduler')loadDedicatedLog('view_scheduler','view_scheduler-logs');if(t=='timer')loadDedicatedLog('viewing_timer','viewing_timer-logs');if(t=='targets')updTargets();if(t=='dm')updDm();if(t=='replies')refreshReplies();if(t=='post')updPost();if(t=='profiles')refreshProfileMapping();if(t=='report')fetchCloudStats();}
         async function sync(){const r=await fetch('/api/sync-profiles',{method:'POST'});profiles=(await r.json()).profiles||[];render();updateProfileCounts();}
         async function loadC(){const r=await fetch('/api/load-comments',{method:'POST'});const d=await r.json();alert('Loaded:\\n'+Object.entries(d.counts).map(([k,v])=>k+': '+v).join('\\n'));}
         function render(){const e=document.getElementById('pl');if(!profiles.length){e.innerHTML='<div style="text-align:center;color:#71717a;padding:40px">Click Sync to load 25 profiles</div>';return;}e.innerHTML=profiles.map(p=>'<div class="profile '+(selected.has(p.user_id)?'selected':'')+'" onclick="tog(\\''+p.user_id+'\\')"><input type="checkbox" '+(selected.has(p.user_id)?'checked':'')+' onclick="event.stopPropagation();tog(\\''+p.user_id+'\\')"><div style="flex:1"><div style="font-weight:500">'+(p.name||p.user_id)+'</div><div style="font-size:11px;color:#71717a">'+p.user_id+'</div></div></div>').join('');document.getElementById('pc').textContent=selected.size+'/'+profiles.length+' selected';}
@@ -4400,6 +5008,56 @@ DASHBOARD_HTML = """
         
         async function upd(){try{const r=await fetch('/api/status');const d=await r.json();document.getElementById('prog').style.width=(d.total?(d.progress/d.total*100):0)+'%';document.getElementById('sp').textContent=d.completed.length;document.getElementById('sc-today').textContent=d.comments_today||0;document.getElementById('sc').textContent=d.comments_posted||0;document.getElementById('st').textContent=d.running?'Running: '+d.current_profile+' ('+d.progress+'/'+d.total+')':'Ready';if(!d.running){document.getElementById('startb').style.display='inline';document.getElementById('stopb').style.display='none';}if(d.logs.length)document.getElementById('logs').innerHTML=d.logs.map(l=>'<div style="color:'+(l.includes('✗')?'#f87171':l.includes('✓')?'#4ade80':'#a1a1aa')+'">'+l+'</div>').join('');if(d.report&&d.report.length!==report.length){report=d.report;applyFilter();}}catch(e){}}
         function clrLog(){fetch('/api/clear-logs',{method:'POST'});document.getElementById('logs').innerHTML='Cleared';}
+
+        // Standalone Script Controls
+        let scriptData={scripts:[]};
+        let selectedScript='';
+        async function refreshScripts(){
+            try{
+                const r=await fetch('/api/scripts/status');
+                const d=await r.json();
+                scriptData=d;
+                (scriptData.scripts||[]).forEach(updateScriptButtons);
+            }catch(e){console.error('Script refresh error:',e);}
+        }
+        function scriptOptions(key){
+            const body={};
+            if(key=='warmup'){
+                body.num=+document.getElementById('warmup-num').value;
+                body.videos=+document.getElementById('warmup-videos').value;
+                body.start=+document.getElementById('warmup-start').value;
+            }
+            return body;
+        }
+        function updateScriptButtons(s){
+            const state=document.getElementById(s.key+'-state');
+            const startBtn=document.getElementById(s.key+'-startb');
+            const stopBtn=document.getElementById(s.key+'-stopb');
+            if(state)state.innerHTML=s.running?'<span style="color:#4ade80">Running</span>':'<span style="color:#71717a">Stopped</span>';
+            if(startBtn)startBtn.style.display=s.running?'none':'inline';
+            if(stopBtn)stopBtn.style.display=s.running?'inline':'none';
+        }
+        async function startNamedScript(key){
+            const r=await fetch('/api/scripts/'+key+'/start',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(scriptOptions(key))});
+            const d=await r.json();
+            selectedScript=key;
+            if(!d.ok)alert(d.message||'Failed to start script');
+            setTimeout(refreshScripts,500);
+        }
+        async function startWarmup(){await startNamedScript('warmup');setTimeout(()=>loadDedicatedLog('warmup','warmup-logs'),800);}
+        async function stopScript(key){
+            const r=await fetch('/api/scripts/'+key+'/stop',{method:'POST'});
+            const d=await r.json();
+            if(!d.ok)alert(d.message||'Script was not running');
+            setTimeout(refreshScripts,500);
+        }
+        async function loadDedicatedLog(key,elementId){
+            const r=await fetch('/api/scripts/'+key+'/log');
+            const d=await r.json();
+            const e=document.getElementById(elementId);
+            if(e)e.innerHTML=(d.lines&&d.lines.length)?d.lines.map(l=>'<div>'+l.replace(/</g,'&lt;').replace(/>/g,'&gt;')+'</div>').join(''):'No log output yet.';
+        }
+        setInterval(()=>{if(['tab-warmup','tab-signup','tab-proxy','tab-scheduler','tab-timer'].some(id=>document.getElementById(id).style.display!='none'))refreshScripts();},3000);
 
         // Target Account Functions
         let targetStatus={running:false,logs:[],stats:{}};
@@ -5440,6 +6098,50 @@ def api_delete_profile_mapping(profile):
         return jsonify({"ok": True, "message": f"Mapping for {profile} deleted"})
     return jsonify({"ok": False, "message": f"No mapping found for {profile}"})
 
+@app.route('/api/scripts/status', methods=['GET'])
+def api_scripts_status():
+    scripts = []
+    for key, config in SCRIPT_CONTROLS.items():
+        proc = script_processes.get(key)
+        return_code = proc.poll() if proc else None
+        running = return_code is None if proc else False
+        scripts.append({
+            "key": key,
+            "label": config["label"],
+            "script": config["script"],
+            "description": config["description"],
+            "running": running,
+            "return_code": return_code,
+            "log_file": _script_log_file(key),
+        })
+    return jsonify({"scripts": scripts})
+
+@app.route('/api/scripts/<script_key>/start', methods=['POST'])
+def api_script_start(script_key):
+    ok, message = _start_script(script_key, request.json or {})
+    status_code = 200 if ok else 400
+    return jsonify({"ok": ok, "message": message}), status_code
+
+@app.route('/api/scripts/<script_key>/stop', methods=['POST'])
+def api_script_stop(script_key):
+    ok, message = _stop_script(script_key)
+    status_code = 200 if ok else 400
+    return jsonify({"ok": ok, "message": message}), status_code
+
+@app.route('/api/scripts/<script_key>/log', methods=['GET'])
+def api_script_log(script_key):
+    if script_key not in SCRIPT_CONTROLS:
+        return jsonify({"ok": False, "message": "Unknown script"}), 404
+    lines = int(request.args.get("lines", 100))
+    config = SCRIPT_CONTROLS[script_key]
+    return jsonify({
+        "ok": True,
+        "key": script_key,
+        "label": config["label"],
+        "running": _script_is_running(script_key),
+        "lines": _script_tail(script_key, lines),
+    })
+
 @app.route('/api/target-accounts', methods=['GET'])
 def api_get_target_accounts():
     """Get target accounts stats from the separate commenter script"""
@@ -5494,16 +6196,10 @@ def api_get_target_accounts_summary():
 def api_get_target_logs():
     """Get live logs from the target commenter script"""
     try:
-        log_file = 'comment_target_run.log'
         lines = int(request.args.get('lines', 100))
-
-        with open(log_file, 'r') as f:
-            all_lines = f.readlines()
-            recent_lines = all_lines[-lines:] if len(all_lines) > lines else all_lines
-
-        # Parse lines into structured format
         logs = []
-        for line in recent_lines:
+        tail = _script_tail("target_comments", lines)
+        for line in tail:
             line = line.strip()
             if line:
                 logs.append({
@@ -5511,57 +6207,32 @@ def api_get_target_logs():
                     'timestamp': time.strftime('%H:%M:%S')
                 })
 
-        # Check if script is running
-        import subprocess
-        result = subprocess.run(['pgrep', '-f', 'comment_target_accounts.py'], capture_output=True, text=True)
-        is_running = result.returncode == 0
-
         return jsonify({
             'logs': logs,
-            'running': is_running,
-            'total_lines': len(all_lines)
+            'running': _script_is_running("target_comments"),
+            'total_lines': len(tail)
         })
-    except FileNotFoundError:
-        return jsonify({'logs': [], 'running': False, 'total_lines': 0})
     except Exception as e:
         return jsonify({'logs': [], 'running': False, 'error': str(e)})
 
 @app.route('/api/target-accounts/start', methods=['POST'])
 def api_start_target_commenter():
     """Start the target commenter script"""
-    import subprocess
     try:
-        # Check if already running
-        result = subprocess.run(['pgrep', '-f', 'comment_target_accounts.py'], capture_output=True, text=True)
-        if result.returncode == 0:
-            return jsonify({'ok': False, 'message': 'Target commenter is already running'})
-
-        # Get parallel browsers setting from request
         data = request.json or {}
         parallel = data.get('parallel', 2)
         parallel = max(1, min(10, int(parallel)))  # Clamp between 1 and 10
-
-        # Start the script with parallel argument
-        subprocess.Popen(
-            ['python3', '-u', 'comment_target_accounts.py', f'--parallel={parallel}'],
-            stdout=open('comment_target_run.log', 'w'),
-            stderr=subprocess.STDOUT,
-            start_new_session=True
-        )
-        return jsonify({'ok': True, 'message': f'Target commenter started with {parallel} parallel browsers'})
+        ok, message = _start_script("target_comments", {"parallel": parallel})
+        return jsonify({'ok': ok, 'message': message})
     except Exception as e:
         return jsonify({'ok': False, 'message': str(e)})
 
 @app.route('/api/target-accounts/stop', methods=['POST'])
 def api_stop_target_commenter():
     """Stop the target commenter script"""
-    import subprocess
     try:
-        result = subprocess.run(['pkill', '-f', 'comment_target_accounts.py'], capture_output=True, text=True)
-        if result.returncode == 0:
-            return jsonify({'ok': True, 'message': 'Target commenter stopped'})
-        else:
-            return jsonify({'ok': False, 'message': 'Target commenter was not running'})
+        ok, message = _stop_script("target_comments")
+        return jsonify({'ok': ok, 'message': message})
     except Exception as e:
         return jsonify({'ok': False, 'message': str(e)})
 
