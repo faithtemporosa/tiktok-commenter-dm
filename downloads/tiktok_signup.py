@@ -267,10 +267,11 @@ def run_signup_for_profile(profile_name, profile_id):
             close_browser(profile_id)
             return False
 
+        browser_conn = None
         try:
             with sync_playwright() as p:
-                browser = p.chromium.connect_over_cdp(ws_endpoint)
-                context = browser.contexts[0]
+                browser_conn = p.chromium.connect_over_cdp(ws_endpoint)
+                context = browser_conn.contexts[0]
                 while len(context.pages) > 1:
                     try:
                         context.pages[-1].close()
@@ -297,6 +298,11 @@ def run_signup_for_profile(profile_name, profile_id):
             traceback.print_exc()
             return False
         finally:
+            if browser_conn:
+                try:
+                    browser_conn.close()
+                except Exception:
+                    pass
             close_browser(profile_id)
 
     # Create temp email
@@ -502,6 +508,7 @@ def run_signup_thread(profiles_to_signup):
             signup_status["completed"].append(profile_name)
         else:
             signup_status["failed"].append(profile_name)
+            log(f"  Fallback: closed {profile_name} and moving to next browser")
 
         # Delay between profiles
         if i < len(profiles_to_signup) - 1 and signup_status["running"]:
