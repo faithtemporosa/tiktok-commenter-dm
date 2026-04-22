@@ -5593,7 +5593,11 @@ DASHBOARD_HTML = """
 # =============================================================================
 @app.route('/')
 def index():
-    return render_template_string(DASHBOARD_HTML)
+    response = app.make_response(render_template_string(DASHBOARD_HTML))
+    response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate, max-age=0"
+    response.headers["Pragma"] = "no-cache"
+    response.headers["Expires"] = "0"
+    return response
 
 @app.route('/screenshots/<path:filename>')
 def serve_screenshot(filename):
