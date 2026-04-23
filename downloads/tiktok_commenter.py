@@ -531,10 +531,18 @@ def _signup_process_status():
     proc = script_processes.get("signup")
     return_code = proc.poll() if proc else None
     running = return_code is None if proc else False
+    failure_report = {}
+    failure_report_file = os.path.join(SCRIPT_DIR, "last_signup_failed_profiles.json")
+    try:
+        with open(failure_report_file, "r", encoding="utf-8") as f:
+            failure_report = json.load(f)
+    except Exception:
+        failure_report = {}
     return {
         "running": running,
         "return_code": return_code,
         "logs": _script_tail("signup", 120),
+        "failure_report": failure_report,
         "progress": 0,
         "total": 0,
         "completed": [],

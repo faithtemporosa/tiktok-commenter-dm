@@ -63,6 +63,9 @@ except ImportError:
 ADSPOWER_API = "http://localhost:50325"
 LOCAL_BOT_API = "http://localhost:9000"
 SIGNUP_EMAIL_ATTEMPTS = int(os.environ.get("SIGNUP_EMAIL_ATTEMPTS", "1"))
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+FAILED_REPORT_JSON = os.path.join(BASE_DIR, "last_signup_failed_profiles.json")
+FAILED_REPORT_TXT = os.path.join(BASE_DIR, "last_signup_failed_profiles.txt")
 
 # =============================================================================
 # GLOBAL STATE
@@ -79,6 +82,8 @@ signup_status = {
     "failed": [],
     "created_accounts": []
 }
+
+signup_failed_details = []
 
 def log(msg):
     ts = datetime.now().strftime("%H:%M:%S")
@@ -249,6 +254,72 @@ def clear_not_logged_in(profile_name):
     except:
         pass
 
+def detect_page_failure_reason(page):
+    """Classify the current signup page state after a failed attempt."""
+    try:
+        current_url = page.url or ""
+    except Exception:
+        current_url = ""
+
+    if "login/download-app" in current_url or "download-app" in current_url:
+        return "download_app_security_redirect"
+
+    try:
+        captcha_visible = page.locator(
+            '[class*="captcha"], [id*="captcha"], iframe[src*="captcha"], '
+            '[class*="verify-wrap"], [data-e2e*="captcha"], '
+            '[class*="secsdk"], [class*="captcha-verify"]'
+        ).first.is_visible(timeout=800)
+        if captcha_visible:
+            return "captcha"
+    except Exception:
+        pass
+
+    try:
+        error_el = page.locator(
+            '[class*="error-text"], [data-e2e*="error"], '
+            '[class*="tip-error"], [class*="error-msg"]'
+        ).first
+        if error_el.is_visible(timeout=800):
+            err_msg = (error_el.text_content() or "").strip().lower()
+            if "maximum" in err_msg or "too many" in err_msg:
+                return "maximum_limit"
+            if "code" in err_msg:
+                return "verification_code_error"
+            if err_msg:
+                return "page_error"
+    except Exception:
+        pass
+
+    return "failed_unknown"
+
+def write_failed_report():
+    """Persist the latest failed profiles with reasons for the local UI/user."""
+    counts = {}
+    for item in signup_failed_details:
+        reason = item.get("reason", "failed_unknown")
+        counts[reason] = counts.get(reason, 0) + 1
+
+    payload = {
+        "total_failed": len(signup_failed_details),
+        "reason_counts": counts,
+        "profiles": signup_failed_details,
+        "updated_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+    }
+    try:
+        with open(FAILED_REPORT_JSON, "w", encoding="utf-8") as f:
+            json.dump(payload, f, indent=2)
+        with open(FAILED_REPORT_TXT, "w", encoding="utf-8") as f:
+            f.write(f"total_failed={len(signup_failed_details)}\n")
+            f.write("reason_counts:\n")
+            for reason, count in sorted(counts.items(), key=lambda kv: kv[1], reverse=True):
+                f.write(f"  {reason}: {count}\n")
+            f.write("\nprofiles:\n")
+            for item in signup_failed_details:
+                f.write(f"{item.get('profile')}\t{item.get('reason')}\n")
+    except Exception as e:
+        log(f"  Could not write failed report: {e}")
+
 # =============================================================================
 # SIGNUP AUTOMATION
 # =============================================================================
@@ -261,13 +332,13 @@ def run_signup_for_profile(profile_name, profile_id):
         browser_data = open_browser(profile_id)
         if not browser_data or browser_data == "SKIP":
             log(f"  ✗ Could not open browser for {profile_name}")
-            return False
+            return False, "browser_open_failed"
 
         ws_endpoint = browser_data.get("ws", {}).get("puppeteer")
         if not ws_endpoint:
             log(f"  ✗ No WebSocket endpoint for {profile_name}")
             close_browser(profile_id)
-            return False
+            return False, "missing_ws_endpoint"
 
         browser_conn = None
         try:
@@ -282,6 +353,7 @@ def run_signup_for_profile(profile_name, profile_id):
                 page = context.pages[0] if context.pages else context.new_page()
                 page.bring_to_front()
 
+                failure_reason = "failed_unknown"
                 for email_attempt in range(1, SIGNUP_EMAIL_ATTEMPTS + 1):
                     if email_attempt > 1:
                         log(f"  Retrying {profile_name} with a different email address before closing browser")
@@ -303,16 +375,22 @@ def run_signup_for_profile(profile_name, profile_id):
                             "created_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
                         })
                         clear_not_logged_in(profile_name)
-                        return True
+                        return True, "success"
 
-                    log(f"  Signup attempt {email_attempt}/{SIGNUP_EMAIL_ATTEMPTS} failed for {profile_name}")
+                    failure_reason = detect_page_failure_reason(page)
+                    if failure_reason == "download_app_security_redirect":
+                        log("  Security redirect detected after code submit; closing this browser and moving on")
+                        log(f"  Signup attempt {email_attempt}/{SIGNUP_EMAIL_ATTEMPTS} failed for {profile_name}: {failure_reason}")
+                        break
+
+                    log(f"  Signup attempt {email_attempt}/{SIGNUP_EMAIL_ATTEMPTS} failed for {profile_name}: {failure_reason}")
 
                 log(f"  Signup failed for {profile_name}")
-                return False
+                return False, failure_reason
         except Exception as e:
             log(f"  ✗ Working signup error: {e}")
             traceback.print_exc()
-            return False
+            return False, "working_signup_error"
         finally:
             if browser_conn:
                 try:
@@ -325,7 +403,7 @@ def run_signup_for_profile(profile_name, profile_id):
     email, email_pass, _ = create_temp_email()
     if not email:
         log(f"  ✗ Could not create temp email for {profile_name}")
-        return False
+        return False, "email_create_failed"
 
     tiktok_password = generate_password()
     birthdate_str, bday_month, bday_day, bday_year = generate_birthday()
@@ -335,13 +413,13 @@ def run_signup_for_profile(profile_name, profile_id):
     browser_data = open_browser(profile_id)
     if not browser_data or browser_data == "SKIP":
         log(f"  ✗ Could not open browser for {profile_name}")
-        return False
+        return False, "browser_open_failed"
 
     ws_endpoint = browser_data.get("ws", {}).get("puppeteer")
     if not ws_endpoint:
         log(f"  ✗ No WebSocket endpoint for {profile_name}")
         close_browser(profile_id)
-        return False
+        return False, "missing_ws_endpoint"
 
     success = False
     try:
@@ -491,7 +569,9 @@ def run_signup_for_profile(profile_name, profile_id):
     finally:
         close_browser(profile_id)
 
-    return success
+    if success:
+        return True, "success"
+    return False, "failed_unknown"
 
 def run_signup_thread(profiles_to_signup):
     """Run signup for all not-logged-in profiles"""
@@ -500,6 +580,7 @@ def run_signup_thread(profiles_to_signup):
     signup_status["total"] = len(profiles_to_signup)
     signup_status["completed"] = []
     signup_status["failed"] = []
+    signup_failed_details.clear()
 
     log(f"Starting signup for {len(profiles_to_signup)} profiles...")
 
@@ -516,15 +597,19 @@ def run_signup_thread(profiles_to_signup):
         if not profile_id:
             log(f"  ✗ Could not find AdsPower ID for {profile_name}")
             signup_status["failed"].append(profile_name)
+            signup_failed_details.append({"profile": profile_name, "reason": "missing_adspower_profile_id"})
+            write_failed_report()
             continue
 
-        success = run_signup_for_profile(profile_name, profile_id)
+        success, failure_reason = run_signup_for_profile(profile_name, profile_id)
 
         if success:
             signup_status["completed"].append(profile_name)
         else:
             signup_status["failed"].append(profile_name)
-            log(f"  Fallback: closed {profile_name} and moving to next browser")
+            signup_failed_details.append({"profile": profile_name, "reason": failure_reason})
+            write_failed_report()
+            log(f"  Fallback: closed {profile_name} and moving to next browser ({failure_reason})")
 
         # Delay between profiles
         if i < len(profiles_to_signup) - 1 and signup_status["running"]:
@@ -534,6 +619,7 @@ def run_signup_thread(profiles_to_signup):
 
     signup_status["running"] = False
     signup_status["current_profile"] = None
+    write_failed_report()
     log(f"\nDone! {len(signup_status['completed'])} succeeded, {len(signup_status['failed'])} failed")
 
 # =============================================================================
