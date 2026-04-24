@@ -1,0 +1,25 @@
+{
+  "emulators": [
+    {"name": "Emulator-1", "udid": "emulator-5554", "tiktok_account": "", "device_name": "Android 1"},
+    {"name": "Emulator-2", "udid": "emulator-5556", "tiktok_account": "", "device_name": "Android 2"},
+    {"name": "Emulator-3", "udid": "emulator-5558", "tiktok_account": "", "device_name": "Android 3"},
+    {"name": "Emulator-4", "udid": "emulator-5560", "tiktok_account": "", "device_name": "Android 4"},
+    {"name": "Emulator-5", "udid": "emulator-5562", "tiktok_account": "", "device_name": "Android 5"},
+    {"name": "Emulator-6", "udid": "emulator-5564", "tiktok_account": "", "device_name": "Android 6"},
+    {"name": "Emulator-7", "udid": "emulator-5566", "tiktok_account": "", "device_name": "Android 7"},
+    {"name": "Emulator-8", "udid": "emulator-5568", "tiktok_account": "", "device_name": "Android 8"},
+    {"name": "Emulator-9", "udid": "emulator-5570", "tiktok_account": "", "device_name": "Android 9"},
+    {"name": "Emulator-10", "udid": "emulator-5572", "tiktok_account": "", "device_name": "Android 10"}
+  ],
+  "settings": {
+    "parallel_emulators": 3,
+    "comments_per_account": 2,
+    "appium_server": "http://localhost:4723",
+    "adb_path": "/root/android-sdk/platform-tools/adb"
+  },
+  "server": {
+    "host": "207.180.244.133",
+    "user": "root",
+    "android_sdk": "/root/android-sdk"
+  }
+}
