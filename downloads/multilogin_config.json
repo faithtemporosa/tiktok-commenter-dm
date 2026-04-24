@@ -1,0 +1,12 @@
+{
+  "email": "your-multilogin-email@example.com",
+  "password": "your-multilogin-password",
+  "automation_token": "",
+  "folder_id": "",
+  "comments": {
+    "email": "Your Multilogin account email address",
+    "password": "Your Multilogin account password (plain text - this file is local only)",
+    "automation_token": "Optional: Use automation token instead of email/password for higher rate limits",
+    "folder_id": "Optional: Specify a folder ID to filter profiles from that folder only"
+  }
+}
