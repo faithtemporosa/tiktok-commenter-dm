@@ -1724,56 +1724,58 @@ def process_browser(browser, browser_idx, total_browsers):
     browser_comments = 0
 
     try:
-        with sync_playwright() as p:
-            browser_conn = p.chromium.connect_over_cdp(ws_url)
-            context = browser_conn.contexts[0]
+        # Don't use 'with' statement - it auto-closes browsers when exiting the block
+        p = sync_playwright().start()
+        browser_conn = p.chromium.connect_over_cdp(ws_url)
+        context = browser_conn.contexts[0]
 
-            # Close ALL extra tabs first - keep only 1 tab
-            if len(context.pages) > 1:
-                print(f'    Closing {len(context.pages) - 1} extra tabs...', flush=True)
-                # Keep first tab, close all others
-                for extra_page in context.pages[1:]:
-                    try:
-                        extra_page.close()
-                    except:
-                        pass
+        # Close ALL extra tabs first - keep only 1 tab
+        if len(context.pages) > 1:
+            print(f'    Closing {len(context.pages) - 1} extra tabs...', flush=True)
+            # Keep first tab, close all others
+            for extra_page in context.pages[1:]:
+                try:
+                    extra_page.close()
+                except:
+                    pass
 
-            page = context.pages[0] if context.pages else context.new_page()
+        page = context.pages[0] if context.pages else context.new_page()
 
-            # ===== INJECT STEALTH MODE - Hide CDP/automation detection =====
-            inject_stealth(page)
+        # ===== INJECT STEALTH MODE - Hide CDP/automation detection =====
+        inject_stealth(page)
 
-            # CHECK LOGIN STATUS FIRST
-            print(f'  Checking login status...', flush=True)
-            is_logged_in, username = check_login_status(page)
+        # CHECK LOGIN STATUS FIRST
+        print(f'  Checking login status...', flush=True)
+        is_logged_in, username = check_login_status(page)
 
-            if not is_logged_in:
-                print(f'  ⚠ {browser_name} NOT logged in - skipping (manual signup required)', flush=True)
-                # Don't auto-signup - user will do manual phone signup
-                # Don't close anything - leave browser completely open
-                return {'success': False, 'videos': 0, 'comments': 0, 'skipped': True}
-            else:
-                print(f'  ✓ {browser_name} logged in as @{username}', flush=True)
-                # Sync existing login to Supabase history
-                sync_account_to_supabase(browser_name, username, account_type='login')
+        if not is_logged_in:
+            print(f'  ⚠ {browser_name} NOT logged in - skipping (manual signup required)', flush=True)
+            # Don't auto-signup - user will do manual phone signup
+            # Don't close anything - leave browser completely open
+            return {'success': False, 'videos': 0, 'comments': 0, 'skipped': True}
+        else:
+            print(f'  ✓ {browser_name} logged in as @{username}', flush=True)
+            # Sync existing login to Supabase history
+            sync_account_to_supabase(browser_name, username, account_type='login')
 
-            # Process ALL target accounts with this browser
-            for acc_idx, account in enumerate(TARGET_ACCOUNTS):
-                print(f'  [{acc_idx+1}/{len(TARGET_ACCOUNTS)}] @{account}', flush=True)
+        # Process ALL target accounts with this browser
+        for acc_idx, account in enumerate(TARGET_ACCOUNTS):
+            print(f'  [{acc_idx+1}/{len(TARGET_ACCOUNTS)}] @{account}', flush=True)
 
-                videos, comments = view_and_comment_on_profile(page, account, browser_name, username)
-                browser_videos += videos
-                browser_comments += comments
+            videos, comments = view_and_comment_on_profile(page, account, browser_name, username)
+            browser_videos += videos
+            browser_comments += comments
 
-                # Update stats for this target account (includes tiktok_username for history)
-                update_account_stats(account, videos, comments, browser_name, username)
+            # Update stats for this target account (includes tiktok_username for history)
+            update_account_stats(account, videos, comments, browser_name, username)
 
-                # Natural pause between accounts
-                if acc_idx < len(TARGET_ACCOUNTS) - 1:
-                    random_pause(5, 23)
+            # Natural pause between accounts
+            if acc_idx < len(TARGET_ACCOUNTS) - 1:
+                random_pause(5, 23)
 
-            # DON'T close browser_conn - keep browsers open for manual control
-            # browser_conn.close()
+        # DON'T close browser_conn or playwright - keep browsers open for manual control
+        # browser_conn.close()
+        # p.stop()
 
     except Exception as e:
         print(f'  Browser error: {e}', flush=True)
