@@ -58,6 +58,9 @@ DAILY_ACTIVITY_PATH = 'daily_activity_tracker.json'
 DAILY_TARGET_COMMENTS_PATH = 'daily_target_comments.json'  # Track comments per target per day
 WEEKLY_TARGET_COMMENTS_PATH = 'weekly_target_comments.json'  # Track comments per target per week
 
+# Keep Playwright instances alive to prevent auto-close
+PLAYWRIGHT_INSTANCES = []
+
 # New account limits
 NEW_ACCOUNT_DAYS = 30  # Consider account "new" for first 30 days
 NEW_ACCOUNT_DAILY_FOLLOWS = 2
@@ -1725,7 +1728,10 @@ def process_browser(browser, browser_idx, total_browsers):
 
     try:
         # Don't use 'with' statement - it auto-closes browsers when exiting the block
+        # Store in global list to prevent garbage collection
         p = sync_playwright().start()
+        PLAYWRIGHT_INSTANCES.append(p)  # Keep reference to prevent auto-close
+
         browser_conn = p.chromium.connect_over_cdp(ws_url)
         context = browser_conn.contexts[0]
 
@@ -1751,7 +1757,7 @@ def process_browser(browser, browser_idx, total_browsers):
         if not is_logged_in:
             print(f'  ⚠ {browser_name} NOT logged in - skipping (manual signup required)', flush=True)
             # Don't auto-signup - user will do manual phone signup
-            # Don't close anything - leave browser completely open
+            # Browser stays open - Playwright instance stored in global list
             return {'success': False, 'videos': 0, 'comments': 0, 'skipped': True}
         else:
             print(f'  ✓ {browser_name} logged in as @{username}', flush=True)
@@ -1773,13 +1779,14 @@ def process_browser(browser, browser_idx, total_browsers):
             if acc_idx < len(TARGET_ACCOUNTS) - 1:
                 random_pause(5, 23)
 
-        # DON'T close browser_conn or playwright - keep browsers open for manual control
+        # DON'T close browser_conn or playwright - they're stored in PLAYWRIGHT_INSTANCES
         # browser_conn.close()
         # p.stop()
 
     except Exception as e:
         print(f'  Browser error: {e}', flush=True)
         # Don't close browser on error - leave it open for debugging
+        # Playwright instance is stored in global list
         return {'success': False, 'videos': browser_videos, 'comments': browser_comments}
 
     # Don't close browser after processing - leave it open
