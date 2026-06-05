@@ -61,6 +61,9 @@ WEEKLY_TARGET_COMMENTS_PATH = 'weekly_target_comments.json'  # Track comments pe
 # Keep Playwright instances alive to prevent auto-close
 PLAYWRIGHT_INSTANCES = []
 
+# KEEP BROWSERS OPEN MODE - Set to True to just open browsers without automation
+KEEP_OPEN_MODE = True  # Set to False to run automation
+
 # New account limits
 NEW_ACCOUNT_DAYS = 30  # Consider account "new" for first 30 days
 NEW_ACCOUNT_DAILY_FOLLOWS = 2
@@ -1723,16 +1726,29 @@ def process_browser(browser, browser_idx, total_browsers):
         print(f'  Failed to open browser', flush=True)
         return {'success': False, 'videos': 0, 'comments': 0}
 
+    print(f'  ✓ Browser opened successfully', flush=True)
+
+    # KEEP OPEN MODE - Just open browsers without connecting/automating
+    if KEEP_OPEN_MODE:
+        print(f'  KEEP_OPEN_MODE: Browser will stay open (no automation)', flush=True)
+        return {'success': True, 'videos': 0, 'comments': 0}
+
+    # Give browser time to fully initialize before connecting
+    print(f'  Waiting for initialization...', flush=True)
+    time.sleep(3)
+
     browser_videos = 0
     browser_comments = 0
 
     try:
         # Don't use 'with' statement - it auto-closes browsers when exiting the block
         # Store in global list to prevent garbage collection
+        print(f'  Connecting via CDP...', flush=True)
         p = sync_playwright().start()
         PLAYWRIGHT_INSTANCES.append(p)  # Keep reference to prevent auto-close
 
         browser_conn = p.chromium.connect_over_cdp(ws_url)
+        print(f'  Connected! Browser will stay open.', flush=True)
         context = browser_conn.contexts[0]
 
         # Close ALL extra tabs first - keep only 1 tab
