@@ -688,6 +688,19 @@ def check_login_status(page):
         page.goto('https://www.tiktok.com/', timeout=30000)
         time.sleep(3)
 
+        # Dismiss cookie consent banner if present
+        try:
+            cookie_btn = page.locator(
+                'button:has-text("Permitir todas"), button:has-text("Allow all"), '
+                'button:has-text("Accept all"), button:has-text("Accept"), '
+                'button:has-text("Aceptar"), button:has-text("Akzeptieren")'
+            ).first
+            if cookie_btn.is_visible(timeout=1500):
+                cookie_btn.click()
+                time.sleep(1)
+        except:
+            pass
+
         # Check for login button (means NOT logged in)
         try:
             login_btn = page.locator('button:has-text("Log in"), [data-e2e="nav-login-button"]').first
@@ -961,6 +974,20 @@ def auto_signup(page, browser_name):
             timeout=15000,
         )
         time.sleep(1.5)
+
+        # Dismiss cookie consent banner if present
+        try:
+            cookie_btn = page.locator(
+                'button:has-text("Permitir todas"), button:has-text("Allow all"), '
+                'button:has-text("Accept all"), button:has-text("Accept"), '
+                'button:has-text("Aceptar"), button:has-text("Akzeptieren")'
+            ).first
+            if cookie_btn.is_visible(timeout=2000):
+                cookie_btn.click()
+                print(f'    [{browser_name}] Dismissed cookie banner', flush=True)
+                time.sleep(1)
+        except:
+            pass
 
         # Fill birthdate using keyboard
         try:
@@ -1721,21 +1748,10 @@ def process_browser(browser, browser_idx, total_browsers):
             is_logged_in, username = check_login_status(page)
 
             if not is_logged_in:
-                print(f'  ⚠ {browser_name} NOT logged in - running auto-signup...', flush=True)
-                # Mark previous account as logged out (if any was recorded)
-                mark_previous_account_logged_out(browser_name)
-                signup_success, new_username = auto_signup(page, browser_name)
-
-                if not signup_success:
-                    print(f'  ✗ Signup failed for {browser_name} - closing browser', flush=True)
-                    browser_conn.close()
-                    close_browser(user_id)  # Close browser on failure
-                    return {'success': False, 'videos': 0, 'comments': 0}
-
-                username = new_username
-                print(f'  ✓ {browser_name} now logged in as @{username}', flush=True)
-                # Sync new signup account to Supabase history
-                sync_account_to_supabase(browser_name, username, account_type='signup')
+                print(f'  ⚠ {browser_name} NOT logged in - skipping (manual signup required)', flush=True)
+                # Don't auto-signup - user will do manual phone signup
+                # Don't close anything - leave browser completely open
+                return {'success': False, 'videos': 0, 'comments': 0, 'skipped': True}
             else:
                 print(f'  ✓ {browser_name} logged in as @{username}', flush=True)
                 # Sync existing login to Supabase history
@@ -1760,10 +1776,10 @@ def process_browser(browser, browser_idx, total_browsers):
 
     except Exception as e:
         print(f'  Browser error: {e}', flush=True)
-        close_browser(user_id)
+        # Don't close browser on error - leave it open for debugging
         return {'success': False, 'videos': browser_videos, 'comments': browser_comments}
 
-    close_browser(user_id)
+    # Don't close browser after processing - leave it open
     print(f'  {browser_name} done: {browser_videos} videos viewed, {browser_comments} comments', flush=True)
 
     # Sync account to Supabase with updated last_commented if any comments were made

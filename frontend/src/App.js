@@ -262,13 +262,17 @@ function Dashboard({ onNavigate }) {
 
   const fetchReports = useCallback(async () => {
     try {
-      let query = supabase.from('comment_reports').select('*', { count: 'exact' }).order('timestamp', { ascending: false }).limit(100);
+      let query = supabase.from('comment_reports').select('*', { count: 'exact' }).order('timestamp', { ascending: false });
       if (startDate) query = query.gte('timestamp', new Date(startDate).toISOString());
       if (endDate) { const end = new Date(endDate); end.setHours(23, 59, 59, 999); query = query.lte('timestamp', end.toISOString()); }
       if (!startDate && !endDate) {
         if (filter === "today") { const t = new Date(); t.setHours(0,0,0,0); query = query.gte('timestamp', t.toISOString()); }
         else if (filter === "week") { const w = new Date(); w.setDate(w.getDate()-7); query = query.gte('timestamp', w.toISOString()); }
         else if (filter === "month") { const m = new Date(); m.setMonth(m.getMonth()-1); query = query.gte('timestamp', m.toISOString()); }
+      }
+      // Only limit when filtering by date range, show all for "all time"
+      if (filter !== "all" || startDate || endDate) {
+        query = query.limit(500);
       }
       const { data, count } = await query;
       setReports(data || []); setTotalReports(count || 0); setLastUpdated(new Date());

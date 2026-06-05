@@ -1,0 +1,9 @@
+total_failed=3
+reason_counts:
+  failed_unknown: 2
+  download_app_security_redirect: 1
+
+profiles:
+tt1	download_app_security_redirect
+tt2	failed_unknown
+tt3	failed_unknown

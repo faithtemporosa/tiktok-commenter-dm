@@ -1,0 +1,22 @@
+{
+  "total_failed": 3,
+  "reason_counts": {
+    "download_app_security_redirect": 1,
+    "failed_unknown": 2
+  },
+  "profiles": [
+    {
+      "profile": "tt1",
+      "reason": "download_app_security_redirect"
+    },
+    {
+      "profile": "tt2",
+      "reason": "failed_unknown"
+    },
+    {
+      "profile": "tt3",
+      "reason": "failed_unknown"
+    }
+  ],
+  "updated_at": "2026-06-05 01:01:51"
+}

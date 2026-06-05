@@ -33,10 +33,11 @@ from datetime import datetime, timedelta
 from flask import Flask, render_template_string, jsonify, request
 
 try:
-    from comment_target_accounts import auto_signup as working_auto_signup
+    from comment_target_accounts import auto_signup as working_auto_signup, sync_account_to_supabase
     HAS_WORKING_SIGNUP = True
 except Exception as e:
     working_auto_signup = None
+    sync_account_to_supabase = None
     HAS_WORKING_SIGNUP = False
     print(f"ERROR: Could not import working auto_signup: {e}")
 
@@ -230,19 +231,23 @@ def get_profile_id(profile_name):
     return None
 
 def save_account_to_supabase(profile_name, browser_num, email, password, username, birthdate):
-    """Save created account to Supabase"""
+    """Save created account to Supabase tiktok_account_history table"""
     if not HAS_SUPABASE:
         return
     try:
-        supabase.table('tiktok_accounts').upsert({
+        import time as _time
+        now = _time.strftime('%Y-%m-%d %H:%M:%S')
+        # Save to tiktok_account_history table (same as comment_target_accounts.py)
+        supabase.table('tiktok_account_history').upsert({
             'browser_num': browser_num,
-            'email': email,
-            'password': password,
+            'browser_name': profile_name,
             'username': username,
-            'birthdate': birthdate,
-            'status': 'active'
-        }).execute()
-        log(f"  ✓ Saved account to Supabase: {username}")
+            'email': email,
+            'account_type': 'signup',
+            'status': 'active',
+            'last_seen': now
+        }, on_conflict='browser_num,username').execute()
+        log(f"  ✓ Saved account to Supabase: @{username}")
     except Exception as e:
         log(f"  ✗ Supabase save error: {e}")
 
@@ -374,6 +379,10 @@ def run_signup_for_profile(profile_name, profile_id):
                             "username": new_username,
                             "created_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
                         })
+                        # Sync new account to Supabase tiktok_account_history table
+                        if sync_account_to_supabase:
+                            sync_account_to_supabase(profile_name, new_username, account_type='signup')
+                            log(f"  ✓ Synced @{new_username} to Supabase")
                         clear_not_logged_in(profile_name)
                         return True, "success"
 

@@ -1,0 +1,80 @@
+[00:57:49] Starting signup for 79 profiles...
+[00:57:49] 
+========================================
+[00:57:49]   Starting signup for: tt1
+    [tt1] Running auto-signup...
+    [tt1] Email: prismmoon993@automateyourbizz.xyz
+    [tt1] Cleared cookies
+    [tt1] Birthdate filled
+    [tt1] Email entered
+    [tt1] Password entered
+    [tt1] Send code clicked
+    [tt1] ✓ Code sent! (code input enabled)
+    [tt1] Screenshot saved: /Users/faithtemporosa/tiktok-commenter-dm/tiktok-commenter-dm/downloads/signup_tt1_after_send.png
+    Searching for TikTok email to prismmoon993@automateyourbizz.xyz...
+    Found 1 email(s), extracting code...
+    Email from: TikTok <noreply@account.tiktok.com>
+    Subject: 478626 is your verification code
+    [tt1] Got code: 478626
+    [tt1] Verification code submitted, waiting for page...
+    [tt1] Page navigated after code submission
+    [tt1] Post-code URL: https://www.tiktok.com/login/download-app
+    [tt1] TikTok redirected to app-download security page - fresh proxy/browser needed
+[00:58:57]   Security redirect detected after code submit; closing this browser and moving on
+[00:58:57]   Signup attempt 1/1 failed for tt1: download_app_security_redirect
+[00:58:57]   Signup failed for tt1
+[00:58:59]   Fallback: closed tt1 and moving to next browser (download_app_security_redirect)
+[00:58:59]   Waiting 3s before next profile...
+[00:59:02] 
+========================================
+[00:59:02]   Starting signup for: tt2
+    [tt2] Running auto-signup...
+    [tt2] Email: pixelcore524@automateyourbizz.xyz
+    [tt2] Cleared cookies
+    [tt2] Birthdate filled
+    [tt2] Email entered
+    [tt2] Password entered
+    [tt2] Debug screenshot: /Users/faithtemporosa/tiktok-commenter-dm/tiktok-commenter-dm/downloads/debug_tt2_send_failed.png
+    [tt2] ✗ Could not verify code was sent - aborting
+[00:59:26]   Signup attempt 1/1 failed for tt2: failed_unknown
+[00:59:26]   Signup failed for tt2
+[00:59:27]   Fallback: closed tt2 and moving to next browser (failed_unknown)
+[00:59:27]   Waiting 3s before next profile...
+[00:59:30] 
+========================================
+[00:59:30]   Starting signup for: tt3
+    [tt3] Running auto-signup...
+    [tt3] Email: foreststream163@automateyourbizz.xyz
+    [tt3] Cleared cookies
+    [tt3] Birthdate filled
+    [tt3] Email entered
+    [tt3] Password entered
+    [tt3] Send code clicked
+    [tt3] ✓ Code sent! (code input enabled)
+    [tt3] Screenshot saved: /Users/faithtemporosa/tiktok-commenter-dm/tiktok-commenter-dm/downloads/signup_tt3_after_send.png
+    Searching for TikTok email to foreststream163@automateyourbizz.xyz...
+    Found 1 email(s), extracting code...
+    Email from: TikTok <noreply@account.tiktok.com>
+    Subject: 927250 is your verification code
+    [tt3] Got code: 927250
+    [tt3] Verification code submitted, waiting for page...
+    [tt3] Page navigated after code submission
+    [tt3] Post-code URL: https://www.tiktok.com/signup/create-username
+    [tt3] Looking for username input field...
+    [tt3] ✓ Username set to: foreststream163
+    [tt3] Setting up profile...
+    [tt3] Setting up profile...
+    [tt3] ✓ Downloaded profile picture
+    [tt3] ⚠ Could not open Edit profile: Locator.wait_for: Timeout 8000ms exceeded.
+Call lo
+    [tt3] ✗ Signup failed - not logged in (landed on: https://www.tiktok.com/foryou?lang=en-GB)
+[01:01:50]   Signup attempt 1/1 failed for tt3: failed_unknown
+[01:01:50]   Signup failed for tt3
+[01:01:51]   Fallback: closed tt3 and moving to next browser (failed_unknown)
+[01:01:51]   Waiting 4s before next profile...
+[01:01:55] 
+========================================
+[01:01:55]   Starting signup for: tt4
+    [tt4] Running auto-signup...
+    [tt4] Email: pixelfalcon312@automateyourbizz.xyz
+    [tt4] Cleared cookies
