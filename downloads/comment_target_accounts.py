@@ -1772,7 +1772,8 @@ def process_browser(browser, browser_idx, total_browsers):
                 if acc_idx < len(TARGET_ACCOUNTS) - 1:
                     random_pause(5, 23)
 
-            browser_conn.close()
+            # DON'T close browser_conn - keep browsers open for manual control
+            # browser_conn.close()
 
     except Exception as e:
         print(f'  Browser error: {e}', flush=True)
