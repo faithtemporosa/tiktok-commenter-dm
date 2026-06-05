@@ -64,6 +64,9 @@ PLAYWRIGHT_INSTANCES = []
 # KEEP BROWSERS OPEN MODE - Set to True to just open browsers without automation
 KEEP_OPEN_MODE = True  # Set to False to run automation
 
+# TEST MODE - Set to 1 to only open 1 browser (for testing)
+TEST_MAX_BROWSERS = 1  # Set to 0 to open all browsers
+
 # New account limits
 NEW_ACCOUNT_DAYS = 30  # Consider account "new" for first 30 days
 NEW_ACCOUNT_DAILY_FOLLOWS = 2
@@ -1850,6 +1853,11 @@ def main():
 
     # Sort by name for consistent ordering
     browsers.sort(key=lambda x: int(re.search(r'\d+', x.get('name', '0')).group()) if re.search(r'\d+', x.get('name', '0')) else 0)
+
+    # Apply TEST_MAX_BROWSERS limit
+    if TEST_MAX_BROWSERS > 0:
+        browsers = browsers[:TEST_MAX_BROWSERS]
+        print(f'TEST MODE: Limited to {len(browsers)} browser(s)')
 
     print(f'Found {len(browsers)} browsers')
     print(f'\nTotal work: {len(browsers)} browsers x {len(TARGET_ACCOUNTS)} accounts = {len(browsers) * len(TARGET_ACCOUNTS)} profile visits')
