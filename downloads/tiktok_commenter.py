@@ -63,7 +63,7 @@ try:
     from playwright.sync_api import sync_playwright
     HAS_PLAYWRIGHT = True
     # STEALTH MODE - Hide automation detection
-    from stealth_browsing import inject_stealth, natural_pause, watch_video_naturally
+    from stealth_browsing import inject_stealth, watch_video_naturally
 except ImportError:
     HAS_PLAYWRIGHT = False
     print("ERROR: Install playwright: pip install playwright && playwright install chromium")
