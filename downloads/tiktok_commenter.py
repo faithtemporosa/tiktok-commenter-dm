@@ -4311,9 +4311,10 @@ def run_single_profile(profile_id, sheet_name):
         # Run commenter
         success = run_tiktok_commenter(ws_endpoint, profile_name, sheet_name)
     finally:
-        # Close browser
-        log(f"  [{profile_name}] Closing browser...")
-        close_browser(profile_id)
+        # DON'T close browser - keep it open for manual control
+        # log(f"  [{profile_name}] Closing browser...")
+        # close_browser(profile_id)
+        log(f"  [{profile_name}] ✓ Browser staying open")
     
     if success:
         automation_status["completed"].append(profile_id)
