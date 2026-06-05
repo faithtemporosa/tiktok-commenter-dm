@@ -1215,6 +1215,9 @@ automation_status = {
     "report": []
 }
 
+# Global list to keep Playwright instances alive (prevent auto-close)
+PLAYWRIGHT_INSTANCES = []
+
 def load_report_history():
     """Load past reports from file on startup"""
     global automation_status
@@ -4004,7 +4007,7 @@ def process_single_video_with_retry(page, video_num, profile_name, target_videos
 
 def run_tiktok_commenter(ws_endpoint, profile_name, sheet_name):
     """Connect to browser and comment on TikTok videos - IMPROVED VERSION"""
-    global commented_videos
+    global commented_videos, PLAYWRIGHT_INSTANCES
 
     # Check if automation was stopped
     if not automation_status["running"]:
@@ -4019,26 +4022,50 @@ def run_tiktok_commenter(ws_endpoint, profile_name, sheet_name):
     target_videos = settings["videos_per_profile"]
     consecutive_failures = 0
     MAX_CONSECUTIVE_FAILURES = 5
-    
+
     try:
-        with sync_playwright() as p:
-            # Connect to AdsPower browser
-            log(f"  → Connecting to browser...")
-            browser = p.chromium.connect_over_cdp(ws_endpoint)
-            context = browser.contexts[0]
-            page = context.pages[0] if context.pages else context.new_page()
-            inject_stealth(page)  # Hide CDP detection
+        # DON'T use 'with' statement - it auto-closes browsers when exiting
+        p = sync_playwright().start()
+        PLAYWRIGHT_INSTANCES.append(p)  # Keep reference to prevent auto-close
+        # Connect to AdsPower browser
+        log(f"  → Connecting to browser...")
+        browser = p.chromium.connect_over_cdp(ws_endpoint)
+        context = browser.contexts[0]
+        page = context.pages[0] if context.pages else context.new_page()
+        inject_stealth(page)  # Hide CDP detection
 
-            log(f"  ✓ Connected")
+        log(f"  ✓ Connected")
 
-            # Auto-detect TikTok username and check login status
-            try:
-                page.goto("https://www.tiktok.com/profile", wait_until="domcontentloaded", timeout=20000)
-                time.sleep(2)
-                current_url = page.url
+        # Auto-detect TikTok username and check login status
+        try:
+            page.goto("https://www.tiktok.com/profile", wait_until="domcontentloaded", timeout=20000)
+            time.sleep(2)
+            current_url = page.url
 
-                # Check if redirected to login page
-                if "login" in current_url.lower() or "signup" in current_url.lower():
+            # Check if redirected to login page
+            if "login" in current_url.lower() or "signup" in current_url.lower():
+                log(f"  ⚠ NOT LOGGED IN - Attempting auto login/signup...")
+                track_not_logged_in(profile_name, source="commenter")
+                if not auto_login_or_signup(page, profile_name):
+                    log(f"  ✗ [{profile_name}] Auto login/signup failed — skipping")
+                    # browser.close()  # DON'T close - keep browser open
+                    return False
+                log(f"  ✓ [{profile_name}] Now logged in, continuing...")
+
+            if "/@" in page.url:
+                match = re.search(r'/@([^/?]+)', page.url)
+                if match:
+                    detected_username = match.group(1)
+                    set_tiktok_username(profile_name, detected_username)
+                    log(f"  📱 Account: @{detected_username}")
+            else:
+                # No username detected - might not be logged in
+                log(f"  ⚠ No account detected - checking login status...")
+                login_visible = page.evaluate('''() => {
+                    const loginBtn = document.querySelector('[data-e2e="login-button"], a[href*="login"]');
+                    return loginBtn && loginBtn.offsetParent !== null;
+                }''')
+                if login_visible:
                     log(f"  ⚠ NOT LOGGED IN - Attempting auto login/signup...")
                     track_not_logged_in(profile_name, source="commenter")
                     if not auto_login_or_signup(page, profile_name):
@@ -4046,227 +4073,206 @@ def run_tiktok_commenter(ws_endpoint, profile_name, sheet_name):
                         browser.close()
                         return False
                     log(f"  ✓ [{profile_name}] Now logged in, continuing...")
+        except Exception as e:
+            log(f"  ⚠ Profile check error: {str(e)[:40]}")
 
-                if "/@" in page.url:
-                    match = re.search(r'/@([^/?]+)', page.url)
-                    if match:
-                        detected_username = match.group(1)
-                        set_tiktok_username(profile_name, detected_username)
-                        log(f"  📱 Account: @{detected_username}")
-                else:
-                    # No username detected - might not be logged in
-                    log(f"  ⚠ No account detected - checking login status...")
-                    login_visible = page.evaluate('''() => {
-                        const loginBtn = document.querySelector('[data-e2e="login-button"], a[href*="login"]');
-                        return loginBtn && loginBtn.offsetParent !== null;
-                    }''')
-                    if login_visible:
-                        log(f"  ⚠ NOT LOGGED IN - Attempting auto login/signup...")
-                        track_not_logged_in(profile_name, source="commenter")
-                        if not auto_login_or_signup(page, profile_name):
-                            log(f"  ✗ [{profile_name}] Auto login/signup failed — skipping")
-                            browser.close()
-                            return False
-                        log(f"  ✓ [{profile_name}] Now logged in, continuing...")
-            except Exception as e:
-                log(f"  ⚠ Profile check error: {str(e)[:40]}")
-
-            # Close extra TikTok tabs only, keep AdsPower tab
-            log(f"  → Cleaning up TikTok tabs...")
-            pages = context.pages
-            tiktok_tabs = []
-            
-            for p in pages:
+        # Close extra TikTok tabs only, keep AdsPower tab
+        log(f"  → Cleaning up TikTok tabs...")
+        pages = context.pages
+        tiktok_tabs = []
+        
+        for p in pages:
+            try:
+                if "tiktok" in p.url.lower():
+                    tiktok_tabs.append(p)
+            except:
+                pass
+        
+        # Close all TikTok tabs except keep first one (or close all if multiple)
+        if len(tiktok_tabs) > 1:
+            for p in tiktok_tabs[1:]:  # Keep first, close rest
                 try:
-                    if "tiktok" in p.url.lower():
-                        tiktok_tabs.append(p)
+                    p.close()
                 except:
                     pass
-            
-            # Close all TikTok tabs except keep first one (or close all if multiple)
-            if len(tiktok_tabs) > 1:
-                for p in tiktok_tabs[1:]:  # Keep first, close rest
-                    try:
-                        p.close()
-                    except:
-                        pass
-                log(f"  ✓ Closed {len(tiktok_tabs)-1} extra TikTok tab(s)")
-                page = tiktok_tabs[0]  # Use existing TikTok tab
-            elif len(tiktok_tabs) == 1:
-                page = tiktok_tabs[0]  # Use existing TikTok tab
-            else:
-                # No TikTok tab, create new one (keeps AdsPower tab open)
-                page = context.new_page()
-            
-            # Go to TikTok - either For You or target hashtag
-            target_hashtag = settings.get("target_hashtag", "").strip()
-            
-            if target_hashtag:
-                # Clean hashtag (remove # if present)
-                hashtag = target_hashtag.replace("#", "").strip()
-                tiktok_url = f"https://www.tiktok.com/tag/{hashtag}"
-                log(f"  → Opening TikTok #{hashtag}...")
-            else:
-                tiktok_url = "https://www.tiktok.com/foryou"
-                log(f"  → Opening TikTok For You...")
-            
-            try:
-                page.goto(tiktok_url, wait_until="domcontentloaded", timeout=90000)
-            except Exception as e:
-                log(f"  ⚠ Slow load, continuing anyway...")
-            
-            time.sleep(8)  # Give more time for content to load
+            log(f"  ✓ Closed {len(tiktok_tabs)-1} extra TikTok tab(s)")
+            page = tiktok_tabs[0]  # Use existing TikTok tab
+        elif len(tiktok_tabs) == 1:
+            page = tiktok_tabs[0]  # Use existing TikTok tab
+        else:
+            # No TikTok tab, create new one (keeps AdsPower tab open)
+            page = context.new_page()
+        
+        # Go to TikTok - either For You or target hashtag
+        target_hashtag = settings.get("target_hashtag", "").strip()
+        
+        if target_hashtag:
+            # Clean hashtag (remove # if present)
+            hashtag = target_hashtag.replace("#", "").strip()
+            tiktok_url = f"https://www.tiktok.com/tag/{hashtag}"
+            log(f"  → Opening TikTok #{hashtag}...")
+        else:
+            tiktok_url = "https://www.tiktok.com/foryou"
+            log(f"  → Opening TikTok For You...")
+        
+        try:
+            page.goto(tiktok_url, wait_until="domcontentloaded", timeout=90000)
+        except Exception as e:
+            log(f"  ⚠ Slow load, continuing anyway...")
+        
+        time.sleep(8)  # Give more time for content to load
 
-            # Wait out any captcha/verification on page load
-            wait_for_captcha(page, profile_name)
+        # Wait out any captcha/verification on page load
+        wait_for_captcha(page, profile_name)
 
-            # Check if logged in
-            current_url = page.url
-            log(f"  📍 URL: {current_url}")
-            
-            # Check if redirected to login
-            if "login" in current_url.lower() or "signup" in current_url.lower():
-                log(f"  ⚠ NOT LOGGED IN - Attempting auto login/signup...")
+        # Check if logged in
+        current_url = page.url
+        log(f"  📍 URL: {current_url}")
+        
+        # Check if redirected to login
+        if "login" in current_url.lower() or "signup" in current_url.lower():
+            log(f"  ⚠ NOT LOGGED IN - Attempting auto login/signup...")
+            track_not_logged_in(profile_name, source="commenter")
+            if not auto_login_or_signup(page, profile_name):
+                log(f"  ✗ [{profile_name}] Auto login/signup failed — skipping")
+                browser.close()
+                return False
+            log(f"  ✓ [{profile_name}] Now logged in, continuing...")
+
+        # Also check page content for login prompts
+        try:
+            login_check = page.evaluate('''() => {
+                const text = document.body.innerText.toLowerCase();
+                if (text.includes('log in') && text.includes('sign up')) return true;
+                if (document.querySelector('[data-e2e="login-button"]')) return true;
+                if (document.querySelector('a[href*="login"]')) return true;
+                return false;
+            }''')
+            if login_check:
+                log(f"  ⚠ LOGIN REQUIRED - Attempting auto login/signup...")
                 track_not_logged_in(profile_name, source="commenter")
                 if not auto_login_or_signup(page, profile_name):
                     log(f"  ✗ [{profile_name}] Auto login/signup failed — skipping")
-                    browser.close()
+                    # browser.close()  # DON'T close - keep browser open
                     return False
                 log(f"  ✓ [{profile_name}] Now logged in, continuing...")
-
-            # Also check page content for login prompts
-            try:
-                login_check = page.evaluate('''() => {
-                    const text = document.body.innerText.toLowerCase();
-                    if (text.includes('log in') && text.includes('sign up')) return true;
-                    if (document.querySelector('[data-e2e="login-button"]')) return true;
-                    if (document.querySelector('a[href*="login"]')) return true;
-                    return false;
-                }''')
-                if login_check:
-                    log(f"  ⚠ LOGIN REQUIRED - Attempting auto login/signup...")
+        except:
+            pass
+        
+        # Wait for video
+        try:
+            page.wait_for_selector('video', timeout=15000)
+            log(f"  ✓ TikTok loaded")
+        except:
+            log(f"  ⚠ No video found, continuing anyway...")
+        
+        # Process videos using improved retry logic
+        for video_num in range(target_videos):
+            if not automation_status["running"]:
+                log(f"  ⏹ Stopped by user")
+                break
+            
+            # Check consecutive failures
+            if consecutive_failures >= MAX_CONSECUTIVE_FAILURES:
+                log(f"  ⚠ Too many consecutive failures ({MAX_CONSECUTIVE_FAILURES}), stopping profile")
+                break
+            
+            # Process video with retry
+            success, result = process_single_video_with_retry(page, video_num, profile_name, target_videos)
+            
+            if success:
+                consecutive_failures = 0
+                
+                if isinstance(result, dict):
+                    # Comment was posted successfully
+                    videos_commented += 1
+                    automation_status["comments_posted"] += 1
+                    
+                    report_entry = {
+                        "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                        "profile": profile_name,
+                        "video_url": result.get("video_url", ""),
+                        "video_id": result.get("video_id", ""),
+                        "comment": result.get("comment", ""),
+                        "sheet": result.get("sheet", "Unknown"),
+                        "screenshot": result.get("screenshot", "")
+                    }
+                    
+                    automation_status["report"].append(report_entry)
+                    save_report_history()
+                    
+                    # Send to cloud
+                    try:
+                        threading.Thread(target=send_to_cloud, args=(report_entry,), daemon=True).start()
+                    except:
+                        pass
+                    
+                    log(f"    ✓ SUCCESS: {result.get('comment', '')[:40]}...")
+                    
+                    # Close comments and wait
+                    page.keyboard.press("Escape")
+                    time.sleep(1)
+                    
+                    delay = random.randint(settings["min_delay"], settings["max_delay"])
+                    log(f"    ⏳ Waiting {delay}s...")
+                    for _ in range(delay):
+                        if not automation_status["running"]:
+                            break
+                        time.sleep(1)
+            else:
+                consecutive_failures += 1
+                if result == "login_required":
+                    log(f"  ⚠ Profile not logged in, stopping")
                     track_not_logged_in(profile_name, source="commenter")
-                    if not auto_login_or_signup(page, profile_name):
-                        log(f"  ✗ [{profile_name}] Auto login/signup failed — skipping")
-                        browser.close()
-                        return False
-                    log(f"  ✓ [{profile_name}] Now logged in, continuing...")
+                    break
+                log(f"    ⚠ Failed: {result}")
+            
+            # Navigate to next video
+            try:
+                current_url = page.url
+                target_hashtag = settings.get("target_hashtag", "").strip()
+                
+                if "/video/" in current_url:
+                    page.keyboard.press("Escape")
+                    time.sleep(0.5)
+                    
+                    if target_hashtag:
+                        # Go back to hashtag grid
+                        if "/video/" in page.url:
+                            hashtag = target_hashtag.replace("#", "").strip()
+                            try:
+                                page.goto(f"https://www.tiktok.com/tag/{hashtag}", wait_until="domcontentloaded", timeout=30000)
+                                time.sleep(3)
+                                # Scroll to load more
+                                for _ in range(min(video_num // 3 + 1, 5)):
+                                    page.keyboard.press("ArrowDown")
+                                    time.sleep(0.3)
+                            except:
+                                pass
+                    else:
+                        page.keyboard.press("ArrowDown")
+                else:
+                    page.keyboard.press("ArrowDown")
+                
+                time.sleep(1)
             except:
                 pass
             
-            # Wait for video
+            # Clean up extra tabs
             try:
-                page.wait_for_selector('video', timeout=15000)
-                log(f"  ✓ TikTok loaded")
+                current_pages = context.pages
+                tiktok_pages = [pg for pg in current_pages if "tiktok" in pg.url.lower()]
+                if len(tiktok_pages) > 1:
+                    for pg in tiktok_pages:
+                        if pg != page:
+                            pg.close()
             except:
-                log(f"  ⚠ No video found, continuing anyway...")
-            
-            # Process videos using improved retry logic
-            for video_num in range(target_videos):
-                if not automation_status["running"]:
-                    log(f"  ⏹ Stopped by user")
-                    break
-                
-                # Check consecutive failures
-                if consecutive_failures >= MAX_CONSECUTIVE_FAILURES:
-                    log(f"  ⚠ Too many consecutive failures ({MAX_CONSECUTIVE_FAILURES}), stopping profile")
-                    break
-                
-                # Process video with retry
-                success, result = process_single_video_with_retry(page, video_num, profile_name, target_videos)
-                
-                if success:
-                    consecutive_failures = 0
-                    
-                    if isinstance(result, dict):
-                        # Comment was posted successfully
-                        videos_commented += 1
-                        automation_status["comments_posted"] += 1
-                        
-                        report_entry = {
-                            "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-                            "profile": profile_name,
-                            "video_url": result.get("video_url", ""),
-                            "video_id": result.get("video_id", ""),
-                            "comment": result.get("comment", ""),
-                            "sheet": result.get("sheet", "Unknown"),
-                            "screenshot": result.get("screenshot", "")
-                        }
-                        
-                        automation_status["report"].append(report_entry)
-                        save_report_history()
-                        
-                        # Send to cloud
-                        try:
-                            threading.Thread(target=send_to_cloud, args=(report_entry,), daemon=True).start()
-                        except:
-                            pass
-                        
-                        log(f"    ✓ SUCCESS: {result.get('comment', '')[:40]}...")
-                        
-                        # Close comments and wait
-                        page.keyboard.press("Escape")
-                        time.sleep(1)
-                        
-                        delay = random.randint(settings["min_delay"], settings["max_delay"])
-                        log(f"    ⏳ Waiting {delay}s...")
-                        for _ in range(delay):
-                            if not automation_status["running"]:
-                                break
-                            time.sleep(1)
-                else:
-                    consecutive_failures += 1
-                    if result == "login_required":
-                        log(f"  ⚠ Profile not logged in, stopping")
-                        track_not_logged_in(profile_name, source="commenter")
-                        break
-                    log(f"    ⚠ Failed: {result}")
-                
-                # Navigate to next video
-                try:
-                    current_url = page.url
-                    target_hashtag = settings.get("target_hashtag", "").strip()
-                    
-                    if "/video/" in current_url:
-                        page.keyboard.press("Escape")
-                        time.sleep(0.5)
-                        
-                        if target_hashtag:
-                            # Go back to hashtag grid
-                            if "/video/" in page.url:
-                                hashtag = target_hashtag.replace("#", "").strip()
-                                try:
-                                    page.goto(f"https://www.tiktok.com/tag/{hashtag}", wait_until="domcontentloaded", timeout=30000)
-                                    time.sleep(3)
-                                    # Scroll to load more
-                                    for _ in range(min(video_num // 3 + 1, 5)):
-                                        page.keyboard.press("ArrowDown")
-                                        time.sleep(0.3)
-                                except:
-                                    pass
-                        else:
-                            page.keyboard.press("ArrowDown")
-                    else:
-                        page.keyboard.press("ArrowDown")
-                    
-                    time.sleep(1)
-                except:
-                    pass
-                
-                # Clean up extra tabs
-                try:
-                    current_pages = context.pages
-                    tiktok_pages = [pg for pg in current_pages if "tiktok" in pg.url.lower()]
-                    if len(tiktok_pages) > 1:
-                        for pg in tiktok_pages:
-                            if pg != page:
-                                pg.close()
-                except:
-                    pass
-            
-            log(f"  ✓ Done: {videos_commented} comments posted")
-            browser.close()
-            return videos_commented > 0
+                pass
+        
+        log(f"  ✓ Done: {videos_commented} comments posted")
+        # DON'T close browser - keep it open for manual control
+        # browser.close()
+        return videos_commented > 0
             
     except Exception as e:
         log(f"  ✗ Error: {e}")
