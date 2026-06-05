@@ -1719,7 +1719,10 @@ def process_browser(browser, browser_idx, total_browsers):
     user_id = browser['user_id']
     browser_name = browser['name']
 
-    print(f'\n[{browser_idx+1}/{total_browsers}] {browser_name} - Processing {len(TARGET_ACCOUNTS)} accounts', flush=True)
+    print(f'\n{"=" * 60}', flush=True)
+    print(f'[{browser_idx+1}/{total_browsers}] {browser_name}', flush=True)
+    print(f'KEEP_OPEN_MODE = {KEEP_OPEN_MODE}', flush=True)
+    print(f'{"=" * 60}', flush=True)
 
     ws_url = open_browser(user_id)
     if not ws_url:
@@ -1727,10 +1730,16 @@ def process_browser(browser, browser_idx, total_browsers):
         return {'success': False, 'videos': 0, 'comments': 0}
 
     print(f'  ✓ Browser opened successfully', flush=True)
+    print(f'  WebSocket URL: {ws_url[:50]}...', flush=True)
 
     # KEEP OPEN MODE - Just open browsers without connecting/automating
     if KEEP_OPEN_MODE:
-        print(f'  KEEP_OPEN_MODE: Browser will stay open (no automation)', flush=True)
+        print(f'', flush=True)
+        print(f'  *** KEEP_OPEN_MODE ACTIVE ***', flush=True)
+        print(f'  Browser will stay open (no automation)', flush=True)
+        print(f'  Returning without Playwright connection', flush=True)
+        print(f'', flush=True)
+        time.sleep(2)  # Small delay to ensure AdsPower registers the open
         return {'success': True, 'videos': 0, 'comments': 0}
 
     # Give browser time to fully initialize before connecting
