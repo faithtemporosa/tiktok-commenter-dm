@@ -73,7 +73,7 @@ def main():
         'sys_app_cate_id': '0',
         'ipchecker': 'ip2location',
         'fingerprint_config': {
-            'os': 'MacIntel',  # macOS platform
+            'platform': 'mac',  # macOS platform
             'automatic_timezone': '1',  # Based on IP
             'webrtc': 'forward',  # Forward mode
             'location': 'ask',  # Ask each time
