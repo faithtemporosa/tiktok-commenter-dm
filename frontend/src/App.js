@@ -838,11 +838,9 @@ function Dashboard({ onNavigate }) {
         {/* ACCOUNTS */}
         {activeTab === "accounts" && (
           <div data-testid="accounts-tab">
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
+            <div className="grid grid-cols-2 gap-3 mb-4">
               <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-4 text-center"><div className="text-2xl font-bold text-violet-400">{accountsTotal.toLocaleString()}</div><div className="text-xs text-zinc-500">Total Records</div></div>
               <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-4 text-center"><div className="text-2xl font-bold text-emerald-400">{new Set(accounts.map(a=>a.username)).size}</div><div className="text-xs text-zinc-500">Unique Accounts</div></div>
-              <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-4 text-center"><div className="text-2xl font-bold text-cyan-400">{accounts.filter(a=>a.account_type==='signup').length}</div><div className="text-xs text-zinc-500">Signups</div></div>
-              <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-4 text-center"><div className="text-2xl font-bold text-amber-400">{new Set(accounts.map(a=>a.browser_num)).size}</div><div className="text-xs text-zinc-500">Browsers Used</div></div>
             </div>
             <div className="mb-3 text-sm text-zinc-500">Showing {accounts.length} account records (sorted by last seen)</div>
             <div className="bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden">
