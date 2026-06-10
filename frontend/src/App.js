@@ -864,7 +864,7 @@ function Dashboard({ onNavigate }) {
                       <td className="px-4 py-3">{acc.browser_name || (acc.browser_num > 0 ? <span className="px-2 py-0.5 rounded bg-violet-500/20 text-violet-400 text-xs font-mono">tt{acc.browser_num}</span> : <span className="text-zinc-600 text-xs">-</span>)}</td>
                       <td className="px-4 py-3">{acc.username ? <a href={`https://www.tiktok.com/@${acc.username}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-cyan-400 hover:text-cyan-300 text-xs"><ExternalLink className="w-3 h-3" />@{acc.username}</a> : <span className="text-zinc-600 text-xs">-</span>}</td>
                       <td className="px-4 py-3 text-zinc-300 text-xs font-mono">{acc.email || '-'}</td>
-                      <td className="px-4 py-3"><span className={`px-2 py-0.5 rounded text-xs ${acc.account_type==='signup'?'text-cyan-400 bg-cyan-500/20':'text-amber-400 bg-amber-500/20'}`}>{acc.account_type || 'login'}</span></td>
+                      <td className="px-4 py-3"><span className={`px-2 py-0.5 rounded text-xs ${acc.status==='active'?'text-emerald-400 bg-emerald-500/20':'text-zinc-500 bg-zinc-800'}`}>{acc.status === 'active' ? 'Logged In' : 'Not Logged In'}</span></td>
                       <td className="px-4 py-3 text-zinc-400 text-xs">{acc.last_seen ? fmt(acc.last_seen) : '-'}</td>
                     </tr>
                   ))}
