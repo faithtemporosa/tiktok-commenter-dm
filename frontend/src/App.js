@@ -852,7 +852,7 @@ function Dashboard({ onNavigate }) {
                   {accounts.length === 0 ? <tr><td colSpan="5" className="text-center py-12 text-zinc-500"><Users className="w-6 h-6 mx-auto mb-2 opacity-50" />No accounts yet. Run the target commenter to start tracking.</td></tr>
                   : accounts.map((acc, i) => (
                     <tr key={acc.id || i} className="border-t border-zinc-800 hover:bg-zinc-800/30" data-testid={`account-row-${i}`}>
-                      <td className="px-4 py-3"><span className="px-2 py-0.5 rounded bg-violet-500/20 text-violet-400 text-xs font-mono">{acc.browser_name || `tt${acc.browser_num}`}</span></td>
+                      <td className="px-4 py-3">{acc.browser_name || (acc.browser_num > 0 ? <span className="px-2 py-0.5 rounded bg-violet-500/20 text-violet-400 text-xs font-mono">tt{acc.browser_num}</span> : <span className="text-zinc-600 text-xs">-</span>)}</td>
                       <td className="px-4 py-3">{acc.username ? <a href={`https://www.tiktok.com/@${acc.username}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-cyan-400 hover:text-cyan-300 text-xs"><ExternalLink className="w-3 h-3" />@{acc.username}</a> : <span className="text-zinc-600 text-xs">-</span>}</td>
                       <td className="px-4 py-3 text-zinc-300 text-xs font-mono">{acc.email || '-'}</td>
                       <td className="px-4 py-3"><span className={`px-2 py-0.5 rounded text-xs ${acc.account_type==='signup'?'text-cyan-400 bg-cyan-500/20':'text-amber-400 bg-amber-500/20'}`}>{acc.account_type || 'login'}</span></td>
