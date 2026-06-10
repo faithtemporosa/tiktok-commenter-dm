@@ -297,7 +297,16 @@ function Dashboard({ onNavigate }) {
     try {
       // Fetch from tiktok_account_history (all accounts ever used per browser)
       const { data, count } = await supabase.from('tiktok_account_history').select('*', { count: 'exact' }).order('last_seen', { ascending: false });
-      setAccounts(data || []); setAccountsTotal(count || 0);
+
+      // Sort: active accounts first, then by last_seen descending
+      const sorted = (data || []).sort((a, b) => {
+        if (a.status === 'active' && b.status !== 'active') return -1;
+        if (a.status !== 'active' && b.status === 'active') return 1;
+        // Within same status, sort by last_seen (most recent first)
+        return new Date(b.last_seen || 0) - new Date(a.last_seen || 0);
+      });
+
+      setAccounts(sorted); setAccountsTotal(count || 0);
     } catch (err) { console.error("Accounts error:", err); }
   }, []);
 
@@ -838,7 +847,7 @@ function Dashboard({ onNavigate }) {
         {/* ACCOUNTS */}
         {activeTab === "accounts" && (
           <div data-testid="accounts-tab">
-            <div className="mb-3 text-sm text-zinc-500">Showing {accounts.length} account records (sorted by last seen)</div>
+            <div className="mb-3 text-sm text-zinc-500">Showing {accounts.length} account records (active accounts first)</div>
             <div className="bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden">
               <table className="w-full text-sm" data-testid="accounts-table">
                 <thead className="bg-zinc-800/50"><tr>
